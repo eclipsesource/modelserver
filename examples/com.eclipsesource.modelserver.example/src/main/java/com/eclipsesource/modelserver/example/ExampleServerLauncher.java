@@ -40,7 +40,7 @@ public class ExampleServerLauncher {
 	public static void main(String[] args) throws IOException {
 		BasicConfigurator.configure();
 
-		final ModelServerLauncher launcher = new ModelServerLauncher();
+		final ModelServerLauncher launcher = new ModelServerLauncher(args);
 		final File workspaceRoot = new File(TEMP_DIR + "/" + WORKSPACE_ROOT);
 		if (!setupTempTestWorkspace(workspaceRoot)) {
 			LOG.error("Could not setup test workspace");
@@ -48,7 +48,7 @@ public class ExampleServerLauncher {
 		}
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> cleanupTempTestWorkspace(workspaceRoot)));
 		launcher.setWorkspaceRoot(workspaceRoot.getAbsolutePath());
-		launcher.setModules(Lists.newArrayList(new ExampleModelServerModule()));
+		launcher.addModules(Lists.newArrayList(new ExampleModelServerModule()));
 		launcher.start();
 
 		final ModelServer server = launcher.getInjector().getInstance(ModelServer.class);

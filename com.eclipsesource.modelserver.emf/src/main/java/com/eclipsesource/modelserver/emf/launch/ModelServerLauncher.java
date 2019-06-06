@@ -18,22 +18,31 @@ package com.eclipsesource.modelserver.emf.launch;
 import java.net.URL;
 import java.util.Collection;
 
+import com.eclipsesource.modelserver.common.EntrypointType;
 import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
+import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
 public class ModelServerLauncher {
 
-	private Collection<? extends Module> modules;
+	private Collection<Module> modules;
 	private Injector injector;
 	private String workspaceRoot;
+	private String[] args;
 
 	public ModelServerLauncher() {
+		modules = Sets.newHashSet(ModelServerModule.create());
 	}
 
 	public ModelServerLauncher(URL workspaceRoot) {
 		this();
+	}
+
+	public ModelServerLauncher(String[] args) {
+		this();
+		this.args = args;
 	}
 
 	protected Injector doSetup() {
@@ -51,15 +60,15 @@ public class ModelServerLauncher {
 	}
 
 	protected void run() {
-		// TODO Setup and init middleware communication
+		injector.getInstance(ModelServerStartup.class).boot(EntrypointType.REST, this.args);
 	}
 
 	public void shutdown() {
 
 	}
 
-	public void setModules(Collection<? extends Module> modules) {
-		this.modules = modules;
+	public void addModules(Collection<Module> modules) {
+		this.modules.addAll(modules);
 	}
 
 	public Collection<? extends Module> getModules() {

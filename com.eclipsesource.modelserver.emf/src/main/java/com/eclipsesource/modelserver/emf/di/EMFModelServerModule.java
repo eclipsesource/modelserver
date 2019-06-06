@@ -18,15 +18,22 @@ package com.eclipsesource.modelserver.emf.di;
 
 import java.util.Collection;
 
+import com.eclipsesource.modelserver.common.AppEntrypoint;
+import com.eclipsesource.modelserver.common.EntrypointType;
+import com.eclipsesource.modelserver.common.Routing;
 import com.eclipsesource.modelserver.emf.EMFModelServer;
 import com.eclipsesource.modelserver.emf.ModelServer;
 import com.eclipsesource.modelserver.emf.ResourceManager;
 import com.eclipsesource.modelserver.emf.configuration.EPackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.EcorePackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
+import com.eclipsesource.modelserver.emf.launch.ModelServerController;
+import com.eclipsesource.modelserver.emf.launch.ModelServerEntrypoint;
+import com.eclipsesource.modelserver.emf.launch.ModelServerRouting;
 import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 
 public class EMFModelServerModule extends AbstractModule {
@@ -39,6 +46,10 @@ public class EMFModelServerModule extends AbstractModule {
 		ePackageConfigurationBinder = Multibinder.newSetBinder(binder(), EPackageConfiguration.class);
 		bind(ResourceManager.class).in(Singleton.class);
 		bindEPackageConfigurations().forEach(c -> ePackageConfigurationBinder.addBinding().to(c));
+
+		bind(ModelServerController.class).in(Singleton.class);
+		Multibinder.newSetBinder(binder(), Routing.class).addBinding().to(ModelServerRouting.class).in(Singleton.class);
+		MapBinder.newMapBinder(binder(), EntrypointType.class, AppEntrypoint.class).addBinding(EntrypointType.REST).to(ModelServerEntrypoint.class);
 	}
 
 	protected Class<? extends ModelServer> bindModelServer() {
