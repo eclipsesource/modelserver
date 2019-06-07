@@ -35,7 +35,7 @@ public class ExampleServerLauncher {
 
 	private static Logger LOG = Logger.getLogger(ExampleServerLauncher.class);
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 		BasicConfigurator.configure();
 
 		final File workspaceRoot = new File(TEMP_DIR + "/" + WORKSPACE_ROOT);
@@ -51,13 +51,13 @@ public class ExampleServerLauncher {
 		launcher.start();
 	}
 
-	private static boolean setupTempTestWorkspace(File workspaceRoot) throws IOException {
+	private static boolean setupTempTestWorkspace(File workspaceRoot) {
 		boolean result = workspaceRoot.mkdirs();
-		result = ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + ECORE_TEST_FILE,
+		result &= ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + ECORE_TEST_FILE,
 				new File(workspaceRoot, ECORE_TEST_FILE));
-		result = result && ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + COFFEE_TEST_FILE,
+		result &= result && ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + COFFEE_TEST_FILE,
 				new File(workspaceRoot, COFFEE_TEST_FILE));
-		result = result && ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + JSON_TEST_FILE,
+		result &= result && ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + JSON_TEST_FILE,
 				new File(workspaceRoot, JSON_TEST_FILE));
 		return result;
 	}
