@@ -13,7 +13,7 @@
  *
  *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  *******************************************************************************/
-package com.eclipsesource.modelserver.emf.launch;
+package com.eclipsesource.modelserver.emf.common;
 
 import static io.javalin.apibuilder.ApiBuilder.crud;
 
@@ -22,7 +22,7 @@ import com.google.inject.Inject;
 
 import io.javalin.Javalin;
 
-public class ModelServerRouting extends Routing<ModelServerController> {
+public class ModelServerRouting extends Routing<ModelController> {
 
 	private Javalin javalin;
 

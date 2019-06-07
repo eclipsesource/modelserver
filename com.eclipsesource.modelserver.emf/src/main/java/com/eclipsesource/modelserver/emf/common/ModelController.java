@@ -13,7 +13,7 @@
  *
  *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  *******************************************************************************/
-package com.eclipsesource.modelserver.emf.launch;
+package com.eclipsesource.modelserver.emf.common;
 
 import java.util.Optional;
 
@@ -31,7 +31,7 @@ import io.javalin.Context;
 import io.javalin.apibuilder.CrudHandler;
 import io.javalin.json.JavalinJackson;
 
-public class ModelServerController implements CrudHandler {
+public class ModelController implements CrudHandler {
 
 	@Inject
 	private ResourceManager resourceManager;
@@ -40,7 +40,7 @@ public class ModelServerController implements CrudHandler {
 
 	private ResourceSet resourceSet= new ResourceSetImpl();
 	
-	public ModelServerController() {
+	public ModelController() {
 		JavalinJackson.configure(EMFJsonConverter.setupDefaultMapper());
 	}
 
