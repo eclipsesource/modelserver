@@ -18,8 +18,7 @@ package com.eclipsesource.modelserver.emf.launch;
 import java.util.Collections;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.eclipsesource.modelserver.common.AppEntryPoint;
 import com.eclipsesource.modelserver.common.Routing;
@@ -31,9 +30,8 @@ import io.javalin.JavalinEvent;
 public class ModelServerEntryPoint implements AppEntryPoint {
 	
 	private Javalin app;
-	private static final Logger LOG = LoggerFactory.getLogger(ModelServerLauncher.class);
+	private static final Logger LOG = Logger.getLogger(ModelServerLauncher.class);
 
-	@SuppressWarnings("rawtypes")
 	@Inject(optional = true)
 	private Set<Routing> routes = Collections.emptySet();
 
@@ -53,6 +51,6 @@ public class ModelServerEntryPoint implements AppEntryPoint {
 	}
 
 	private void bindRoutes() {
-		routes.forEach(r -> r.bindRoutes());
+		routes.forEach(Routing::bindRoutes);
 	}
 }
