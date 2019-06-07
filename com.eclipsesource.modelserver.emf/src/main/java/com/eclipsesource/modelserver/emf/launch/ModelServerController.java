@@ -61,8 +61,7 @@ public class ModelServerController implements CrudHandler {
 
 	@Override
 	public void getOne(Context ctx, String modeluri) {
-		EObject model= loadModel(modeluri);
-		ctx.json(model);
+		loadModel(modeluri).map(ctx::json).orElse(ctx.status(404));
 	}
 
 	@Override
@@ -70,14 +69,13 @@ public class ModelServerController implements CrudHandler {
 		// TODO Auto-generated method stub
 	}
 
-	private EObject loadModel(String filePath) {
+	private Optional<EObject> loadModel(String filePath) {
 		String baseURL = serverConfiguration.getWorkspaceRoot();
 		if (!filePath.startsWith(baseURL)) {
 			filePath = baseURL + "/" + filePath;
 		}
 
 		final URI uri = URI.createURI(filePath);
-		Optional<EObject> root = resourceManager.loadModel(uri, resourceSet, EObject.class);
-		return root.get();
+		return resourceManager.loadModel(uri, resourceSet, EObject.class);
 	}
 }

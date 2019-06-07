@@ -75,11 +75,11 @@ public class ResourceManager {
 	}
 
 	public Optional<Resource> loadResource(URI resourceURI, ResourceSet rs) {
-		Resource resource = rs.getResource(resourceURI, true);
 		try {
+			Resource resource = rs.getResource(resourceURI, true);
 			resource.load(Collections.EMPTY_MAP);
 			return Optional.of(resource);
-		} catch (final IOException e) {
+		} catch (final Throwable e) {
 			LOG.error("Could not load resource with URI: " + resourceURI);
 			return Optional.empty();
 		}
