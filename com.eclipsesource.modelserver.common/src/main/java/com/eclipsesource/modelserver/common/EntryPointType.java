@@ -15,6 +15,6 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.common;
 
-public enum EntrypointType {
+public enum EntryPointType {
 	REST
 }

@@ -17,7 +17,7 @@ package com.eclipsesource.modelserver.emf.launch;
 
 import java.util.Collection;
 
-import com.eclipsesource.modelserver.common.EntrypointType;
+import com.eclipsesource.modelserver.common.EntryPointType;
 import com.eclipsesource.modelserver.emf.configuration.EPackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
 import com.eclipsesource.modelserver.emf.di.ModelServerModule;
@@ -57,7 +57,7 @@ public class ModelServerLauncher {
 	}
 
 	protected void run() {
-		injector.getInstance(ModelServerStartup.class).boot(EntrypointType.REST, this.args);
+		injector.getInstance(ModelServerStartup.class).boot(EntryPointType.REST, this.args);
 	}
 
 	public void shutdown() {

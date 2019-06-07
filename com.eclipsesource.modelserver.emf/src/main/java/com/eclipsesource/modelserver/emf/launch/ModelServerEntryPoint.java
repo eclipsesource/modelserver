@@ -21,14 +21,14 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.eclipsesource.modelserver.common.AppEntrypoint;
+import com.eclipsesource.modelserver.common.AppEntryPoint;
 import com.eclipsesource.modelserver.common.Routing;
 import com.google.inject.Inject;
 
 import io.javalin.Javalin;
 import io.javalin.JavalinEvent;
 
-public class ModelServerEntrypoint implements AppEntrypoint {
+public class ModelServerEntryPoint implements AppEntryPoint {
 	
 	private Javalin app;
 	private static final Logger LOG = LoggerFactory.getLogger(ModelServerLauncher.class);
@@ -38,7 +38,7 @@ public class ModelServerEntrypoint implements AppEntrypoint {
 	private Set<Routing> routes = Collections.emptySet();
 
 	@Inject
-	public ModelServerEntrypoint(Javalin app) {
+	public ModelServerEntryPoint(Javalin app) {
 		this.app = app;
 	}
 

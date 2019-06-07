@@ -19,17 +19,17 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-import com.eclipsesource.modelserver.common.AppEntrypoint;
-import com.eclipsesource.modelserver.common.EntrypointType;
+import com.eclipsesource.modelserver.common.AppEntryPoint;
+import com.eclipsesource.modelserver.common.EntryPointType;
 import com.google.inject.Inject;
 
 public class ModelServerStartup {
 
 	@Inject(optional = true)
-	private Map<EntrypointType, AppEntrypoint> entrypoints = Collections.emptyMap();
+	private Map<EntryPointType, AppEntryPoint> entryPoints = Collections.emptyMap();
 
-	public void boot(EntrypointType entrypointType, String[] args) {
-		Optional<AppEntrypoint> entryPoint = Optional.ofNullable(entrypoints.get(entrypointType));
-		entryPoint.orElseThrow(() -> new RuntimeException("Entrypoint not defined")).boot(args);;
+	public void boot(EntryPointType entryPointType, String[] args) {
+		Optional<AppEntryPoint> entryPoint = Optional.ofNullable(entryPoints.get(entryPointType));
+		entryPoint.orElseThrow(() -> new RuntimeException("EntryPoint not defined")).boot(args);
 	}
 }
