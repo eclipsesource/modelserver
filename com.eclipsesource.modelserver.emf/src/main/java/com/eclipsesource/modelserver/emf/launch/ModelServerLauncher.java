@@ -15,11 +15,12 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.launch;
 
-import java.net.URL;
 import java.util.Collection;
 
 import com.eclipsesource.modelserver.common.EntrypointType;
+import com.eclipsesource.modelserver.emf.configuration.EPackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
+import com.eclipsesource.modelserver.emf.di.ModelServerModule;
 import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -34,10 +35,6 @@ public class ModelServerLauncher {
 
 	public ModelServerLauncher() {
 		modules = Sets.newHashSet(ModelServerModule.create());
-	}
-
-	public ModelServerLauncher(URL workspaceRoot) {
-		this();
 	}
 
 	public ModelServerLauncher(String[] args) {
@@ -67,8 +64,10 @@ public class ModelServerLauncher {
 
 	}
 
-	public void addModules(Collection<Module> modules) {
-		this.modules.addAll(modules);
+	public void addEPackageConfigurations(Collection<Class<? extends EPackageConfiguration>> configs) {
+		this.modules.forEach(m -> {
+			((ModelServerModule) m).addEPackageConfigurations(configs);
+		});
 	}
 
 	public Collection<? extends Module> getModules() {

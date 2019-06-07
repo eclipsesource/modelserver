@@ -22,7 +22,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
-import com.eclipsesource.modelserver.emf.ModelServer;
 import com.eclipsesource.modelserver.emf.launch.ModelServerLauncher;
 import com.eclipsesource.modelserver.example.util.ResourceUtil;
 import com.google.common.collect.Lists;
@@ -40,21 +39,17 @@ public class ExampleServerLauncher {
 	public static void main(String[] args) throws IOException {
 		BasicConfigurator.configure();
 
-		final ModelServerLauncher launcher = new ModelServerLauncher(args);
 		final File workspaceRoot = new File(TEMP_DIR + "/" + WORKSPACE_ROOT);
 		if (!setupTempTestWorkspace(workspaceRoot)) {
 			LOG.error("Could not setup test workspace");
 			System.exit(0);
 		}
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> cleanupTempTestWorkspace(workspaceRoot)));
+
+		final ModelServerLauncher launcher = new ModelServerLauncher(args);
 		launcher.setWorkspaceRoot(workspaceRoot.getAbsolutePath());
-		launcher.addModules(Lists.newArrayList(new ExampleModelServerModule()));
+		launcher.addEPackageConfigurations(Lists.newArrayList(CoffeePackageConfiguration.class));
 		launcher.start();
-
-		final ModelServer server = launcher.getInjector().getInstance(ModelServer.class);
-		server.initialize();
-		server.loadModel(ECORE_TEST_FILE);
-
 	}
 
 	private static boolean setupTempTestWorkspace(File workspaceRoot) throws IOException {

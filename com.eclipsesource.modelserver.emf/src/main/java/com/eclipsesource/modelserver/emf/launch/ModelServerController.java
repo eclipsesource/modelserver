@@ -29,19 +29,19 @@ import com.google.inject.Inject;
 
 import io.javalin.Context;
 import io.javalin.apibuilder.CrudHandler;
+import io.javalin.json.JavalinJackson;
 
 public class ModelServerController implements CrudHandler {
 
 	@Inject
 	private ResourceManager resourceManager;
-	@Inject 
-	private EMFJsonConverter emfJsonConverter;
 	@Inject
 	private ServerConfiguration serverConfiguration;
 
 	private ResourceSet resourceSet= new ResourceSetImpl();
 	
 	public ModelServerController() {
+		JavalinJackson.configure(EMFJsonConverter.setupDefaultMapper());
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class ModelServerController implements CrudHandler {
 	@Override
 	public void getOne(Context ctx, String modeluri) {
 		EObject model= loadModel(modeluri);
-		ctx.json(emfJsonConverter.toJson(model).get());
+		ctx.json(model);
 	}
 
 	@Override

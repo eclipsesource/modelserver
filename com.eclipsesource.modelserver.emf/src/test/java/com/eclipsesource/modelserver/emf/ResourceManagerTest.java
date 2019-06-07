@@ -31,7 +31,7 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.eclipsesource.modelserver.emf.di.EMFModelServerModule;
+import com.eclipsesource.modelserver.emf.di.ModelServerModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -41,7 +41,7 @@ public class ResourceManagerTest extends AbstractResourceTest {
 
 	@BeforeClass
 	public static void beforeClass() {
-		Injector injector = Guice.createInjector(new EMFModelServerModule());
+		Injector injector = Guice.createInjector(ModelServerModule.create());
 		resourceManager = injector.getInstance(ResourceManager.class);
 	}
 
