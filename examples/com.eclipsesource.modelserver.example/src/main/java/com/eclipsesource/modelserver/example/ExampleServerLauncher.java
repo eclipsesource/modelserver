@@ -30,9 +30,8 @@ public class ExampleServerLauncher {
 	private static String TEMP_DIR = ".temp";
 	private static String WORKSPACE_ROOT = "workspace";
 	private static String ECORE_TEST_FILE = "Coffe.ecore";
-	private static String COFFEE_TEST_FILE = "SuperBrewer3000";
-	private static String COFFEE_XMI_TEST_FILE = COFFEE_TEST_FILE + ".xmi";
-	private static String COFFEE_JSON_TEST_FILE = COFFEE_TEST_FILE + ".json";
+	private static String COFFEE_TEST_FILE = "SuperBrewer3000.coffee";
+	private static String JSON_TEST_FILE = "SuperBrewer3000.json";
 
 	private static Logger LOG = Logger.getLogger(ExampleServerLauncher.class);
 
@@ -56,10 +55,10 @@ public class ExampleServerLauncher {
 		boolean result = workspaceRoot.mkdirs();
 		result = ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + ECORE_TEST_FILE,
 				new File(workspaceRoot, ECORE_TEST_FILE));
-		result = result && ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + COFFEE_XMI_TEST_FILE,
-				new File(workspaceRoot, COFFEE_XMI_TEST_FILE));
-		result = result && ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + COFFEE_JSON_TEST_FILE,
-				new File(workspaceRoot, COFFEE_JSON_TEST_FILE));
+		result = result && ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + COFFEE_TEST_FILE,
+				new File(workspaceRoot, COFFEE_TEST_FILE));
+		result = result && ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + JSON_TEST_FILE,
+				new File(workspaceRoot, JSON_TEST_FILE));
 		return result;
 	}
 

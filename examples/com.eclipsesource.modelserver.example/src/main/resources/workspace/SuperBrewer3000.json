@@ -1,38 +1,29 @@
 {
-  "name": "Super Brewer 3000",
-  "children": [
-    {
-      "eClass": "http://www.eclipse.org/emfforms/example/coffeemodel#//BrewingUnit",
-      "activities": [
-        {
-          "name": "Preheat"
-        },
-        {
-          "name": "Brew"
-        }
-      ],
-      "children": [
-        {
-          "eClass": "http://www.eclipse.org/emfforms/example/coffeemodel#//ControlUnit",
-          "processor": {
-            "vendor": "Qualcomm",
-            "socketconnectorType": "Z51",
-            "manufactoringProcess": "nm18",
-            "clockSpeed": 5,
-            "numberOfCores": 10,
-            "thermalDesignPower": 1000
-          },
-          "display": {
-            "width": 10,
-            "height": 20
-          },
-          "dimension": {
-            "width": 10,
-            "height": 12,
-            "length": 13
-          }
-        }
-      ]
+  "eClass" : "http://www.eclipsesource.com/emfforms/example/coffeemodel#//Machine",
+  "children" : [ {
+    "eClass" : "http://www.eclipsesource.com/emfforms/example/coffeemodel#//BrewingUnit"
+  }, {
+    "eClass" : "http://www.eclipsesource.com/emfforms/example/coffeemodel#//ControlUnit",
+    "processor" : {
+      "clockSpeed" : 5,
+      "numberOfCores" : 10,
+      "socketconnectorType" : "Z51",
+      "thermalDesignPower" : 100
+    },
+    "display" : {
+      "width" : 10,
+      "height" : 20
     }
-  ]
+  } ],
+  "name" : "Super Brewer 3000",
+  "workflows" : [ {
+    "nodes" : [ {
+      "eClass" : "http://www.eclipsesource.com/emfforms/example/coffeemodel#//AutomaticTask",
+      "name" : "PreHeat",
+      "component" : {
+        "eClass" : "http://www.eclipsesource.com/emfforms/example/coffeemodel#//BrewingUnit",
+        "$ref" : "//@children.0"
+      }
+    } ]
+  } ]
 }

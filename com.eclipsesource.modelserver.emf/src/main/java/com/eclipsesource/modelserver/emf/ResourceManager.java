@@ -48,7 +48,7 @@ public class ResourceManager {
 	public ResourceManager(Set<EPackageConfiguration> configurations) {
 		this.configurations = configurations;
 		registerExtensions(configurations);
-
+		initialize();
 	}
 
 	public void initialize() {

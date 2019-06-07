@@ -1,8 +1,8 @@
 {
   "eClass" : "http://www.eclipse.org/emf/2002/Ecore#//EPackage",
   "name" : "coffee",
-  "nsURI" : "http://www.eclipse.org/emfforms/example/coffeemodel",
-  "nsPrefix" : "org.eclipse.emfforms.coffee.model",
+  "nsURI" : "http://www.eclipsesource.com/emfforms/example/coffeemodel",
+  "nsPrefix" : "com.eclipsesource.emfforms.coffee.model",
   "eClassifiers" : [ {
     "eClass" : "http://www.eclipse.org/emf/2002/Ecore#//EClass",
     "name" : "Component",
