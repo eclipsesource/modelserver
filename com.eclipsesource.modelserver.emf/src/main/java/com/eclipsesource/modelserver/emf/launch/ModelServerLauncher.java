@@ -33,6 +33,8 @@ public class ModelServerLauncher {
 	private String workspaceRoot;
 	private String[] args;
 
+	private static final int DEFAULT_JAVALIN_PORT = 8081;
+
 	public ModelServerLauncher() {
 		modules = Sets.newHashSet(ModelServerModule.create());
 	}
@@ -57,7 +59,9 @@ public class ModelServerLauncher {
 	}
 
 	protected void run() {
-		injector.getInstance(ModelServerStartup.class).boot(EntryPointType.REST, this.args);
+		int port = args.length > 0 ? Integer.parseInt(args[0].split("=")[1]) : DEFAULT_JAVALIN_PORT;
+
+		injector.getInstance(ModelServerStartup.class).boot(EntryPointType.REST, port);
 	}
 
 	public void shutdown() {

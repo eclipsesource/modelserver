@@ -28,8 +28,8 @@ public class ModelServerStartup {
 	@Inject(optional = true)
 	private Map<EntryPointType, AppEntryPoint> entryPoints = Collections.emptyMap();
 
-	public void boot(EntryPointType entryPointType, String[] args) {
+	public void boot(EntryPointType entryPointType, int port) {
 		Optional<AppEntryPoint> entryPoint = Optional.ofNullable(entryPoints.get(entryPointType));
-		entryPoint.orElseThrow(() -> new RuntimeException("EntryPoint not defined")).boot(args);
+		entryPoint.orElseThrow(() -> new RuntimeException("EntryPoint not defined")).boot(port);
 	}
 }

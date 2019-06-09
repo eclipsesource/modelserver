@@ -40,10 +40,11 @@ public class ModelServerEntryPoint implements AppEntryPoint {
 		this.app = app;
 	}
 
-	public void boot(String[] args) {
+	public void boot(int port) {
 		bindRoutes();
+		
 		app.event(JavalinEvent.SERVER_START_FAILED, () -> LOG.error("SERVER START FAILED"))
-			.port(8081)
+			.port(port)
 			.requestLogger((ctx, timeMs) -> {
 				LOG.info(ctx.method() + " "  + ctx.path() + " took " + timeMs + " ms");
 			})
