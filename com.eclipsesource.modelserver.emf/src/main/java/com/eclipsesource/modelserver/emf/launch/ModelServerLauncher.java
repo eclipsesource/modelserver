@@ -17,6 +17,8 @@ package com.eclipsesource.modelserver.emf.launch;
 
 import java.util.Collection;
 
+import org.apache.log4j.Logger;
+
 import com.eclipsesource.modelserver.common.EntryPointType;
 import com.eclipsesource.modelserver.emf.configuration.EPackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
@@ -32,6 +34,9 @@ public class ModelServerLauncher {
 	private Injector injector;
 	private String workspaceRoot;
 	private String[] args;
+	private static final Logger LOG = Logger.getLogger("ModelServer");
+
+	public static final int DEFAULT_JAVALIN_PORT = 8081;
 
 	public ModelServerLauncher() {
 		modules = Sets.newHashSet(ModelServerModule.create());
@@ -57,7 +62,35 @@ public class ModelServerLauncher {
 	}
 
 	protected void run() {
-		injector.getInstance(ModelServerStartup.class).boot(EntryPointType.REST, this.args);
+		int port = DEFAULT_JAVALIN_PORT;
+		
+		if (args.length > 0) {
+			String usageHint = " Please refer to the documentation for details (README.md).";
+			
+			String argument = args[0];
+			String[] arr = argument.split("=");
+			try {
+				String parameter = arr[0];
+				if (!parameter.equals("--port"))
+					throw new IllegalArgumentException();
+				
+				port = Integer.parseInt(arr[1]);
+				if (port < 0 || port > 65535) {
+					port = DEFAULT_JAVALIN_PORT;
+					throw new NumberFormatException();
+				}
+				
+				if (args.length > 1) {
+					LOG.warn("Additional arguments are not supported yet." + usageHint);
+				}
+			} catch (NumberFormatException n) {
+				LOG.error("'" + arr[1] + "' is not a valid port! The default port " + port + " is used." + usageHint);
+			} catch (ArrayIndexOutOfBoundsException | IllegalArgumentException e) {
+				LOG.error("'" + argument + "' is not a valid argument!" + usageHint);
+			}
+		}
+
+		injector.getInstance(ModelServerStartup.class).boot(EntryPointType.REST, port);
 	}
 
 	public void shutdown() {

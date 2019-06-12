@@ -30,7 +30,7 @@ import io.javalin.JavalinEvent;
 public class ModelServerEntryPoint implements AppEntryPoint {
 	
 	private Javalin app;
-	private static final Logger LOG = Logger.getLogger(ModelServerLauncher.class);
+	private static final Logger LOG = Logger.getLogger(ModelServerEntryPoint.class);
 
 	@Inject(optional = true)
 	private Set<Routing> routes = Collections.emptySet();
@@ -40,10 +40,11 @@ public class ModelServerEntryPoint implements AppEntryPoint {
 		this.app = app;
 	}
 
-	public void boot(String[] args) {
+	public void boot(int port) {
 		bindRoutes();
+		
 		app.event(JavalinEvent.SERVER_START_FAILED, () -> LOG.error("SERVER START FAILED"))
-			.port(8081)
+			.port(port)
 			.requestLogger((ctx, timeMs) -> {
 				LOG.info(ctx.method() + " "  + ctx.path() + " took " + timeMs + " ms");
 			})

@@ -16,5 +16,5 @@
 package com.eclipsesource.modelserver.common;
 
 public interface AppEntryPoint {
-	void boot(String[] args);
+	void boot(int port);
 }
