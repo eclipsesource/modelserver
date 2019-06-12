@@ -30,7 +30,7 @@ import io.javalin.JavalinEvent;
 public class ModelServerEntryPoint implements AppEntryPoint {
 	
 	private Javalin app;
-	private static final Logger LOG = Logger.getLogger(ModelServerLauncher.class);
+	private static final Logger LOG = Logger.getLogger(ModelServerEntryPoint.class);
 
 	@Inject(optional = true)
 	private Set<Routing> routes = Collections.emptySet();
