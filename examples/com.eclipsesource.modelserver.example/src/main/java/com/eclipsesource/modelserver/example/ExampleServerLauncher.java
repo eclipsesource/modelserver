@@ -29,7 +29,7 @@ import com.google.common.collect.Lists;
 public class ExampleServerLauncher {
 	private static String TEMP_DIR = ".temp";
 	private static String WORKSPACE_ROOT = "workspace";
-	private static String ECORE_TEST_FILE = "Coffe.ecore";
+	private static String ECORE_TEST_FILE = "Coffee.ecore";
 	private static String COFFEE_TEST_FILE = "SuperBrewer3000.coffee";
 	private static String JSON_TEST_FILE = "SuperBrewer3000.json";
 
