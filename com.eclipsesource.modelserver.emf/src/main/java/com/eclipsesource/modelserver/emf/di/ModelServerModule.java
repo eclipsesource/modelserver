@@ -22,6 +22,7 @@ import com.eclipsesource.modelserver.common.AppEntryPoint;
 import com.eclipsesource.modelserver.common.EntryPointType;
 import com.eclipsesource.modelserver.common.Routing;
 import com.eclipsesource.modelserver.emf.ResourceManager;
+import com.eclipsesource.modelserver.emf.common.SchemaController;
 import com.eclipsesource.modelserver.emf.configuration.EPackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.EcorePackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
@@ -66,6 +67,7 @@ public class ModelServerModule extends AbstractModule {
 		bind(Javalin.class).toInstance(this.app);
 		bind(ModelServerStartup.class).in(Singleton.class);
 		bind(ModelController.class).in(Singleton.class);
+		bind(SchemaController.class).in(Singleton.class);
 		Multibinder.newSetBinder(binder(), Routing.class).addBinding().to(ModelServerRouting.class).in(Singleton.class);
 		MapBinder.newMapBinder(binder(), EntryPointType.class, AppEntryPoint.class).addBinding(EntryPointType.REST)
 				.to(ModelServerEntryPoint.class);

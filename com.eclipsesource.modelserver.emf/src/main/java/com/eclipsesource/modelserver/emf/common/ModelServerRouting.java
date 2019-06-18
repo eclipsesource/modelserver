@@ -16,13 +16,16 @@
 package com.eclipsesource.modelserver.emf.common;
 
 import static io.javalin.apibuilder.ApiBuilder.crud;
+import static io.javalin.apibuilder.ApiBuilder.path;
+import static io.javalin.apibuilder.ApiBuilder.get;
+
 
 import com.eclipsesource.modelserver.common.Routing;
 import com.google.inject.Inject;
 
 import io.javalin.Javalin;
 
-public class ModelServerRouting extends Routing<ModelController> {
+public class ModelServerRouting extends Routing {
 
 	private Javalin javalin;
 
@@ -34,7 +37,10 @@ public class ModelServerRouting extends Routing<ModelController> {
 	@Override
 	public void bindRoutes() {
 		javalin.routes(() -> {
-			crud("api/model/:modeluri", getController());
+			path("api/v1/", () -> {
+				crud("model/:modeluri", getController(ModelController.class));
+				get("schema/:modeluri", getController(SchemaController.class));
+			});
 		});
 	}
 }

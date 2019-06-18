@@ -38,7 +38,7 @@ public class ModelController implements CrudHandler {
 	@Inject
 	private ServerConfiguration serverConfiguration;
 
-	private ResourceSet resourceSet= new ResourceSetImpl();
+	private ResourceSet resourceSet = new ResourceSetImpl();
 	
 	public ModelController() {
 		JavalinJackson.configure(EMFJsonConverter.setupDefaultMapper());
