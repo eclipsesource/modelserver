@@ -15,32 +15,10 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import static io.javalin.apibuilder.ApiBuilder.crud;
-import static io.javalin.apibuilder.ApiBuilder.path;
-import static io.javalin.apibuilder.ApiBuilder.get;
+public class ModelSeverPath {
 
-import com.eclipsesource.modelserver.common.Routing;
-import com.google.inject.Inject;
+	public static final String INDEX = "index";
+	public static final String MODEL_URIS = "modeluris";
+	public static final String MODEL_CRUD = "models/:modeluri";
 
-import io.javalin.Javalin;
-
-public class ModelServerRouting extends Routing {
-
-	private Javalin javalin;
-
-	@Inject
-	public ModelServerRouting(Javalin javalin) {
-		this.javalin = javalin;
-	}
-
-	@Override
-	public void bindRoutes() {
-		javalin.routes(() -> {
-			path("api/v1/", () -> {
-				crud(ModelSeverPath.MODEL_CRUD, getController(ModelController.class));
-				get(ModelSeverPath.MODEL_URIS, getController(ModelController.class).getModelUris);
-				get("schema/:modeluri", getController(SchemaController.class));
-			});
-		});
-	}
 }

@@ -17,65 +17,75 @@ package com.eclipsesource.modelserver.emf.common;
 
 import java.util.Optional;
 
-import org.eclipse.emf.common.util.URI;
+import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.EStructuralFeature;
 
 import com.eclipsesource.modelserver.emf.EMFJsonConverter;
-import com.eclipsesource.modelserver.emf.ResourceManager;
-import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
 import com.google.inject.Inject;
 
-import io.javalin.Context;
 import io.javalin.apibuilder.CrudHandler;
-import io.javalin.json.JavalinJackson;
+import io.javalin.http.BadRequestResponse;
+import io.javalin.http.Context;
+import io.javalin.http.Handler;
+import io.javalin.plugin.json.JavalinJackson;
 
 public class ModelController implements CrudHandler {
 
-	@Inject
-	private ResourceManager resourceManager;
-	@Inject
-	private ServerConfiguration serverConfiguration;
+	private static final Logger LOG = Logger.getLogger(ModelController.class);
 
-	private ResourceSet resourceSet = new ResourceSetImpl();
-	
+	@Inject
+	private ModelRepository modelRepository;
+
 	public ModelController() {
 		JavalinJackson.configure(EMFJsonConverter.setupDefaultMapper());
 	}
 
 	@Override
 	public void create(Context ctx) {
-		// TODO Auto-generated method stub
+		try {
+			EObject model = ctx.bodyAsClass(EObject.class);
+			
+			EStructuralFeature name = model.eClass().getEStructuralFeature("name");
+			String modelUri = model.eGet(name).toString().replaceAll(" ", "");
+			
+			this.modelRepository.addModel(modelUri, model);
+		} catch (BadRequestResponse r) {
+			handleError(ctx, 400, r.getMessage());
+		} catch (NullPointerException e) {
+			handleError(ctx, 400, "Create new model failed: Model identifier (name) is missing");
+		}
 	}
 
 	@Override
 	public void delete(Context ctx, String modeluri) {
-		// TODO Auto-generated method stub
+		this.modelRepository.removeModel(modeluri);
 	}
 
 	@Override
 	public void getAll(Context ctx) {
-		// TODO Auto-generated method stub
+		ctx.json(this.modelRepository.getAllModels());
 	}
 
 	@Override
 	public void getOne(Context ctx, String modeluri) {
-		loadModel(modeluri).map(ctx::json).orElse(ctx.status(404));
+		Optional<Context> opt = this.modelRepository.getModel(modeluri).map(ctx::json);
+		if (!opt.isPresent())
+			handleError(ctx, 404, "Model not found!");
 	}
 
 	@Override
 	public void update(Context ctx, String modeluri) {
-		// TODO Auto-generated method stub
+		EObject model = ctx.bodyAsClass(EObject.class);
+		this.modelRepository.updateModel(modeluri, model);
 	}
 
-	private Optional<EObject> loadModel(String filePath) {
-		String baseURL = serverConfiguration.getWorkspaceRoot();
-		if (!filePath.startsWith(baseURL)) {
-			filePath = baseURL + "/" + filePath;
-		}
+	public Handler getModelUris = ctx -> {
+		ctx.json(this.modelRepository.getAllModelUris());
+	};
 
-		final URI uri = URI.createURI(filePath);
-		return resourceManager.loadModel(uri, resourceSet, EObject.class);
+	private void handleError(Context ctx, int statusCode, String errorMsg) {
+		LOG.error(errorMsg);
+		ctx.status(statusCode).result(errorMsg);
 	}
 }

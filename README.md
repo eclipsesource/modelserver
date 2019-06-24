@@ -27,9 +27,15 @@ For running the modelserver the default port is `8081`.
 To change the port, use the command line argument `--port=XXXX`.
 
 ## Use the modelserver API
-If the modelserver is up and running, you can access the modelserver API via `http://localhost:8081/api/model/:modeluri`.
+If the modelserver is up and running, you can access the modelserver API via `http://localhost:8081/api/v1/*`.
 
-The following example models can be requested and are returned as a whole in JSON format:
- - `/api/model/Coffe.ecore`
- - `/api/model/SuperBrewer3000.coffee`
- - `/api/model/SuperBrewer3000.json`
+The following table shows the current endpoints: 
+
+|Description|HTTP method|Path|Input|Examples
+|-|:-:|-|-|-
+|Get model|__GET__|`/api/model/:modeluri`|path parameter: `modeluri`| <ul><li>`/api/model/Coffee.ecore`</li><li>`/api/model/SuperBrewer3000.coffee`</li><li>`/api/model/SuperBrewer3000.json`</li></ul>
+|Get all loaded models|__GET__|`/api/v1/models`| -
+|Get all loaded model URIs|__GET__|`/api/v1/modeluris`| -
+|Create new model|__POST__|`/api/v1/models`|application/json
+|Update model|__PATCH__|`/api/v1/models/:modeluri`|path parameter: `modeluri` <br> application/json
+|Delete model|__DELETE__|`/api/v1/models/:modeluri`|path parameter: `modeluri`

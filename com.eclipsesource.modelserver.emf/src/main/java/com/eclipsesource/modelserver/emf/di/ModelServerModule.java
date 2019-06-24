@@ -18,6 +18,8 @@ package com.eclipsesource.modelserver.emf.di;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.log4j.Logger;
+
 import com.eclipsesource.modelserver.common.AppEntryPoint;
 import com.eclipsesource.modelserver.common.EntryPointType;
 import com.eclipsesource.modelserver.common.Routing;
@@ -41,6 +43,7 @@ import io.javalin.Javalin;
 public class ModelServerModule extends AbstractModule {
 
 	private Javalin app;
+	private static final Logger LOG = Logger.getLogger(ModelServerModule.class);
 	protected Multibinder<EPackageConfiguration> ePackageConfigurationBinder;
 	protected ArrayList<Class<? extends EPackageConfiguration>> ePackageConfigurations;
 
@@ -54,7 +57,11 @@ public class ModelServerModule extends AbstractModule {
 	}
 
 	public static ModelServerModule create() {
-		return new ModelServerModule(Javalin.create());
+		return new ModelServerModule(Javalin.create(config -> {
+			config.requestLogger((ctx, ms) -> {
+				LOG.info(ctx.method() + " "  + ctx.path() + " took " + ms + " ms");
+			});
+		}));
 	}
 
 	@Override

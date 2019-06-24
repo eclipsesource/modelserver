@@ -25,7 +25,6 @@ import com.eclipsesource.modelserver.common.Routing;
 import com.google.inject.Inject;
 
 import io.javalin.Javalin;
-import io.javalin.JavalinEvent;
 
 public class ModelServerEntryPoint implements AppEntryPoint {
 	
@@ -42,13 +41,11 @@ public class ModelServerEntryPoint implements AppEntryPoint {
 
 	public void boot(int port) {
 		bindRoutes();
-		
-		app.event(JavalinEvent.SERVER_START_FAILED, () -> LOG.error("SERVER START FAILED"))
-			.port(port)
-			.requestLogger((ctx, timeMs) -> {
-				LOG.info(ctx.method() + " "  + ctx.path() + " took " + timeMs + " ms");
+
+		app.events(event -> {
+				event.serverStartFailed(() -> LOG.error("SERVER START FAILED"));
 			})
-			.start();
+			.start(port);
 	}
 
 	private void bindRoutes() {
