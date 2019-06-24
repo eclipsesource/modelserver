@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
@@ -22,20 +23,22 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
 
 import com.eclipsesource.modelserver.emf.EMFJsonConverter;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 
 import io.javalin.apibuilder.CrudHandler;
-import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.plugin.json.JavalinJackson;
 
 public class ModelController implements CrudHandler {
 
-	private static final Logger LOG = Logger.getLogger(ModelController.class);
+	private static final Logger LOG = Logger.getLogger(ModelController.class.getSimpleName());
 
 	@Inject
 	private ModelRepository modelRepository;
+	@Inject
+	private SessionController sessionController;
 
 	public ModelController() {
 		JavalinJackson.configure(EMFJsonConverter.setupDefaultMapper());
@@ -43,52 +46,80 @@ public class ModelController implements CrudHandler {
 
 	@Override
 	public void create(Context ctx) {
-		try {
-			EObject model = ctx.bodyAsClass(EObject.class);
-			
-			EStructuralFeature name = model.eClass().getEStructuralFeature("name");
-			if (model.eGet(name) == null) {
+		readEObject(ctx).ifPresent(eObject -> {
+			EStructuralFeature name = eObject.eClass().getEStructuralFeature("name");
+			if (eObject.eGet(name) == null) {
 				handleError(ctx, 400, "Create new model failed: Model identifier (name) is missing");
 				return;
 			}
 			
-			String modelUri = model.eGet(name).toString().replaceAll(" ", "");
-			this.modelRepository.addModel(modelUri, model);
+			String modeluri = eObject.eGet(name).toString().replaceAll(" ", "");
+			this.modelRepository.addModel(modeluri, eObject);
+
+			ctx.json(JsonResponse.data(eObject));
 			
-		} catch (BadRequestResponse r) {
-			handleError(ctx, 400, r.getMessage());
-		}
+			this.sessionController.modelChanged(modeluri);
+		});
 	}
 
 	@Override
 	public void delete(Context ctx, String modeluri) {
-		this.modelRepository.removeModel(modeluri);
+		if (this.modelRepository.hasModel(modeluri)) {
+			this.modelRepository.removeModel(modeluri);
+			ctx.json(JsonResponse.confirm("Model '" + modeluri + "' successfully deleted"));
+			this.sessionController.modelDeleted(modeluri);
+		} else {
+			handleError(ctx, 404, "Model '" + modeluri + "' not found, cannot be deleted!");
+		}
 	}
 
 	@Override
 	public void getAll(Context ctx) {
-		ctx.json(this.modelRepository.getAllModels());
+		ctx.json(JsonResponse.data(this.modelRepository.getAllModels()));
 	}
 
 	@Override
 	public void getOne(Context ctx, String modeluri) {
-		Optional<Context> opt = this.modelRepository.getModel(modeluri).map(ctx::json);
-		if (!opt.isPresent())
-			handleError(ctx, 404, "Model not found!");
+		this.modelRepository.getModel(modeluri).ifPresentOrElse(
+				model -> ctx.json(JsonResponse.data(model)),
+				() -> handleError(ctx, 404, "Model '" + modeluri + "' not found!")
+		);
 	}
 
 	@Override
 	public void update(Context ctx, String modeluri) {
-		EObject model = ctx.bodyAsClass(EObject.class);
-		this.modelRepository.updateModel(modeluri, model);
+		readEObject(ctx).ifPresent(
+				eObject -> {
+					modelRepository.updateModel(modeluri, eObject);
+					ctx.json(JsonResponse.data(eObject));
+					sessionController.modelChanged(modeluri);
+				}
+		);
 	}
 
 	public Handler modelUrisHandler = ctx -> {
-		ctx.json(this.modelRepository.getAllModelUris());
+		ctx.json(JsonResponse.data(this.modelRepository.getAllModelUris()));
 	};
+
+	private Optional<EObject> readEObject(Context ctx) {
+		final EMFJsonConverter emfJsonConverter = new EMFJsonConverter();
+		
+		try {
+			JsonNode json = JavalinJackson.getObjectMapper().readTree(ctx.body());
+			String jsonData = json.get("data").toString();
+			if (jsonData.equals("{}")) {
+				handleError(ctx, 400, "Empty JSON");
+				return Optional.empty();
+			}
+			return emfJsonConverter.fromJson(jsonData);
+		} catch (IOException e) {
+			handleError(ctx, 400, "Invalid JSON");
+		}
+		return Optional.empty();
+	}
 
 	private void handleError(Context ctx, int statusCode, String errorMsg) {
 		LOG.error(errorMsg);
-		ctx.status(statusCode).result(errorMsg);
+		ctx.status(statusCode).json(JsonResponse.error(errorMsg));
 	}
 }

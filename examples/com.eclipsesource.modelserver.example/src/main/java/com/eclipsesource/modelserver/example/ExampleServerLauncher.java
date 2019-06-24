@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.UnrecognizedOptionException;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -36,12 +37,25 @@ public class ExampleServerLauncher {
 	private static String ECORE_TEST_FILE = "Coffee.ecore";
 	private static String COFFEE_TEST_FILE = "SuperBrewer3000.coffee";
 	private static String JSON_TEST_FILE = "SuperBrewer3000.json";
+	private static String PROCESS_NAME = "java -jar com.eclipsesource.modelserver.example-X.X.X-SNAPSHOT-standalone.jar";
 
-	private static Logger LOG = Logger.getLogger(ExampleServerLauncher.class);
+	private static Logger LOG = Logger.getLogger(ExampleServerLauncher.class.getSimpleName());
 
 	public static void main(String[] args) throws ParseException {
 		BasicConfigurator.configure();
-		CLIParser.create(args, CLIParser.getDefaultCLIOptions());
+		try {
+			CLIParser.create(args, CLIParser.getDefaultCLIOptions());
+		} catch (UnrecognizedOptionException e) {
+			LOG.error("Unrecognized command line argument(s) used!\n");
+			CLIParser.printHelp(PROCESS_NAME, CLIParser.getDefaultCLIOptions());
+			return;
+		}
+
+		if (CLIParser.getInstance().optionExists("h")) {
+			CLIParser.getInstance().printHelp(PROCESS_NAME);
+			return;
+		}
+
 		Logger root = Logger.getRootLogger();
 		if (CLIParser.getInstance().optionExists("e")) {
 			root.setLevel(Level.ERROR);
@@ -60,7 +74,6 @@ public class ExampleServerLauncher {
 			args = Arrays.copyOf(args, args.length + 1);
 			args[args.length - 1] = "--root=" + workspaceRoot.toURI();
 			CLIParser.create(args, CLIParser.getDefaultCLIOptions());
-
 		}
 
 		final ModelServerLauncher launcher = new ModelServerLauncher(args);

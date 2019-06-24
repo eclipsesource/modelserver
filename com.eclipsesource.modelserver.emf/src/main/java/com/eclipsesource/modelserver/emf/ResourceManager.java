@@ -41,7 +41,7 @@ import com.google.inject.Inject;
  *
  */
 public class ResourceManager {
-	private static Logger LOG = Logger.getLogger(ResourceManager.class);
+	private static Logger LOG = Logger.getLogger(ResourceManager.class.getSimpleName());
 	private Set<EPackageConfiguration> configurations;
 
 	@Inject

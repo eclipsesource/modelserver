@@ -88,13 +88,18 @@ public class CLIParser {
 	}
 
 	public void printHelp(String processName) {
+		CLIParser.printHelp(processName, this.options);
+	}
+
+	public static void printHelp(String processName, Options options) {
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("processName", options);
+		formatter.printHelp(85, processName, "\noptions:", options, "", true);
 	}
 
 	public static Options getDefaultCLIOptions() {
 		Options options = new Options();
-		options.addOption("p", "port", true, "Set server port");
+		options.addOption("h", "help", false, "Display usage information about ModelServer");
+		options.addOption("p", "port", true, "Set server port, otherwise default port 8081 is used");
 		options.addOption("r", "root", true, "Set workspace root");
 		options.addOption("e", "errorsOnly", false, "Only log errors");
 		return options;

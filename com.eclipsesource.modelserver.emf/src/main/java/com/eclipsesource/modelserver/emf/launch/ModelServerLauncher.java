@@ -31,7 +31,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 public class ModelServerLauncher {
-	private static final Logger LOG = LoggerFactory.getLogger(ModelServerLauncher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ModelServerLauncher.class.getSimpleName());
 	public static final int DEFAULT_JAVALIN_PORT = 8081;
 
 	private Collection<Module> modules;

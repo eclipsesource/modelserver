@@ -25,8 +25,10 @@ import com.eclipsesource.modelserver.common.EntryPointType;
 import com.eclipsesource.modelserver.common.Routing;
 import com.eclipsesource.modelserver.emf.ResourceManager;
 import com.eclipsesource.modelserver.emf.common.ModelController;
+import com.eclipsesource.modelserver.emf.common.ModelRepository;
 import com.eclipsesource.modelserver.emf.common.ModelServerRouting;
 import com.eclipsesource.modelserver.emf.common.SchemaController;
+import com.eclipsesource.modelserver.emf.common.SessionController;
 import com.eclipsesource.modelserver.emf.configuration.EPackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.EcorePackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
@@ -43,7 +45,7 @@ import io.javalin.Javalin;
 public class ModelServerModule extends AbstractModule {
 
 	private Javalin app;
-	private static final Logger LOG = Logger.getLogger(ModelServerModule.class);
+	private static final Logger LOG = Logger.getLogger(ModelServerModule.class.getSimpleName());
 	protected Multibinder<EPackageConfiguration> ePackageConfigurationBinder;
 	protected ArrayList<Class<? extends EPackageConfiguration>> ePackageConfigurations;
 
@@ -60,7 +62,13 @@ public class ModelServerModule extends AbstractModule {
 		return new ModelServerModule(Javalin.create(config -> {
 			config.enableCorsForAllOrigins();
 			config.requestLogger((ctx, ms) -> {
-				LOG.info(ctx.method() + " " + ctx.path() + " took " + ms + " ms");
+				LOG.info(ctx.method() + " "  + ctx.path() + " -> Status: " + ctx.status() + " (took " + ms + " ms)");
+			});
+			config.wsLogger(ws -> {
+				ws.onConnect(ctx -> LOG.info("WS Connected: " + ctx.getSessionId()));
+				ws.onMessage(ctx -> LOG.info("WS Received: " + ctx.message() + " by " + ctx.getSessionId()));
+				ws.onClose(ctx -> LOG.info("WS Closed: " + ctx.getSessionId()));
+				ws.onError(ctx -> LOG.info("WS Error: " + ctx.getSessionId()));
 			});
 		}));
 	}
@@ -75,13 +83,15 @@ public class ModelServerModule extends AbstractModule {
 		bind(Javalin.class).toInstance(this.app);
 		bind(ModelServerStartup.class).in(Singleton.class);
 		bind(ModelController.class).in(Singleton.class);
+		bind(ModelRepository.class).in(Singleton.class);
 		bind(SchemaController.class).in(Singleton.class);
+		bind(SessionController.class).in(Singleton.class);
 		Multibinder.newSetBinder(binder(), Routing.class).addBinding().to(ModelServerRouting.class).in(Singleton.class);
 		MapBinder.newMapBinder(binder(), EntryPointType.class, AppEntryPoint.class).addBinding(EntryPointType.REST)
 				.to(ModelServerEntryPoint.class);
 	}
 
 	public void addEPackageConfigurations(Collection<Class<? extends EPackageConfiguration>> configs) {
-		configs.forEach(c -> ePackageConfigurations.add(c));
+		ePackageConfigurations.addAll(configs);
 	}
 }

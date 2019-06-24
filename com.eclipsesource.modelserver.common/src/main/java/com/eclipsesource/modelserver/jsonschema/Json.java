@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import static java.util.Map.entry;
@@ -64,4 +65,29 @@ public class Json {
     public static TextNode text(String s) { return TextNode.valueOf(s); }
 
     public static BooleanNode bool(Boolean b) { return BooleanNode.valueOf(b); }
+
+    // based on https://stackoverflow.com/a/11459962
+    public static JsonNode merge(JsonNode mainNode, JsonNode updateNode) {
+
+        Iterator<String> fieldNames = updateNode.fieldNames();
+        while (fieldNames.hasNext()) {
+
+            String fieldName = fieldNames.next();
+            JsonNode jsonNode = mainNode.get(fieldName);
+
+            // if field exists and is an embedded object
+            if (jsonNode != null && jsonNode.isObject()) {
+                merge(jsonNode, updateNode.get(fieldName));
+            } else {
+                if (mainNode instanceof ObjectNode) {
+                    // Overwrite field
+                    JsonNode value = updateNode.get(fieldName);
+                    ((ObjectNode) mainNode).set(fieldName, value);
+                }
+            }
+
+        }
+
+        return mainNode;
+    }
 }

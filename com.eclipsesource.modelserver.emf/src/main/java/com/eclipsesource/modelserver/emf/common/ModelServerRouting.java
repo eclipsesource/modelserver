@@ -19,6 +19,7 @@ import static io.javalin.apibuilder.ApiBuilder.crud;
 import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.put;
+import static io.javalin.apibuilder.ApiBuilder.ws;
 
 import com.eclipsesource.modelserver.common.Routing;
 import com.google.inject.Inject;
@@ -37,12 +38,19 @@ public class ModelServerRouting extends Routing {
 	@Override
 	public void bindRoutes() {
 		javalin.routes(() -> {
-			path("api/v1/", () -> {
+			path("api/v1", () -> {
 				crud(ModelServerPaths.MODEL_CRUD, getController(ModelController.class));
 				get(ModelServerPaths.MODEL_URIS, getController(ModelController.class).modelUrisHandler);
 				get(ModelServerPaths.SCHEMA, getController(SchemaController.class));
 				put(ModelServerPaths.SERVER_CONFIGURE, getController(ServerController.class).configureHandler);
 				get(ModelServerPaths.SERVER_PING, getController(ServerController.class).pingHandler);
+
+				ws(ModelServerPaths.SUBSCRIPTION, wsHandler -> {
+					wsHandler.onConnect(ctx -> getController(SessionController.class).subscribe(ctx, ctx.pathParam("modeluri")));
+					wsHandler.onClose(ctx -> getController(SessionController.class).unsubscribe(ctx));
+					wsHandler.onError(ctx -> {});
+					wsHandler.onMessage(ctx -> {});
+				});
 			});
 		});
 	}

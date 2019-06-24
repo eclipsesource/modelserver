@@ -36,9 +36,9 @@ import com.google.inject.Inject;
  *
  */
 public class ModelRepository {
-	
+
 	private Map<URI, EObject> models;
-	
+
 	@Inject
 	private ServerConfiguration serverConfiguration;
 	@Inject
@@ -48,7 +48,12 @@ public class ModelRepository {
 
 	@Inject
 	public ModelRepository() {
-		this.models = new HashMap<URI, EObject>();
+		this.models = new HashMap<>();
+	}
+
+	boolean hasModel(String modeluri) {
+		final URI uri = getWorkspaceUri(modeluri);
+		return models.containsKey(uri);
 	}
 
 	public Optional<EObject> getModel(String modeluri) {
@@ -62,7 +67,7 @@ public class ModelRepository {
 	public void addModel(String modeluri, EObject model) {
 		this.models.put(getWorkspaceUri(modeluri), model);
 	}
-	
+
 	public void updateModel(String modeluri, EObject model) {
 		this.models.put(getWorkspaceUri(modeluri), model);
 	}
@@ -70,13 +75,13 @@ public class ModelRepository {
 	public void removeModel(String modeluri) {
 		this.models.remove(getWorkspaceUri(modeluri));
 	}
-	
+
 	public Set<String> getAllModelUris() {
-		Set<String> modelUris = new HashSet<String>();
+		Set<String> modeluris = new HashSet<>();
 		for(URI uri: this.models.keySet()){
-			modelUris.add(uri.toString());
+			modeluris.add(uri.toString());
 		}
-		return modelUris;
+		return modeluris;
 	}
 
 	private Optional<EObject> loadModel(String modeluri) {

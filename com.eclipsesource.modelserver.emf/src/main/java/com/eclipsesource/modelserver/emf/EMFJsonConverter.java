@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class EMFJsonConverter {
-	private static Logger LOG = Logger.getLogger(EMFJsonConverter.class);
+	private static Logger LOG = Logger.getLogger(EMFJsonConverter.class.getSimpleName());
 
 	public static ObjectMapper setupDefaultMapper() {
 		return EMFJsonConverter.setupDefaultMapper(null);
@@ -67,7 +67,8 @@ public class EMFJsonConverter {
 
 	public <T extends EObject> Optional<T> fromJson(String json, Class<T> clazz) {
 		try {
-			return Optional.of(mapper.readValue(json, clazz)).map(clazz::cast);
+			final T t = mapper.readValue(json, clazz);
+			return Optional.of(t).map(clazz::cast);
 		} catch (IOException | ClassCastException e) {
 			LOG.error(String.format("The json input \"%s\" could not be converted to an EObject of type \"%s\"", json,
 					clazz.getSimpleName()));
@@ -86,5 +87,4 @@ public class EMFJsonConverter {
 	public void setMapper(ObjectMapper mapper) {
 		this.mapper = mapper;
 	}
-
 }
