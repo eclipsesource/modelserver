@@ -52,6 +52,7 @@ public class ExampleServerLauncher {
 	}
 
 	private static boolean setupTempTestWorkspace(File workspaceRoot) {
+		cleanupTempTestWorkspace(workspaceRoot);
 		boolean result = workspaceRoot.mkdirs();
 		result &= ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + ECORE_TEST_FILE,
 				new File(workspaceRoot, ECORE_TEST_FILE));
