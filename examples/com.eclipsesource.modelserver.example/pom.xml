@@ -35,9 +35,7 @@
 		<profile>
 			<id>fatjar</id>
 			<activation>
-				<property>
-					<name>fatjar</name>
-				</property>
+				<activeByDefault>true</activeByDefault>
 			</activation>
 			<build>
 				<plugins>

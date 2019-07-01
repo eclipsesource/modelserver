@@ -6,7 +6,7 @@ mvn clean install
 ```
 To build the modelserver as standalone JAR execute the following maven goal in the root directory:
 ```bash
-mvn clean install -Pfatjar
+mvn clean install
 ```
 
 
