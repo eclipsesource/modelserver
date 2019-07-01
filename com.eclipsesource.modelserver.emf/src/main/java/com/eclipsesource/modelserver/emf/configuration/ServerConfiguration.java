@@ -15,6 +15,8 @@
  ********************************************************************************/
 package com.eclipsesource.modelserver.emf.configuration;
 
+import com.eclipsesource.modelserver.emf.launch.ModelServerLauncher;
+
 /**
  * Singleton class that holds configurations parameters for a model server
  * instance
@@ -22,6 +24,7 @@ package com.eclipsesource.modelserver.emf.configuration;
  */
 public class ServerConfiguration {
 	private String workspaceRoot;
+	private int serverPort = ModelServerLauncher.DEFAULT_JAVALIN_PORT;
 
 	public String getWorkspaceRoot() {
 		return workspaceRoot;
@@ -29,6 +32,14 @@ public class ServerConfiguration {
 
 	public void setWorkspaceRoot(String workspaceRoot) {
 		this.workspaceRoot = workspaceRoot;
+	}
+
+	public int getServerPort() {
+		return serverPort;
+	}
+
+	public void setServerPort(int serverPort) {
+		this.serverPort = serverPort;
 	}
 
 }

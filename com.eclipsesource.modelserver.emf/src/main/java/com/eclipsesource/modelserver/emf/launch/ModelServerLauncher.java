@@ -17,7 +17,9 @@ package com.eclipsesource.modelserver.emf.launch;
 
 import java.util.Collection;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.cli.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.eclipsesource.modelserver.common.EntryPointType;
 import com.eclipsesource.modelserver.emf.configuration.EPackageConfiguration;
@@ -29,17 +31,17 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 public class ModelServerLauncher {
+	private static final Logger LOG = LoggerFactory.getLogger(ModelServerLauncher.class);
+	public static final int DEFAULT_JAVALIN_PORT = 8081;
 
 	private Collection<Module> modules;
 	private Injector injector;
-	private String workspaceRoot;
 	private String[] args;
-	private static final Logger LOG = Logger.getLogger("ModelServer");
-
-	public static final int DEFAULT_JAVALIN_PORT = 8081;
+	private ServerConfiguration configuration;
 
 	public ModelServerLauncher() {
 		modules = Sets.newHashSet(ModelServerModule.create());
+
 	}
 
 	public ModelServerLauncher(String[] args) {
@@ -49,8 +51,7 @@ public class ModelServerLauncher {
 
 	protected Injector doSetup() {
 		Injector injector = Guice.createInjector(modules);
-		ServerConfiguration configuration = injector.getInstance(ServerConfiguration.class);
-		configuration.setWorkspaceRoot(workspaceRoot);
+		this.configuration = injector.getInstance(ServerConfiguration.class);
 		return injector;
 	}
 
@@ -62,35 +63,24 @@ public class ModelServerLauncher {
 	}
 
 	protected void run() {
-		int port = DEFAULT_JAVALIN_PORT;
-		
-		if (args.length > 0) {
-			String usageHint = " Please refer to the documentation for details (README.md).";
-			
-			String argument = args[0];
-			String[] arr = argument.split("=");
+		if (parseCLIArguments(args)) {
+			injector.getInstance(ModelServerStartup.class).boot(EntryPointType.REST, configuration.getServerPort());
+		}
+	}
+
+	protected boolean parseCLIArguments(String[] args) {
+		if (CLIParser.initialized()) {
+			CLIParser parser = CLIParser.getInstance();
 			try {
-				String parameter = arr[0];
-				if (!parameter.equals("--port"))
-					throw new IllegalArgumentException();
-				
-				port = Integer.parseInt(arr[1]);
-				if (port < 0 || port > 65535) {
-					port = DEFAULT_JAVALIN_PORT;
-					throw new NumberFormatException();
-				}
-				
-				if (args.length > 1) {
-					LOG.warn("Additional arguments are not supported yet." + usageHint);
-				}
-			} catch (NumberFormatException n) {
-				LOG.error("'" + arr[1] + "' is not a valid port! The default port " + port + " is used." + usageHint);
-			} catch (ArrayIndexOutOfBoundsException | IllegalArgumentException e) {
-				LOG.error("'" + argument + "' is not a valid argument!" + usageHint);
+				configuration.setServerPort(parser.parsePort());
+				parser.parseWorkspaceRoot().ifPresent(configuration::setWorkspaceRoot);
+				return true;
+			} catch (ParseException e) {
+				LOG.error(e.getMessage(), e);
+				parser.printHelp("ModelServerLauncher");
 			}
 		}
-
-		injector.getInstance(ModelServerStartup.class).boot(EntryPointType.REST, port);
+		return false;
 	}
 
 	public void shutdown() {
@@ -107,16 +97,7 @@ public class ModelServerLauncher {
 		return modules;
 	}
 
-	public String getWorkspaceRoot() {
-		return workspaceRoot;
-	}
-
-	public void setWorkspaceRoot(String workspaceRoot) {
-		this.workspaceRoot = workspaceRoot;
-	}
-
 	public Injector getInjector() {
 		return injector;
 	}
-
 }
