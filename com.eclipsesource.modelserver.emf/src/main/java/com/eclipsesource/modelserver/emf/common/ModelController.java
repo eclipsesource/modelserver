@@ -47,13 +47,16 @@ public class ModelController implements CrudHandler {
 			EObject model = ctx.bodyAsClass(EObject.class);
 			
 			EStructuralFeature name = model.eClass().getEStructuralFeature("name");
-			String modelUri = model.eGet(name).toString().replaceAll(" ", "");
+			if (model.eGet(name) == null) {
+				handleError(ctx, 400, "Create new model failed: Model identifier (name) is missing");
+				return;
+			}
 			
+			String modelUri = model.eGet(name).toString().replaceAll(" ", "");
 			this.modelRepository.addModel(modelUri, model);
+			
 		} catch (BadRequestResponse r) {
 			handleError(ctx, 400, r.getMessage());
-		} catch (NullPointerException e) {
-			handleError(ctx, 400, "Create new model failed: Model identifier (name) is missing");
 		}
 	}
 
@@ -80,7 +83,7 @@ public class ModelController implements CrudHandler {
 		this.modelRepository.updateModel(modeluri, model);
 	}
 
-	public Handler getModelUris = ctx -> {
+	public Handler modelUrisHandler = ctx -> {
 		ctx.json(this.modelRepository.getAllModelUris());
 	};
 

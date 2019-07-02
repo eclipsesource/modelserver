@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-public class ModelSeverPath {
+public class ModelSeverPaths {
 
 	public static final String INDEX = "index";
 	public static final String MODEL_URIS = "modeluris";

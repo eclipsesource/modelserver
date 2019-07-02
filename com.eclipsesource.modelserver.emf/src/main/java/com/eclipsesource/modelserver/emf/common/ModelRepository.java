@@ -52,8 +52,7 @@ public class ModelRepository {
 	}
 
 	public Optional<EObject> getModel(String modeluri) {
-		Optional<EObject> model = loadModel(modeluri);
-		return model;
+		return loadModel(modeluri);
 	}
 
 	public Set<Entry<URI, EObject>> getAllModels() {
@@ -82,7 +81,11 @@ public class ModelRepository {
 
 	private Optional<EObject> loadModel(String modeluri) {
 		final URI uri = getWorkspaceUri(modeluri);
-		this.models.computeIfAbsent(uri, m -> resourceManager.loadModel(m, resourceSet, EObject.class).orElse(null));
+		if (!this.models.containsKey(uri)) {
+			Optional<EObject> model = resourceManager.loadModel(uri, resourceSet, EObject.class);
+			if (model.isPresent())
+				this.models.put(uri, model.get());
+		}
 		return Optional.ofNullable(this.models.get(uri));
 	}
 

@@ -33,7 +33,7 @@ The following table shows the current endpoints:
 
 |Description|HTTP method|Path|Input|Examples
 |-|:-:|-|-|-
-|Get model|__GET__|`/api/model/:modeluri`|path parameter: `modeluri`| <ul><li>`/api/model/Coffee.ecore`</li><li>`/api/model/SuperBrewer3000.coffee`</li><li>`/api/model/SuperBrewer3000.json`</li></ul>
+|Get model|__GET__|`/api/v1/models/:modeluri`|path parameter: `modeluri`| <ul><li>`/api/v1/models/Coffee.ecore`</li><li>`/api/v1/models/SuperBrewer3000.coffee`</li><li>`/api/v1/models/SuperBrewer3000.json`</li></ul>
 |Get all loaded models|__GET__|`/api/v1/models`| -
 |Get all loaded model URIs|__GET__|`/api/v1/modeluris`| -
 |Create new model|__POST__|`/api/v1/models`|application/json

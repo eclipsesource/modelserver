@@ -37,8 +37,8 @@ public class ModelServerRouting extends Routing {
 	public void bindRoutes() {
 		javalin.routes(() -> {
 			path("api/v1/", () -> {
-				crud(ModelSeverPath.MODEL_CRUD, getController(ModelController.class));
-				get(ModelSeverPath.MODEL_URIS, getController(ModelController.class).getModelUris);
+				crud(ModelSeverPaths.MODEL_CRUD, getController(ModelController.class));
+				get(ModelSeverPaths.MODEL_URIS, getController(ModelController.class).modelUrisHandler);
 				get("schema/:modeluri", getController(SchemaController.class));
 			});
 		});
