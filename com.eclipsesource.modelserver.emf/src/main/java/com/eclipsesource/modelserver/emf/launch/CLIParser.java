@@ -25,7 +25,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 public class CLIParser {
-	public static int DEFAULT_SERVER_PORT = 8081;
 	private static CLIParser INSTANCE;
 	private CommandLine cmd;
 	private Options options;
@@ -59,7 +58,7 @@ public class CLIParser {
 	 */
 	public Integer parsePort() throws ParseException {
 		String portArg = cmd.getOptionValue("p");
-		int port = DEFAULT_SERVER_PORT;
+		int port = ModelServerLauncher.DEFAULT_JAVALIN_PORT;
 		if (portArg != null) {
 			try {
 				port = Integer.parseInt(portArg);
@@ -68,7 +67,7 @@ public class CLIParser {
 				}
 			} catch (NumberFormatException e) {
 				throw new ParseException(String.format("'%s' is not a valid port! The default port '%s' is used",
-						portArg, DEFAULT_SERVER_PORT));
+						portArg, ModelServerLauncher.DEFAULT_JAVALIN_PORT));
 			}
 		}
 
