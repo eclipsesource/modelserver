@@ -733,15 +733,14 @@ public interface CoffeePackage extends EPackage {
 
 	/**
 	 * The meta object id for the
-	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.impl.AutomaticTaskImpl
-	 * <em>Automatic Task</em>}' class. <!-- begin-user-doc --> <!-- end-user-doc
-	 * -->
+	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.impl.TaskImpl
+	 * <em>Task</em>}' class. <!-- begin-user-doc --> <!-- end-user-doc -->
 	 * 
-	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.AutomaticTaskImpl
-	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getAutomaticTask()
+	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.TaskImpl
+	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getTask()
 	 * @generated
 	 */
-	int AUTOMATIC_TASK = 12;
+	int TASK = 12;
 
 	/**
 	 * The feature id for the '<em><b>Name</b></em>' attribute. <!-- begin-user-doc
@@ -750,7 +749,64 @@ public interface CoffeePackage extends EPackage {
 	 * @generated
 	 * @ordered
 	 */
-	int AUTOMATIC_TASK__NAME = NODE_FEATURE_COUNT + 0;
+	int TASK__NAME = NODE_FEATURE_COUNT + 0;
+
+	/**
+	 * The feature id for the '<em><b>Duration</b></em>' attribute. <!--
+	 * begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 * @ordered
+	 */
+	int TASK__DURATION = NODE_FEATURE_COUNT + 1;
+
+	/**
+	 * The number of structural features of the '<em>Task</em>' class. <!--
+	 * begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 * @ordered
+	 */
+	int TASK_FEATURE_COUNT = NODE_FEATURE_COUNT + 2;
+
+	/**
+	 * The number of operations of the '<em>Task</em>' class. <!-- begin-user-doc
+	 * --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 * @ordered
+	 */
+	int TASK_OPERATION_COUNT = NODE_OPERATION_COUNT + 0;
+
+	/**
+	 * The meta object id for the
+	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.impl.AutomaticTaskImpl
+	 * <em>Automatic Task</em>}' class. <!-- begin-user-doc --> <!-- end-user-doc
+	 * -->
+	 * 
+	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.AutomaticTaskImpl
+	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getAutomaticTask()
+	 * @generated
+	 */
+	int AUTOMATIC_TASK = 13;
+
+	/**
+	 * The feature id for the '<em><b>Name</b></em>' attribute. <!-- begin-user-doc
+	 * --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 * @ordered
+	 */
+	int AUTOMATIC_TASK__NAME = TASK__NAME;
+
+	/**
+	 * The feature id for the '<em><b>Duration</b></em>' attribute. <!--
+	 * begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 * @ordered
+	 */
+	int AUTOMATIC_TASK__DURATION = TASK__DURATION;
 
 	/**
 	 * The feature id for the '<em><b>Component</b></em>' reference. <!--
@@ -759,7 +815,7 @@ public interface CoffeePackage extends EPackage {
 	 * @generated
 	 * @ordered
 	 */
-	int AUTOMATIC_TASK__COMPONENT = NODE_FEATURE_COUNT + 1;
+	int AUTOMATIC_TASK__COMPONENT = TASK_FEATURE_COUNT + 0;
 
 	/**
 	 * The number of structural features of the '<em>Automatic Task</em>' class.
@@ -768,7 +824,7 @@ public interface CoffeePackage extends EPackage {
 	 * @generated
 	 * @ordered
 	 */
-	int AUTOMATIC_TASK_FEATURE_COUNT = NODE_FEATURE_COUNT + 2;
+	int AUTOMATIC_TASK_FEATURE_COUNT = TASK_FEATURE_COUNT + 1;
 
 	/**
 	 * The number of operations of the '<em>Automatic Task</em>' class. <!--
@@ -777,7 +833,7 @@ public interface CoffeePackage extends EPackage {
 	 * @generated
 	 * @ordered
 	 */
-	int AUTOMATIC_TASK_OPERATION_COUNT = NODE_OPERATION_COUNT + 0;
+	int AUTOMATIC_TASK_OPERATION_COUNT = TASK_OPERATION_COUNT + 0;
 
 	/**
 	 * The meta object id for the
@@ -788,7 +844,7 @@ public interface CoffeePackage extends EPackage {
 	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getManualTask()
 	 * @generated
 	 */
-	int MANUAL_TASK = 13;
+	int MANUAL_TASK = 14;
 
 	/**
 	 * The feature id for the '<em><b>Name</b></em>' attribute. <!-- begin-user-doc
@@ -797,7 +853,25 @@ public interface CoffeePackage extends EPackage {
 	 * @generated
 	 * @ordered
 	 */
-	int MANUAL_TASK__NAME = NODE_FEATURE_COUNT + 0;
+	int MANUAL_TASK__NAME = TASK__NAME;
+
+	/**
+	 * The feature id for the '<em><b>Duration</b></em>' attribute. <!--
+	 * begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 * @ordered
+	 */
+	int MANUAL_TASK__DURATION = TASK__DURATION;
+
+	/**
+	 * The feature id for the '<em><b>Actor</b></em>' attribute. <!-- begin-user-doc
+	 * --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 * @ordered
+	 */
+	int MANUAL_TASK__ACTOR = TASK_FEATURE_COUNT + 0;
 
 	/**
 	 * The number of structural features of the '<em>Manual Task</em>' class. <!--
@@ -806,7 +880,7 @@ public interface CoffeePackage extends EPackage {
 	 * @generated
 	 * @ordered
 	 */
-	int MANUAL_TASK_FEATURE_COUNT = NODE_FEATURE_COUNT + 1;
+	int MANUAL_TASK_FEATURE_COUNT = TASK_FEATURE_COUNT + 1;
 
 	/**
 	 * The number of operations of the '<em>Manual Task</em>' class. <!--
@@ -815,7 +889,7 @@ public interface CoffeePackage extends EPackage {
 	 * @generated
 	 * @ordered
 	 */
-	int MANUAL_TASK_OPERATION_COUNT = NODE_OPERATION_COUNT + 0;
+	int MANUAL_TASK_OPERATION_COUNT = TASK_OPERATION_COUNT + 0;
 
 	/**
 	 * The meta object id for the
@@ -826,7 +900,7 @@ public interface CoffeePackage extends EPackage {
 	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getFork()
 	 * @generated
 	 */
-	int FORK = 14;
+	int FORK = 15;
 
 	/**
 	 * The number of structural features of the '<em>Fork</em>' class. <!--
@@ -855,7 +929,7 @@ public interface CoffeePackage extends EPackage {
 	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getJoin()
 	 * @generated
 	 */
-	int JOIN = 15;
+	int JOIN = 16;
 
 	/**
 	 * The number of structural features of the '<em>Join</em>' class. <!--
@@ -884,7 +958,7 @@ public interface CoffeePackage extends EPackage {
 	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getDecision()
 	 * @generated
 	 */
-	int DECISION = 16;
+	int DECISION = 17;
 
 	/**
 	 * The number of structural features of the '<em>Decision</em>' class. <!--
@@ -913,7 +987,7 @@ public interface CoffeePackage extends EPackage {
 	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getMerge()
 	 * @generated
 	 */
-	int MERGE = 17;
+	int MERGE = 18;
 
 	/**
 	 * The number of structural features of the '<em>Merge</em>' class. <!--
@@ -942,7 +1016,7 @@ public interface CoffeePackage extends EPackage {
 	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getFlow()
 	 * @generated
 	 */
-	int FLOW = 18;
+	int FLOW = 19;
 
 	/**
 	 * The feature id for the '<em><b>Source</b></em>' reference. <!--
@@ -989,7 +1063,7 @@ public interface CoffeePackage extends EPackage {
 	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getWeightedFlow()
 	 * @generated
 	 */
-	int WEIGHTED_FLOW = 19;
+	int WEIGHTED_FLOW = 20;
 
 	/**
 	 * The feature id for the '<em><b>Source</b></em>' reference. <!--
@@ -1046,7 +1120,7 @@ public interface CoffeePackage extends EPackage {
 	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getSocketConnectorType()
 	 * @generated
 	 */
-	int SOCKET_CONNECTOR_TYPE = 20;
+	int SOCKET_CONNECTOR_TYPE = 21;
 
 	/**
 	 * The meta object id for the
@@ -1058,7 +1132,7 @@ public interface CoffeePackage extends EPackage {
 	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getManufactoringProcess()
 	 * @generated
 	 */
-	int MANUFACTORING_PROCESS = 21;
+	int MANUFACTORING_PROCESS = 22;
 
 	/**
 	 * The meta object id for the
@@ -1069,7 +1143,7 @@ public interface CoffeePackage extends EPackage {
 	 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getRamType()
 	 * @generated
 	 */
-	int RAM_TYPE = 22;
+	int RAM_TYPE = 23;
 
 	/**
 	 * Returns the meta object for class
@@ -1510,6 +1584,41 @@ public interface CoffeePackage extends EPackage {
 
 	/**
 	 * Returns the meta object for class
+	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.Task <em>Task</em>}'.
+	 * <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @return the meta object for class '<em>Task</em>'.
+	 * @see com.eclipsesource.emfforms.coffee.model.coffee.Task
+	 * @generated
+	 */
+	EClass getTask();
+
+	/**
+	 * Returns the meta object for the attribute
+	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.Task#getName
+	 * <em>Name</em>}'. <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @return the meta object for the attribute '<em>Name</em>'.
+	 * @see com.eclipsesource.emfforms.coffee.model.coffee.Task#getName()
+	 * @see #getTask()
+	 * @generated
+	 */
+	EAttribute getTask_Name();
+
+	/**
+	 * Returns the meta object for the attribute
+	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.Task#getDuration
+	 * <em>Duration</em>}'. <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @return the meta object for the attribute '<em>Duration</em>'.
+	 * @see com.eclipsesource.emfforms.coffee.model.coffee.Task#getDuration()
+	 * @see #getTask()
+	 * @generated
+	 */
+	EAttribute getTask_Duration();
+
+	/**
+	 * Returns the meta object for class
 	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.AutomaticTask
 	 * <em>Automatic Task</em>}'. <!-- begin-user-doc --> <!-- end-user-doc -->
 	 * 
@@ -1518,18 +1627,6 @@ public interface CoffeePackage extends EPackage {
 	 * @generated
 	 */
 	EClass getAutomaticTask();
-
-	/**
-	 * Returns the meta object for the attribute
-	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.AutomaticTask#getName
-	 * <em>Name</em>}'. <!-- begin-user-doc --> <!-- end-user-doc -->
-	 * 
-	 * @return the meta object for the attribute '<em>Name</em>'.
-	 * @see com.eclipsesource.emfforms.coffee.model.coffee.AutomaticTask#getName()
-	 * @see #getAutomaticTask()
-	 * @generated
-	 */
-	EAttribute getAutomaticTask_Name();
 
 	/**
 	 * Returns the meta object for the reference
@@ -1556,15 +1653,15 @@ public interface CoffeePackage extends EPackage {
 
 	/**
 	 * Returns the meta object for the attribute
-	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.ManualTask#getName
-	 * <em>Name</em>}'. <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.ManualTask#getActor
+	 * <em>Actor</em>}'. <!-- begin-user-doc --> <!-- end-user-doc -->
 	 * 
-	 * @return the meta object for the attribute '<em>Name</em>'.
-	 * @see com.eclipsesource.emfforms.coffee.model.coffee.ManualTask#getName()
+	 * @return the meta object for the attribute '<em>Actor</em>'.
+	 * @see com.eclipsesource.emfforms.coffee.model.coffee.ManualTask#getActor()
 	 * @see #getManualTask()
 	 * @generated
 	 */
-	EAttribute getManualTask_Name();
+	EAttribute getManualTask_Actor();
 
 	/**
 	 * Returns the meta object for class
@@ -2060,6 +2157,33 @@ public interface CoffeePackage extends EPackage {
 
 		/**
 		 * The meta object literal for the
+		 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.impl.TaskImpl
+		 * <em>Task</em>}' class. <!-- begin-user-doc --> <!-- end-user-doc -->
+		 * 
+		 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.TaskImpl
+		 * @see com.eclipsesource.emfforms.coffee.model.coffee.impl.CoffeePackageImpl#getTask()
+		 * @generated
+		 */
+		EClass TASK = eINSTANCE.getTask();
+
+		/**
+		 * The meta object literal for the '<em><b>Name</b></em>' attribute feature.
+		 * <!-- begin-user-doc --> <!-- end-user-doc -->
+		 * 
+		 * @generated
+		 */
+		EAttribute TASK__NAME = eINSTANCE.getTask_Name();
+
+		/**
+		 * The meta object literal for the '<em><b>Duration</b></em>' attribute feature.
+		 * <!-- begin-user-doc --> <!-- end-user-doc -->
+		 * 
+		 * @generated
+		 */
+		EAttribute TASK__DURATION = eINSTANCE.getTask_Duration();
+
+		/**
+		 * The meta object literal for the
 		 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.impl.AutomaticTaskImpl
 		 * <em>Automatic Task</em>}' class. <!-- begin-user-doc --> <!-- end-user-doc
 		 * -->
@@ -2069,14 +2193,6 @@ public interface CoffeePackage extends EPackage {
 		 * @generated
 		 */
 		EClass AUTOMATIC_TASK = eINSTANCE.getAutomaticTask();
-
-		/**
-		 * The meta object literal for the '<em><b>Name</b></em>' attribute feature.
-		 * <!-- begin-user-doc --> <!-- end-user-doc -->
-		 * 
-		 * @generated
-		 */
-		EAttribute AUTOMATIC_TASK__NAME = eINSTANCE.getAutomaticTask_Name();
 
 		/**
 		 * The meta object literal for the '<em><b>Component</b></em>' reference
@@ -2098,12 +2214,12 @@ public interface CoffeePackage extends EPackage {
 		EClass MANUAL_TASK = eINSTANCE.getManualTask();
 
 		/**
-		 * The meta object literal for the '<em><b>Name</b></em>' attribute feature.
+		 * The meta object literal for the '<em><b>Actor</b></em>' attribute feature.
 		 * <!-- begin-user-doc --> <!-- end-user-doc -->
 		 * 
 		 * @generated
 		 */
-		EAttribute MANUAL_TASK__NAME = eINSTANCE.getManualTask_Name();
+		EAttribute MANUAL_TASK__ACTOR = eINSTANCE.getManualTask_Actor();
 
 		/**
 		 * The meta object literal for the
