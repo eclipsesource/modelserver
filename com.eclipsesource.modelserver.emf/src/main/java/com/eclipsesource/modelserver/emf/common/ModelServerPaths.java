@@ -15,10 +15,15 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-public class ModelSeverPaths {
+public class ModelServerPaths {
 
 	public static final String INDEX = "index";
 	public static final String MODEL_URIS = "modeluris";
 	public static final String MODEL_CRUD = "models/:modeluri";
+
+	public static final String SCHEMA = "schema/:modeluri";
+
+	public static final String SERVER_CONFIGURE = "server/configure";
+	public static final String SERVER_PING = "server/ping";
 
 }

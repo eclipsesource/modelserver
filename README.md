@@ -39,3 +39,5 @@ The following table shows the current endpoints:
 |Create new model|__POST__|`/api/v1/models`|application/json
 |Update model|__PATCH__|`/api/v1/models/:modeluri`|path parameter: `modeluri` <br> application/json
 |Delete model|__DELETE__|`/api/v1/models/:modeluri`|path parameter: `modeluri`
+|Ping server|__GET__|`/api/v1/server/ping`| -
+|Update server configuration|__PUT__|`/api/v1/server/configure`|application/json

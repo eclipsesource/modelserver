@@ -16,8 +16,9 @@
 package com.eclipsesource.modelserver.emf.common;
 
 import static io.javalin.apibuilder.ApiBuilder.crud;
-import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.get;
+import static io.javalin.apibuilder.ApiBuilder.path;
+import static io.javalin.apibuilder.ApiBuilder.put;
 
 import com.eclipsesource.modelserver.common.Routing;
 import com.google.inject.Inject;
@@ -37,9 +38,11 @@ public class ModelServerRouting extends Routing {
 	public void bindRoutes() {
 		javalin.routes(() -> {
 			path("api/v1/", () -> {
-				crud(ModelSeverPaths.MODEL_CRUD, getController(ModelController.class));
-				get(ModelSeverPaths.MODEL_URIS, getController(ModelController.class).modelUrisHandler);
-				get("schema/:modeluri", getController(SchemaController.class));
+				crud(ModelServerPaths.MODEL_CRUD, getController(ModelController.class));
+				get(ModelServerPaths.MODEL_URIS, getController(ModelController.class).modelUrisHandler);
+				get(ModelServerPaths.SCHEMA, getController(SchemaController.class));
+				put(ModelServerPaths.SERVER_CONFIGURE, getController(ServerController.class).configureHandler);
+				get(ModelServerPaths.SERVER_PING, getController(ServerController.class).pingHandler);
 			});
 		});
 	}

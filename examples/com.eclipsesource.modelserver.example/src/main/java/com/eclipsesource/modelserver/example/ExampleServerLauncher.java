@@ -58,7 +58,7 @@ public class ExampleServerLauncher {
 			}
 			Runtime.getRuntime().addShutdownHook(new Thread(() -> cleanupTempTestWorkspace(workspaceRoot)));
 			args = Arrays.copyOf(args, args.length + 1);
-			args[args.length - 1] = "--root=" + workspaceRoot.getAbsolutePath();
+			args[args.length - 1] = "--root=" + workspaceRoot.toURI();
 			CLIParser.create(args, CLIParser.getDefaultCLIOptions());
 
 		}

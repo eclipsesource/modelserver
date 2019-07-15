@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.launch;
 
-import java.io.File;
 import java.util.Optional;
 
 import org.apache.commons.cli.CommandLine;
@@ -23,6 +22,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
 
 public class CLIParser {
 	private static CLIParser INSTANCE;
@@ -62,7 +63,7 @@ public class CLIParser {
 		if (portArg != null) {
 			try {
 				port = Integer.parseInt(portArg);
-				if (port < 0 || port > 65535) {
+				if (ServerConfiguration.isValidPort(port)) {
 					throw new NumberFormatException();
 				}
 			} catch (NumberFormatException e) {
@@ -77,8 +78,7 @@ public class CLIParser {
 	protected Optional<String> parseWorkspaceRoot() throws ParseException {
 		String rootArg = cmd.getOptionValue("r");
 		if (rootArg != null) {
-			File file = new File(rootArg);
-			if (!file.exists()) {
+			if (!ServerConfiguration.isValidWorkspaceRoot(rootArg)) {
 				throw new ParseException(String.format("Could not set workspace! The path '%s' is invalid.", rootArg));
 			} else {
 				return Optional.of(rootArg);

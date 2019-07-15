@@ -15,6 +15,12 @@
  ********************************************************************************/
 package com.eclipsesource.modelserver.emf.configuration;
 
+import java.io.File;
+import java.net.URI;
+import java.util.Optional;
+
+import org.apache.log4j.Logger;
+
 import com.eclipsesource.modelserver.emf.launch.ModelServerLauncher;
 
 /**
@@ -24,6 +30,7 @@ import com.eclipsesource.modelserver.emf.launch.ModelServerLauncher;
  */
 public class ServerConfiguration {
 	private String workspaceRoot;
+	private static Logger LOG = Logger.getLogger(ServerConfiguration.class);
 	private int serverPort = ModelServerLauncher.DEFAULT_JAVALIN_PORT;
 
 	public String getWorkspaceRoot() {
@@ -31,7 +38,7 @@ public class ServerConfiguration {
 	}
 
 	public void setWorkspaceRoot(String workspaceRoot) {
-		this.workspaceRoot = workspaceRoot;
+		toFilePath(workspaceRoot).ifPresent(path -> this.workspaceRoot = path);
 	}
 
 	public int getServerPort() {
@@ -40,6 +47,25 @@ public class ServerConfiguration {
 
 	public void setServerPort(int serverPort) {
 		this.serverPort = serverPort;
+	}
+
+	public static boolean isValidWorkspaceRoot(String fileUrl) {
+		return toFilePath(fileUrl).map(url -> new File(url).exists()).orElse(false);
+	}
+
+	public static boolean isValidPort(Integer port) {
+		return port >= 0 || port <= 65535;
+
+	}
+
+	private static Optional<String> toFilePath(String fileUrl) {
+		try {
+			URI uri = URI.create(fileUrl);
+			return Optional.of(uri.getPath());
+		} catch (NullPointerException | IllegalArgumentException e) {
+			LOG.warn(String.format("Could not convert to filePath! ’%s’ is not a valid URL", fileUrl));
+			return Optional.empty();
+		}
 	}
 
 }

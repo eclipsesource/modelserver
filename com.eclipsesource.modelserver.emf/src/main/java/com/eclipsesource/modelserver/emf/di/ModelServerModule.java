@@ -58,8 +58,9 @@ public class ModelServerModule extends AbstractModule {
 
 	public static ModelServerModule create() {
 		return new ModelServerModule(Javalin.create(config -> {
+			config.enableCorsForAllOrigins();
 			config.requestLogger((ctx, ms) -> {
-				LOG.info(ctx.method() + " "  + ctx.path() + " took " + ms + " ms");
+				LOG.info(ctx.method() + " " + ctx.path() + " took " + ms + " ms");
 			});
 		}));
 	}
