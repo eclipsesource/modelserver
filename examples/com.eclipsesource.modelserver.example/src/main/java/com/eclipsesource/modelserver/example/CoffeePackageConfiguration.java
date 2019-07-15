@@ -17,7 +17,7 @@ package com.eclipsesource.modelserver.example;
 
 import java.util.Collection;
 
-import com.eclipsesource.emfforms.coffee.model.coffee.CoffeePackage;
+import com.eclipsesource.modelserver.coffee.model.coffee.CoffeePackage;
 import com.eclipsesource.modelserver.emf.configuration.EPackageConfiguration;
 import com.google.common.collect.Lists;
 

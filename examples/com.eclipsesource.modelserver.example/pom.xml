@@ -24,8 +24,8 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.eclipsesource.emfforms</groupId>
-			<artifactId>com.eclipsesource.emfforms.coffee.model</artifactId>
+			<groupId>com.eclipsesource.modelserver</groupId>
+			<artifactId>com.eclipsesource.modelserver.coffee.model</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
