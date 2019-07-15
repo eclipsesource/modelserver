@@ -37,6 +37,7 @@ import com.eclipsesource.emfforms.coffee.model.coffee.Node;
 import com.eclipsesource.emfforms.coffee.model.coffee.Processor;
 import com.eclipsesource.emfforms.coffee.model.coffee.RamType;
 import com.eclipsesource.emfforms.coffee.model.coffee.SocketConnectorType;
+import com.eclipsesource.emfforms.coffee.model.coffee.Task;
 import com.eclipsesource.emfforms.coffee.model.coffee.WaterTank;
 import com.eclipsesource.emfforms.coffee.model.coffee.WeightedFlow;
 import com.eclipsesource.emfforms.coffee.model.coffee.Workflow;
@@ -139,6 +140,13 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 	 * @generated
 	 */
 	private EClass nodeEClass = null;
+
+	/**
+	 * <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 */
+	private EClass taskEClass = null;
 
 	/**
 	 * <!-- begin-user-doc --> <!-- end-user-doc -->
@@ -660,6 +668,36 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 	 * @generated
 	 */
 	@Override
+	public EClass getTask() {
+		return taskEClass;
+	}
+
+	/**
+	 * <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 */
+	@Override
+	public EAttribute getTask_Name() {
+		return (EAttribute) taskEClass.getEStructuralFeatures().get(0);
+	}
+
+	/**
+	 * <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 */
+	@Override
+	public EAttribute getTask_Duration() {
+		return (EAttribute) taskEClass.getEStructuralFeatures().get(1);
+	}
+
+	/**
+	 * <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 */
+	@Override
 	public EClass getAutomaticTask() {
 		return automaticTaskEClass;
 	}
@@ -670,18 +708,8 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 	 * @generated
 	 */
 	@Override
-	public EAttribute getAutomaticTask_Name() {
-		return (EAttribute) automaticTaskEClass.getEStructuralFeatures().get(0);
-	}
-
-	/**
-	 * <!-- begin-user-doc --> <!-- end-user-doc -->
-	 * 
-	 * @generated
-	 */
-	@Override
 	public EReference getAutomaticTask_Component() {
-		return (EReference) automaticTaskEClass.getEStructuralFeatures().get(1);
+		return (EReference) automaticTaskEClass.getEStructuralFeatures().get(0);
 	}
 
 	/**
@@ -700,7 +728,7 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 	 * @generated
 	 */
 	@Override
-	public EAttribute getManualTask_Name() {
+	public EAttribute getManualTask_Actor() {
 		return (EAttribute) manualTaskEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -903,12 +931,15 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 
 		nodeEClass = createEClass(NODE);
 
+		taskEClass = createEClass(TASK);
+		createEAttribute(taskEClass, TASK__NAME);
+		createEAttribute(taskEClass, TASK__DURATION);
+
 		automaticTaskEClass = createEClass(AUTOMATIC_TASK);
-		createEAttribute(automaticTaskEClass, AUTOMATIC_TASK__NAME);
 		createEReference(automaticTaskEClass, AUTOMATIC_TASK__COMPONENT);
 
 		manualTaskEClass = createEClass(MANUAL_TASK);
-		createEAttribute(manualTaskEClass, MANUAL_TASK__NAME);
+		createEAttribute(manualTaskEClass, MANUAL_TASK__ACTOR);
 
 		forkEClass = createEClass(FORK);
 
@@ -965,8 +996,9 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 		brewingUnitEClass.getESuperTypes().add(this.getComponent());
 		dipTrayEClass.getESuperTypes().add(this.getComponent());
 		waterTankEClass.getESuperTypes().add(this.getComponent());
-		automaticTaskEClass.getESuperTypes().add(this.getNode());
-		manualTaskEClass.getESuperTypes().add(this.getNode());
+		taskEClass.getESuperTypes().add(this.getNode());
+		automaticTaskEClass.getESuperTypes().add(this.getTask());
+		manualTaskEClass.getESuperTypes().add(this.getTask());
 		forkEClass.getESuperTypes().add(this.getNode());
 		joinEClass.getESuperTypes().add(this.getNode());
 		decisionEClass.getESuperTypes().add(this.getNode());
@@ -1073,17 +1105,21 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 
 		initEClass(nodeEClass, Node.class, "Node", IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS); //$NON-NLS-1$
 
+		initEClass(taskEClass, Task.class, "Task", IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS); //$NON-NLS-1$
+		initEAttribute(getTask_Name(), ecorePackage.getEString(), "name", null, 1, 1, Task.class, !IS_TRANSIENT, //$NON-NLS-1$
+				!IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+		initEAttribute(getTask_Duration(), ecorePackage.getEInt(), "duration", null, 0, 1, Task.class, !IS_TRANSIENT, //$NON-NLS-1$
+				!IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
 		initEClass(automaticTaskEClass, AutomaticTask.class, "AutomaticTask", !IS_ABSTRACT, !IS_INTERFACE, //$NON-NLS-1$
 				IS_GENERATED_INSTANCE_CLASS);
-		initEAttribute(getAutomaticTask_Name(), ecorePackage.getEString(), "name", null, 1, 1, AutomaticTask.class, //$NON-NLS-1$
-				!IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 		initEReference(getAutomaticTask_Component(), this.getComponent(), null, "component", null, 0, 1, //$NON-NLS-1$
 				AutomaticTask.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES,
 				!IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
 		initEClass(manualTaskEClass, ManualTask.class, "ManualTask", !IS_ABSTRACT, !IS_INTERFACE, //$NON-NLS-1$
 				IS_GENERATED_INSTANCE_CLASS);
-		initEAttribute(getManualTask_Name(), ecorePackage.getEString(), "name", null, 1, 1, ManualTask.class, //$NON-NLS-1$
+		initEAttribute(getManualTask_Actor(), ecorePackage.getEString(), "actor", null, 0, 1, ManualTask.class, //$NON-NLS-1$
 				!IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
 		initEClass(forkEClass, Fork.class, "Fork", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS); //$NON-NLS-1$

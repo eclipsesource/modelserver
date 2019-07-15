@@ -68,12 +68,15 @@
         eType="#//Flow" containment="true"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Node" abstract="true"/>
-  <eClassifiers xsi:type="ecore:EClass" name="AutomaticTask" eSuperTypes="#//Node">
+  <eClassifiers xsi:type="ecore:EClass" name="Task" abstract="true" eSuperTypes="#//Node">
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="duration" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="AutomaticTask" eSuperTypes="#//Task">
     <eStructuralFeatures xsi:type="ecore:EReference" name="component" eType="#//Component"/>
   </eClassifiers>
-  <eClassifiers xsi:type="ecore:EClass" name="ManualTask" eSuperTypes="#//Node">
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  <eClassifiers xsi:type="ecore:EClass" name="ManualTask" eSuperTypes="#//Task">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="actor" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Fork" eSuperTypes="#//Node"/>
   <eClassifiers xsi:type="ecore:EClass" name="Join" eSuperTypes="#//Node"/>

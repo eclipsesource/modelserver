@@ -24,36 +24,41 @@ package com.eclipsesource.emfforms.coffee.model.coffee;
  * The following features are supported:
  * </p>
  * <ul>
- * <li>{@link com.eclipsesource.emfforms.coffee.model.coffee.ManualTask#getName
- * <em>Name</em>}</li>
+ * <li>{@link com.eclipsesource.emfforms.coffee.model.coffee.ManualTask#getActor
+ * <em>Actor</em>}</li>
  * </ul>
  *
  * @see com.eclipsesource.emfforms.coffee.model.coffee.CoffeePackage#getManualTask()
  * @model
  * @generated
  */
-public interface ManualTask extends Node {
+public interface ManualTask extends Task {
 	/**
-	 * Returns the value of the '<em><b>Name</b></em>' attribute. <!--
-	 * begin-user-doc --> <!-- end-user-doc -->
+	 * Returns the value of the '<em><b>Actor</b></em>' attribute. <!--
+	 * begin-user-doc -->
+	 * <p>
+	 * If the meaning of the '<em>Actor</em>' attribute isn't clear, there really
+	 * should be more of a description here...
+	 * </p>
+	 * <!-- end-user-doc -->
 	 * 
-	 * @return the value of the '<em>Name</em>' attribute.
-	 * @see #setName(String)
-	 * @see com.eclipsesource.emfforms.coffee.model.coffee.CoffeePackage#getManualTask_Name()
-	 * @model required="true"
+	 * @return the value of the '<em>Actor</em>' attribute.
+	 * @see #setActor(String)
+	 * @see com.eclipsesource.emfforms.coffee.model.coffee.CoffeePackage#getManualTask_Actor()
+	 * @model
 	 * @generated
 	 */
-	String getName();
+	String getActor();
 
 	/**
 	 * Sets the value of the
-	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.ManualTask#getName
-	 * <em>Name</em>}' attribute. <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.ManualTask#getActor
+	 * <em>Actor</em>}' attribute. <!-- begin-user-doc --> <!-- end-user-doc -->
 	 * 
-	 * @param value the new value of the '<em>Name</em>' attribute.
-	 * @see #getName()
+	 * @param value the new value of the '<em>Actor</em>' attribute.
+	 * @see #getActor()
 	 * @generated
 	 */
-	void setName(String value);
+	void setActor(String value);
 
 } // ManualTask

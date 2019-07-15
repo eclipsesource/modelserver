@@ -172,9 +172,20 @@ public class CoffeeSwitch<T> extends Switch<T> {
 				result = defaultCase(theEObject);
 			return result;
 		}
+		case CoffeePackage.TASK: {
+			Task task = (Task) theEObject;
+			T result = caseTask(task);
+			if (result == null)
+				result = caseNode(task);
+			if (result == null)
+				result = defaultCase(theEObject);
+			return result;
+		}
 		case CoffeePackage.AUTOMATIC_TASK: {
 			AutomaticTask automaticTask = (AutomaticTask) theEObject;
 			T result = caseAutomaticTask(automaticTask);
+			if (result == null)
+				result = caseTask(automaticTask);
 			if (result == null)
 				result = caseNode(automaticTask);
 			if (result == null)
@@ -184,6 +195,8 @@ public class CoffeeSwitch<T> extends Switch<T> {
 		case CoffeePackage.MANUAL_TASK: {
 			ManualTask manualTask = (ManualTask) theEObject;
 			T result = caseManualTask(manualTask);
+			if (result == null)
+				result = caseTask(manualTask);
 			if (result == null)
 				result = caseNode(manualTask);
 			if (result == null)
@@ -428,6 +441,21 @@ public class CoffeeSwitch<T> extends Switch<T> {
 	 * @generated
 	 */
 	public T caseNode(Node object) {
+		return null;
+	}
+
+	/**
+	 * Returns the result of interpreting the object as an instance of
+	 * '<em>Task</em>'. <!-- begin-user-doc --> This implementation returns null;
+	 * returning a non-null result will terminate the switch. <!-- end-user-doc -->
+	 * 
+	 * @param object the target of the switch.
+	 * @return the result of interpreting the object as an instance of
+	 *         '<em>Task</em>'.
+	 * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+	 * @generated
+	 */
+	public T caseTask(Task object) {
 		return null;
 	}
 

@@ -24,8 +24,6 @@ package com.eclipsesource.emfforms.coffee.model.coffee;
  * The following features are supported:
  * </p>
  * <ul>
- * <li>{@link com.eclipsesource.emfforms.coffee.model.coffee.AutomaticTask#getName
- * <em>Name</em>}</li>
  * <li>{@link com.eclipsesource.emfforms.coffee.model.coffee.AutomaticTask#getComponent
  * <em>Component</em>}</li>
  * </ul>
@@ -34,30 +32,7 @@ package com.eclipsesource.emfforms.coffee.model.coffee;
  * @model
  * @generated
  */
-public interface AutomaticTask extends Node {
-	/**
-	 * Returns the value of the '<em><b>Name</b></em>' attribute. <!--
-	 * begin-user-doc --> <!-- end-user-doc -->
-	 * 
-	 * @return the value of the '<em>Name</em>' attribute.
-	 * @see #setName(String)
-	 * @see com.eclipsesource.emfforms.coffee.model.coffee.CoffeePackage#getAutomaticTask_Name()
-	 * @model required="true"
-	 * @generated
-	 */
-	String getName();
-
-	/**
-	 * Sets the value of the
-	 * '{@link com.eclipsesource.emfforms.coffee.model.coffee.AutomaticTask#getName
-	 * <em>Name</em>}' attribute. <!-- begin-user-doc --> <!-- end-user-doc -->
-	 * 
-	 * @param value the new value of the '<em>Name</em>' attribute.
-	 * @see #getName()
-	 * @generated
-	 */
-	void setName(String value);
-
+public interface AutomaticTask extends Task {
 	/**
 	 * Returns the value of the '<em><b>Component</b></em>' reference. <!--
 	 * begin-user-doc --> <!-- end-user-doc -->
