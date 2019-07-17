@@ -15,7 +15,18 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import static java.util.stream.Collectors.toSet;
+import com.eclipsesource.modelserver.emf.common.codecs.Encoder;
+import com.eclipsesource.modelserver.emf.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.jsonschema.Json;
+import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+import io.javalin.http.Context;
+import io.javalin.websocket.WsContext;
+import io.javalin.websocket.WsHandler;
+import org.apache.log4j.Logger;
+import org.eclipse.emf.ecore.EObject;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -23,23 +34,22 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-import org.eclipse.emf.ecore.EObject;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.TestOnly;
-
-import com.eclipsesource.modelserver.jsonschema.Json;
-import com.google.common.collect.Maps;
-import com.google.inject.Inject;
-
-import io.javalin.websocket.WsContext;
-import io.javalin.websocket.WsHandler;
+import static java.util.stream.Collectors.toSet;
 
 public class SessionController extends WsHandler {
+
+	Logger LOG = Logger.getLogger(SessionController.class.getSimpleName());
 
 	private Map<String, Set<WsContext>> modelUrisToClients = Maps.newConcurrentMap();
 
 	@Inject
 	private ModelRepository modelRepository;
+
+	private Encoder encoder;
+
+	public SessionController() {
+		this.encoder = new Encoder();
+	}
 
 	public void subscribe(WsContext ctx, String modeluri) {
 		modelUrisToClients.computeIfAbsent(modeluri, clients -> ConcurrentHashMap.newKeySet()).add(ctx);
@@ -59,25 +69,31 @@ public class SessionController extends WsHandler {
 		}
 	}
 
-	public void modelChanged(String modeluri) {
+	public void modelChanged(String modeluri, Context context) {
 		modelRepository.getModel(modeluri).ifPresentOrElse(
-				eObject -> broadcastModelUpdate(modeluri, eObject),
+				eObject -> broadcastModelUpdate(modeluri, eObject, context),
 				() -> broadcastError(modeluri, "Could not load changed object")
 		);
 	}
 
-	public void modelDeleted(String modeluri) {
-		broadcastModelUpdate(modeluri, null);
+	public void modelDeleted(String modeluri, Context context) {
+		broadcastModelUpdate(modeluri, null, context);
 	}
 	
 	private Stream<WsContext> getOpenSessions(String modeluri) {
 		return modelUrisToClients.get(modeluri).stream().filter(ctx -> ctx.session.isOpen());
 	}
 
-	private void broadcastModelUpdate(String modeluri, @Nullable EObject updatedModel) {
+	private void broadcastModelUpdate(String modeluri, @Nullable EObject updatedModel, Context context) {
 		if (modelUrisToClients.containsKey(modeluri)) {
 			getOpenSessions(modeluri)
-				.forEach(session -> session.send(JsonResponse.data(updatedModel)));
+				.forEach(session -> {
+					try {
+						session.send(JsonResponse.data(encoder.encode(context, updatedModel)));
+					} catch (EncodingException e) {
+						LOG.error("Broadcast model update of " + modeluri + " failed", e);
+					}
+				});
 		}
 	}
 

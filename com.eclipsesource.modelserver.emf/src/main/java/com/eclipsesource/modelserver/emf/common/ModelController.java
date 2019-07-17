@@ -15,33 +15,40 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import java.io.IOException;
-import java.util.Optional;
-
-import org.apache.log4j.Logger;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EStructuralFeature;
-
 import com.eclipsesource.modelserver.emf.EMFJsonConverter;
+import com.eclipsesource.modelserver.emf.common.codecs.Encoder;
+import com.eclipsesource.modelserver.emf.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
+import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-
 import io.javalin.apibuilder.CrudHandler;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.plugin.json.JavalinJackson;
+import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EStructuralFeature;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
 
 public class ModelController implements CrudHandler {
 
 	private static final Logger LOG = Logger.getLogger(ModelController.class.getSimpleName());
 
-	@Inject
 	private ModelRepository modelRepository;
-	@Inject
 	private SessionController sessionController;
+	private Encoder encoder;
 
-	public ModelController() {
+	@Inject public ModelController(ModelRepository modelRepository, SessionController sessionController) {
 		JavalinJackson.configure(EMFJsonConverter.setupDefaultMapper());
+		encoder = new Encoder();
+		this.modelRepository = modelRepository;
+		this.sessionController = sessionController;
 	}
 
 	@Override
@@ -52,13 +59,16 @@ public class ModelController implements CrudHandler {
 				handleError(ctx, 400, "Create new model failed: Model identifier (name) is missing");
 				return;
 			}
-			
+
 			String modeluri = eObject.eGet(name).toString().replaceAll(" ", "");
 			this.modelRepository.addModel(modeluri, eObject);
-
-			ctx.json(JsonResponse.data(eObject));
-			
-			this.sessionController.modelChanged(modeluri);
+			try {
+				final JsonNode encoded = encoder.encode(ctx, eObject);
+				ctx.json(JsonResponse.data(encoded));
+				this.sessionController.modelChanged(modeluri, ctx);
+			} catch (EncodingException ex) {
+				handleEncodingError(ctx, ex);
+			}
 		});
 	}
 
@@ -67,7 +77,7 @@ public class ModelController implements CrudHandler {
 		if (this.modelRepository.hasModel(modeluri)) {
 			this.modelRepository.removeModel(modeluri);
 			ctx.json(JsonResponse.confirm("Model '" + modeluri + "' successfully deleted"));
-			this.sessionController.modelDeleted(modeluri);
+			this.sessionController.modelDeleted(modeluri, ctx);
 		} else {
 			handleError(ctx, 404, "Model '" + modeluri + "' not found, cannot be deleted!");
 		}
@@ -75,37 +85,65 @@ public class ModelController implements CrudHandler {
 
 	@Override
 	public void getAll(Context ctx) {
-		ctx.json(JsonResponse.data(this.modelRepository.getAllModels()));
+		final Map<URI, EObject> allModels = this.modelRepository.getAllModels();
+		try {
+			Map<URI, JsonNode> encodedEntries = Maps.newLinkedHashMap();
+			for (Map.Entry<URI, EObject> entry : allModels.entrySet()) {
+				final JsonNode encoded = encoder.encode(ctx, entry.getValue());
+				encodedEntries.put(entry.getKey(), encoded);
+			}
+			ctx.json(JsonResponse.data(JsonCodec.encode(encodedEntries)));
+		} catch (EncodingException ex) {
+			handleEncodingError(ctx, ex);
+		}
 	}
 
 	@Override
 	public void getOne(Context ctx, String modeluri) {
 		this.modelRepository.getModel(modeluri).ifPresentOrElse(
-				model -> ctx.json(JsonResponse.data(model)),
-				() -> handleError(ctx, 404, "Model '" + modeluri + "' not found!")
+			model -> {
+				if (model == null) {
+					ctx.json(JsonResponse.data(Json.text("")));
+				} else {
+					try {
+						ctx.json(JsonResponse.data(encoder.encode(ctx, model)));
+					} catch (EncodingException ex) {
+						handleEncodingError(ctx, ex);
+					}
+				}
+			},
+			() -> handleError(ctx, 404, "Model '" + modeluri + "' not found!")
 		);
 	}
 
 	@Override
 	public void update(Context ctx, String modeluri) {
 		readEObject(ctx).ifPresent(
-				eObject -> {
-					modelRepository.updateModel(modeluri, eObject);
-					ctx.json(JsonResponse.data(eObject));
-					sessionController.modelChanged(modeluri);
+			eObject -> {
+				modelRepository.updateModel(modeluri, eObject);
+				try {
+					ctx.json(JsonResponse.data(encoder.encode(ctx, eObject)));
+				} catch (EncodingException e) {
+					handleEncodingError(ctx, e);
 				}
+				sessionController.modelChanged(modeluri, ctx);
+			}
 		);
 	}
 
 	public Handler modelUrisHandler = ctx -> {
-		ctx.json(JsonResponse.data(this.modelRepository.getAllModelUris()));
+		ctx.json(JsonResponse.data(JsonCodec.encode(this.modelRepository.getAllModelUris())));
 	};
 
 	private Optional<EObject> readEObject(Context ctx) {
 		final EMFJsonConverter emfJsonConverter = new EMFJsonConverter();
-		
+
 		try {
 			JsonNode json = JavalinJackson.getObjectMapper().readTree(ctx.body());
+			if (!json.has("data")) {
+				handleError(ctx, 400, "Empty JSON");
+				return Optional.empty();
+			}
 			String jsonData = json.get("data").toString();
 			if (jsonData.equals("{}")) {
 				handleError(ctx, 400, "Empty JSON");
@@ -118,8 +156,17 @@ public class ModelController implements CrudHandler {
 		return Optional.empty();
 	}
 
+	private void handleEncodingError(Context context, EncodingException ex) {
+		handleError(context, 500, "An error occurred during data encoding", ex);
+	}
+
 	private void handleError(Context ctx, int statusCode, String errorMsg) {
 		LOG.error(errorMsg);
+		ctx.status(statusCode).json(JsonResponse.error(errorMsg));
+	}
+
+	private void handleError(Context ctx, int statusCode, String errorMsg, Exception e) {
+		LOG.error(errorMsg, e);
 		ctx.status(statusCode).json(JsonResponse.error(errorMsg));
 	}
 }

@@ -58,6 +58,12 @@
 			<version>2.9.0</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.eclipsesource.modelserver</groupId>
+			<artifactId>com.eclipsesource.modelserver.coffee.model</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 

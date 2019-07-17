@@ -15,12 +15,7 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -60,8 +55,8 @@ public class ModelRepository {
 		return loadModel(modeluri);
 	}
 
-	public Set<Entry<URI, EObject>> getAllModels() {
-		return this.models.entrySet();
+	public Map<URI, EObject> getAllModels() {
+		return new LinkedHashMap<>(this.models);
 	}
 
 	public void addModel(String modeluri, EObject model) {

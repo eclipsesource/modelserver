@@ -56,6 +56,14 @@ public class Json {
 
     public static ArrayNode array() { return mapper.createArrayNode(); }
 
+    public static ArrayNode array(JsonNode... json) {
+        final ArrayNode arrayNode = mapper.createArrayNode();
+        for (JsonNode node : json) {
+            arrayNode.add(node);
+        }
+        return arrayNode;
+    }
+
     public static ArrayNode array(List<String> list) {
         final ArrayNode array = mapper.createArrayNode();
         list.forEach(array::add);

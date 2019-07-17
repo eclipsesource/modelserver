@@ -13,42 +13,23 @@
  *
  *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  *******************************************************************************/
-package com.eclipsesource.modelserver.emf.common;
+package com.eclipsesource.modelserver.emf.common.codecs;
 
-import org.jetbrains.annotations.Nullable;
-
-import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.javalin.plugin.json.JavalinJackson;
+import org.eclipse.emf.ecore.EObject;
 
-public class JsonResponse {
+public class JsonCodec implements Codec {
 
-	public static JsonNode success(ObjectNode response) {
-		final ObjectNode success = Json.object(
-			Json.prop("type", Json.text("success"))
-		);
-		return Json.merge(success, response);
-	}
+    public JsonNode encode(EObject obj) throws EncodingException {
+        return encode((Object) obj);
+    }
 
-	public static ObjectNode error(String message) {
-		return Json.object(
-			Json.prop("type", Json.text("error")),
-			Json.prop("message", Json.text(message))
-		);
-	}
-
-	public static JsonNode data(@Nullable JsonNode jsonNode) {
-		return Json.object(
-			Json.prop("data", jsonNode)
-		);
-	}
-
-	public static JsonNode confirm(String message) {
-		return Json.object(
-			Json.prop("type", Json.text("confirm")),
-			Json.prop("message", Json.text(message))
-		);
-	}
+    public static JsonNode encode(Object obj) throws EncodingException {
+        try {
+            return JavalinJackson.getObjectMapper().valueToTree(obj);
+        } catch (IllegalArgumentException ex) {
+            throw new EncodingException(ex);
+        }
+    }
 }
