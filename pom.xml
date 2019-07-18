@@ -35,7 +35,8 @@
 		<module>com.eclipsesource.modelserver.emf</module>
 		<module>examples/com.eclipsesource.modelserver.example</module>
 		<module>examples/com.eclipsesource.modelserver.coffee.model</module>
-	</modules>
+		<module>com.eclipsesource.modelserver.client</module>
+    </modules>
 
 	<build>
 		<resources>

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,15 @@ import static java.util.Map.entry;
 public class Json {
 
     private static ObjectMapper mapper = new ObjectMapper();
+
+    public static <T extends JsonNode> T parse(String jsonAsString) throws IOException {
+        final JsonNode jsonNode = mapper.readTree(jsonAsString);
+        return jsonNode.deepCopy();
+    }
+
+    public static <T> T parse(String objectAsString, Class<T> as) throws IOException {
+        return mapper.readValue(objectAsString, as);
+    }
 
     public static ObjectNode object() {
         return mapper.createObjectNode();

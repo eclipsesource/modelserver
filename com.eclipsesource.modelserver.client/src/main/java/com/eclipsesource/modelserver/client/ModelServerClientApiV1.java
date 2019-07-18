@@ -13,26 +13,24 @@
  *
  *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  *******************************************************************************/
-package com.eclipsesource.modelserver.emf.common;
+package com.eclipsesource.modelserver.client;
 
-import org.jetbrains.annotations.NotNull;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-import com.eclipsesource.modelserver.jsonschema.JsonSchema;
-import com.google.inject.Inject;
+public interface ModelServerClientApiV1 {
 
-import io.javalin.http.Context;
-import io.javalin.http.Handler;
+    CompletableFuture<Response<String>> get(String modelUri);
 
-public class SchemaController implements Handler {
+    CompletableFuture<Response<List<String>>> getAll();
 
-	@Inject
-	private ModelRepository modelRepository;
+    CompletableFuture<Response<Boolean>> delete(String modelUri);
 
-	@Override
-	public void handle(@NotNull Context ctx) {
-		modelRepository.getModel(ctx.pathParam("modeluri")).ifPresentOrElse(
-				instance -> ctx.json(JsonResponse.data(JsonSchema.from(instance.eClass()))),
-				() -> ctx.status(404).json(JsonResponse.error("Schema not found!"))
-		);
-	}
+    CompletableFuture<Response<String>> update(String modelUri, String updatedModel, String mediaType);
+
+    CompletableFuture<Response<String>> getSchema(String modelUri);
+
+    CompletableFuture<Response<Boolean>> configure(ServerConfiguration configuration);
+
+    CompletableFuture<Response<Boolean>> ping();
 }

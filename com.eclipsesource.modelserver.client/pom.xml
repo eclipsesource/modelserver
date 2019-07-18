@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>com.eclipsesource.modelserver.parent</artifactId>
+        <groupId>com.eclipsesource.modelserver</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <artifactId>com.eclipsesource.modelserver.client</artifactId>
+    <name>modelserver-client</name>
+
+    <repositories>
+        <repository>
+            <id>jcenter</id>
+            <url>https://jcenter.bintray.com/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.eclipsesource.modelserver</groupId>
+            <artifactId>com.eclipsesource.modelserver.common</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.eclipsesource.modelserver</groupId>
+            <artifactId>com.eclipsesource.modelserver.coffee.model</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.eclipsesource.modelserver</groupId>
+            <artifactId>com.eclipsesource.modelserver.emf</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.gmazzo</groupId>
+            <artifactId>okhttp-mock</artifactId>
+            <version>1.3.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

@@ -13,26 +13,10 @@
  *
  *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  *******************************************************************************/
-package com.eclipsesource.modelserver.emf.common;
+package com.eclipsesource.modelserver.client;
 
-import org.jetbrains.annotations.NotNull;
+public interface ServerConfiguration {
 
-import com.eclipsesource.modelserver.jsonschema.JsonSchema;
-import com.google.inject.Inject;
+    String getWorkspaceRoot();
 
-import io.javalin.http.Context;
-import io.javalin.http.Handler;
-
-public class SchemaController implements Handler {
-
-	@Inject
-	private ModelRepository modelRepository;
-
-	@Override
-	public void handle(@NotNull Context ctx) {
-		modelRepository.getModel(ctx.pathParam("modeluri")).ifPresentOrElse(
-				instance -> ctx.json(JsonResponse.data(JsonSchema.from(instance.eClass()))),
-				() -> ctx.status(404).json(JsonResponse.error("Schema not found!"))
-		);
-	}
 }

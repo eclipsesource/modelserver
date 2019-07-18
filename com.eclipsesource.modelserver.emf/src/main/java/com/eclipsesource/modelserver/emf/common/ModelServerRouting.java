@@ -15,17 +15,12 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import static io.javalin.apibuilder.ApiBuilder.crud;
-import static io.javalin.apibuilder.ApiBuilder.get;
-import static io.javalin.apibuilder.ApiBuilder.path;
-import static io.javalin.apibuilder.ApiBuilder.put;
-import static io.javalin.apibuilder.ApiBuilder.ws;
-
 import com.eclipsesource.modelserver.common.ModelServerPaths;
 import com.eclipsesource.modelserver.common.Routing;
 import com.google.inject.Inject;
-
 import io.javalin.Javalin;
+
+import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class ModelServerRouting extends Routing {
 

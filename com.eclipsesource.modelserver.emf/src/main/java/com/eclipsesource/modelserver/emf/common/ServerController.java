@@ -29,7 +29,7 @@ public class ServerController {
 	private ServerConfiguration serverConfiguration;
 
 	public Handler pingHandler = ctx -> {
-		ctx.json("Success");
+		ctx.json(JsonResponse.success());
 	};
 
 	public Handler configureHandler = ctx -> {
@@ -38,6 +38,7 @@ public class ServerController {
 		if (workspaceRoot != null) {
 			if (ServerConfiguration.isValidWorkspaceRoot(workspaceRoot)) {
 				serverConfiguration.setWorkspaceRoot(workspaceRoot);
+				ctx.json(JsonResponse.success());
 			} else {
 				handleError(ctx, 400, "The given workspaceRoot is not a valid path: " + workspaceRoot);
 			}
@@ -46,7 +47,9 @@ public class ServerController {
 
 	private void handleError(Context ctx, int statusCode, String errorMsg) {
 		LOG.error(errorMsg);
-		ctx.status(statusCode).result(errorMsg);
+		ctx.status(statusCode)
+			.result(errorMsg)
+			.json(JsonResponse.error());
 	}
 
 }

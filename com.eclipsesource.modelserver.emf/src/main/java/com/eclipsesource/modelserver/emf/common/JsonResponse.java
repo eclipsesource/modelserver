@@ -21,21 +21,28 @@ import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.javalin.plugin.json.JavalinJackson;
-
 public class JsonResponse {
 
-	public static JsonNode success(ObjectNode response) {
-		final ObjectNode success = Json.object(
+	public static ObjectNode success() {
+		return Json.object(
 			Json.prop("type", Json.text("success"))
 		);
-		return Json.merge(success, response);
+	}
+
+	public static JsonNode success(ObjectNode response) {
+		return Json.merge(success(), response);
+	}
+
+	public static ObjectNode error() {
+		return Json.object(
+			Json.prop("type", Json.text("error"))
+		);
 	}
 
 	public static ObjectNode error(String message) {
-		return Json.object(
-			Json.prop("type", Json.text("error")),
-			Json.prop("message", Json.text(message))
+		return (ObjectNode) Json.merge(
+			error(),
+			Json.object(Json.prop("message", Json.text(message)))
 		);
 	}
 

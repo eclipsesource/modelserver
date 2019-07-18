@@ -15,17 +15,5 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.common;
 
-public class ModelServerPaths {
-
-	public static final String INDEX = "index";
-	public static final String MODEL_URIS = "modeluris";
-	public static final String MODEL_CRUD = "models/:modeluri";
-
-	public static final String SUBSCRIPTION = "subscribe/:modeluri";
-
-	public static final String SCHEMA = "schema/:modeluri";
-
-	public static final String SERVER_CONFIGURE = "server/configure";
-	public static final String SERVER_PING = "server/ping";
-
+public interface ModelServerPaths extends ModelServerPathsV1 {
 }
