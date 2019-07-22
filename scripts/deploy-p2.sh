@@ -4,7 +4,7 @@ REPO_DIR=$ROOT_DIR/.repo
 
 rm -rf $REPO_DIR
 mkdir $REPO_DIR
-# Clone glsp-p2 and switch to new skeleton branch
+# Clone modelserver-p2 and switch to new skeleton branch
 cd $REPO_DIR || exit
 git clone  https://github.com/eclipsesource/modelserver-p2.git
 cd modelserver-p2 || exit
