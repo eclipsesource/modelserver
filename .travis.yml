@@ -16,8 +16,8 @@ deploy:
   on:
     branch: master
 after_deploy:
-        - cd  scripts
-        - ./deploy-p2.sh
+   - cd scripts
+   - ./deploy-p2.sh
 addons:
     apt:
       packages:
