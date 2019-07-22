@@ -35,11 +35,11 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
     private OkHttpClient client;
     private String baseUrl;
 
-    ModelServerClient(String baseUrl) throws MalformedURLException {
+    public ModelServerClient(String baseUrl) throws MalformedURLException {
         this(new OkHttpClient(), baseUrl);
     }
 
-    ModelServerClient(OkHttpClient client, String baseUrl) throws MalformedURLException {
+    public ModelServerClient(OkHttpClient client, String baseUrl) throws MalformedURLException {
         this.client = client;
         this.baseUrl = new URL(baseUrl).toString();
     }
