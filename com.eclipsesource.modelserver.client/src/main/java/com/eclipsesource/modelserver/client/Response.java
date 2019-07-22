@@ -35,11 +35,11 @@ public class Response<T> {
         this.demarshaller = (Function<String, T>) Function.<String>identity();
     }
 
-    Integer getStatusCode() {
+    public Integer getStatusCode() {
         return this.response.code();
     }
 
-    T body() {
+    public T body() {
         if (body == null) {
             try {
                 body = this.demarshaller.apply(Objects.requireNonNull(this.response.body()).string());
@@ -50,11 +50,11 @@ public class Response<T> {
         return body;
     }
 
-    String getMessage() {
+    public String getMessage() {
         return this.response.message();
     }
 
-    <U> Response<U> mapBody(Function<T, U> mapper) {
+    public <U> Response<U> mapBody(Function<T, U> mapper) {
         return new Response<>(this.response, demarshaller.andThen(mapper));
     }
 }
