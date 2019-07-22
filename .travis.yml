@@ -15,6 +15,13 @@ deploy:
   script: mvn deploy -s ./settings.xml -U -DskipTests -Prelease
   on:
     branch: master
+after_deploy:
+        - cd  scripts
+        - ./deploy-p2.sh
+addons:
+    apt:
+      packages:
+        - libxml2-utils
 branches:
   only:
   - master
