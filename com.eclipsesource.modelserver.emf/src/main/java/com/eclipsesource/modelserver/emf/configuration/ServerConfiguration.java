@@ -54,7 +54,7 @@ public class ServerConfiguration {
 	}
 
 	public static boolean isValidPort(Integer port) {
-		return port >= 0 || port <= 65535;
+		return port >= 0 && port <= 65535;
 
 	}
 

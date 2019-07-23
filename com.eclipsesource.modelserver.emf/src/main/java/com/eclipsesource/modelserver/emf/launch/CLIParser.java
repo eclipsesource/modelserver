@@ -63,7 +63,7 @@ public class CLIParser {
 		if (portArg != null) {
 			try {
 				port = Integer.parseInt(portArg);
-				if (ServerConfiguration.isValidPort(port)) {
+				if (!ServerConfiguration.isValidPort(port)) {
 					throw new NumberFormatException();
 				}
 			} catch (NumberFormatException e) {
