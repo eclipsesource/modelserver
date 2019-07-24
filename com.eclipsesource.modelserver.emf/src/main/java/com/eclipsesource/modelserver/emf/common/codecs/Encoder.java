@@ -17,9 +17,11 @@ package com.eclipsesource.modelserver.emf.common.codecs;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.javalin.http.Context;
+import io.javalin.websocket.WsContext;
 import org.eclipse.emf.ecore.EObject;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,13 +35,18 @@ public class Encoder {
     }
 
     public JsonNode encode(Context context, EObject eObject) throws EncodingException {
-        return findFormat(context).encode(eObject);
+        return findFormat(context.queryParamMap()).encode(eObject);
     }
 
-    private Codec findFormat(Context ctx) {
+    public JsonNode encode(WsContext context, EObject eObject) throws EncodingException {
+        return findFormat(context.queryParamMap()).encode(eObject);
+    }
+
+    private Codec findFormat(Map<String, List<String>> queryParams) {
         return Optional
-            .ofNullable(ctx.queryParam("format"))
-            .flatMap(f -> Optional.ofNullable(formatToCodec.get(f)))
+            .ofNullable(queryParams.get("format"))
+            .filter(list -> !list.isEmpty())
+            .flatMap(f -> Optional.ofNullable(formatToCodec.get(f.get(0))))
             .orElse(new JsonCodec());
     }
 }

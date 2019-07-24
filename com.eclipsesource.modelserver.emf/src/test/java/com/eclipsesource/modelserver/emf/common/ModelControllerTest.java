@@ -29,10 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -63,7 +60,9 @@ public class ModelControllerTest {
             return null;
         };
         doAnswer(answer).when(context).json(any(JsonNode.class));
-        when(context.queryParam("format")).thenReturn("xmi");
+        final LinkedHashMap<String, List<String>> queryParams = new LinkedHashMap<>();
+        queryParams.put("format", Collections.singletonList("xmi"));
+        when(context.queryParamMap()).thenReturn(queryParams);
         when(modelRepository.getModel("test")).thenReturn(Optional.of(brewingUnit));
 
         modelController.getOne(context, "test");
@@ -80,7 +79,9 @@ public class ModelControllerTest {
             return null;
         };
         doAnswer(answer).when(context).json(any(JsonNode.class));
-        when(context.queryParam("format")).thenReturn("xmi");
+        final LinkedHashMap<String, List<String>> queryParams = new LinkedHashMap<>();
+        queryParams.put("format", Collections.singletonList("xmi"));
+        when(context.queryParamMap()).thenReturn(queryParams);
         final Map<URI, EObject> allModels =
             Collections.singletonMap(URI.createURI("test"), brewingUnit);
         when(modelRepository.getAllModels()).thenReturn(allModels);

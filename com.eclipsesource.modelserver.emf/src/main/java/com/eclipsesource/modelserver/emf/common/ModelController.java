@@ -65,7 +65,7 @@ public class ModelController implements CrudHandler {
 			try {
 				final JsonNode encoded = encoder.encode(ctx, eObject);
 				ctx.json(JsonResponse.data(encoded));
-				this.sessionController.modelChanged(modeluri, ctx);
+				this.sessionController.modelChanged(modeluri);
 			} catch (EncodingException ex) {
 				handleEncodingError(ctx, ex);
 			}
@@ -77,7 +77,7 @@ public class ModelController implements CrudHandler {
 		if (this.modelRepository.hasModel(modeluri)) {
 			this.modelRepository.removeModel(modeluri);
 			ctx.json(JsonResponse.confirm("Model '" + modeluri + "' successfully deleted"));
-			this.sessionController.modelDeleted(modeluri, ctx);
+			this.sessionController.modelDeleted(modeluri);
 		} else {
 			handleError(ctx, 404, "Model '" + modeluri + "' not found, cannot be deleted!");
 		}
@@ -126,7 +126,7 @@ public class ModelController implements CrudHandler {
 				} catch (EncodingException e) {
 					handleEncodingError(ctx, e);
 				}
-				sessionController.modelChanged(modeluri, ctx);
+				sessionController.modelChanged(modeluri);
 			}
 		);
 	}

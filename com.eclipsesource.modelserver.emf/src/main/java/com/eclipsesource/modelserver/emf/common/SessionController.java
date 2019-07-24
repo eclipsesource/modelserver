@@ -69,27 +69,27 @@ public class SessionController extends WsHandler {
 		}
 	}
 
-	public void modelChanged(String modeluri, Context context) {
+	public void modelChanged(String modeluri) {
 		modelRepository.getModel(modeluri).ifPresentOrElse(
-				eObject -> broadcastModelUpdate(modeluri, eObject, context),
+				eObject -> broadcastModelUpdate(modeluri, eObject),
 				() -> broadcastError(modeluri, "Could not load changed object")
 		);
 	}
 
-	public void modelDeleted(String modeluri, Context context) {
-		broadcastModelUpdate(modeluri, null, context);
+	public void modelDeleted(String modeluri) {
+		broadcastModelUpdate(modeluri, null);
 	}
 	
 	private Stream<WsContext> getOpenSessions(String modeluri) {
 		return modelUrisToClients.get(modeluri).stream().filter(ctx -> ctx.session.isOpen());
 	}
 
-	private void broadcastModelUpdate(String modeluri, @Nullable EObject updatedModel, Context context) {
+	private void broadcastModelUpdate(String modeluri, @Nullable EObject updatedModel) {
 		if (modelUrisToClients.containsKey(modeluri)) {
 			getOpenSessions(modeluri)
 				.forEach(session -> {
 					try {
-						session.send(JsonResponse.data(encoder.encode(context, updatedModel)));
+						session.send(JsonResponse.data(encoder.encode(session, updatedModel)));
 					} catch (EncodingException e) {
 						LOG.error("Broadcast model update of " + modeluri + " failed", e);
 					}
