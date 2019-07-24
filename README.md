@@ -57,6 +57,99 @@ The following table shows the current WS endpoints:
 |-|-|-|-
 |Subscribe to model changes|`/subscribe/:modeluri`|path parameter: `modeluri`|`sessionId`
 
+## Java client API
+
+The modelserver project features a Java-based client API that eases integration with the model server.
+The interface declaration looks as follows
+
+```Java
+public interface ModelServerClientApiV1 {
+
+    CompletableFuture<Response<String>> get(String modelUri);
+
+    CompletableFuture<Response<List<String>>> getAll();
+
+    CompletableFuture<Response<Boolean>> delete(String modelUri);
+
+    CompletableFuture<Response<String>> update(String modelUri, String updatedModel, String mediaType);
+
+    CompletableFuture<Response<String>> getSchema(String modelUri);
+
+    CompletableFuture<Response<Boolean>> configure(ServerConfiguration configuration);
+
+    CompletableFuture<Response<Boolean>> ping();
+
+    void subscribe(String modelUri);
+
+    boolean unsubscribe(String modelUri);
+}
+
+```
+
+
+### REST API Example
+
+```Java
+// You can customize the underlying okhttp instance by passing it in as a 1st parameter 
+ModelServerClient client = new ModelServerClient("http://localhost:8081/api/v1/");
+
+// perform simple GET
+client.get("SuperBrewer3000.json")
+      .thenAccept(response -> System.out.println(response.body()));
+
+// perform same GET, but expect XMI format      
+client.get("SuperBrewer3000.json?format=xmi")
+      .thenAccept(response -> System.out.println(response.body()));
+      
+// perform POST
+client.update("SuperBrewer3000.json", "{ \"data\": <payload> }")
+      .thenAccept(response -> System.out.println(response.body()));      
+```
+
+### Subscriptions Example
+
+If you want to be notified about any changes happening on a certain model, 
+you can subscribe with a `SubscriptionListener`.
+
+```Java
+ModelServerClient client = new ModelServerClient("http://localhost:8081/api/v1/");
+String subscriptionId = "SuperBrewer3000.json?format=xmi";
+client.subscribe(subscriptionId, new SubscriptionListener() {
+  @Override
+  public void onOpen(Response<String> response) {
+    System.out.println("connected: " + response.getMessage());
+  }
+
+  @Override
+  public void onMessage(String response) {
+    System.out.println("message received: " + response);
+  }
+
+  @Override
+  public void onClosing(int code, @NotNull String reason) {
+    System.out.println("Closing");
+  }
+
+  @Override
+  public void onFailure(Throwable t) {
+    System.out.println("Failed: ");
+    t.printStackTrace();
+  }
+
+  @Override
+  public void onClosed(int code, @NotNull String reason) {
+    System.out.println("Connected closed");
+  }
+
+  @Override
+  public void onFailure(Throwable t, Response<String> response) {
+    System.out.println("Failed: " + response);
+  }
+});
+client.unsubscribe(subscriptionId);
+```
+
+
 ## Unit Testing
 
 tbd

@@ -20,7 +20,6 @@ import com.eclipsesource.modelserver.emf.common.codecs.EncodingException;
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import io.javalin.http.Context;
 import io.javalin.websocket.WsContext;
 import io.javalin.websocket.WsHandler;
 import org.apache.log4j.Logger;
@@ -38,7 +37,7 @@ import static java.util.stream.Collectors.toSet;
 
 public class SessionController extends WsHandler {
 
-	Logger LOG = Logger.getLogger(SessionController.class.getSimpleName());
+	private static Logger LOG = Logger.getLogger(SessionController.class.getSimpleName());
 
 	private Map<String, Set<WsContext>> modelUrisToClients = Maps.newConcurrentMap();
 
@@ -89,7 +88,12 @@ public class SessionController extends WsHandler {
 			getOpenSessions(modeluri)
 				.forEach(session -> {
 					try {
-						session.send(JsonResponse.data(encoder.encode(session, updatedModel)));
+						if (updatedModel == null) {
+							// model has been deleted
+							session.send(JsonResponse.data(null));
+						} else {
+							session.send(JsonResponse.data(encoder.encode(session, updatedModel)));
+						}
 					} catch (EncodingException e) {
 						LOG.error("Broadcast model update of " + modeluri + " failed", e);
 					}

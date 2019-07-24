@@ -15,11 +15,11 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import org.jetbrains.annotations.Nullable;
-
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.jetbrains.annotations.Nullable;
 
 public class JsonResponse {
 
@@ -48,7 +48,7 @@ public class JsonResponse {
 
 	public static JsonNode data(@Nullable JsonNode jsonNode) {
 		return Json.object(
-			Json.prop("data", jsonNode)
+			Json.prop("data", jsonNode == null ? NullNode.getInstance() : jsonNode)
 		);
 	}
 
