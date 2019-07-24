@@ -20,20 +20,24 @@ import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import okhttp3.*;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 public class ModelServerClient implements ModelServerClientApi, ModelServerPaths {
 
+    private static Logger LOG = Logger.getLogger(ModelServerClient.class.getSimpleName());
+
     private OkHttpClient client;
     private String baseUrl;
+    private Map<String, WebSocket> openSockets = new LinkedHashMap<>();
 
     public ModelServerClient(String baseUrl) throws MalformedURLException {
         this(new OkHttpClient(), baseUrl);
@@ -50,7 +54,9 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
             .url(makeUrl(MODEL_CRUD).replace(":modeluri", modelUri))
             .build();
 
-        return makeCall(request).thenApply(response -> parseField(response, "data"));
+        return makeCall(request)
+            .thenApply(response -> parseField(response, "data"))
+            .thenApply(this::getBodyOrThrow);
     }
 
     @Override
@@ -61,6 +67,7 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
 
         return makeCall(request)
             .thenApply(response -> parseField(response, "data"))
+            .thenApply(this::getBodyOrThrow)
             .thenApply(response -> response.mapBody(body -> {
                 List<String> uris = new ArrayList<>();
                 try {
@@ -81,6 +88,7 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
 
         return makeCall(request)
             .thenApply(response -> parseField(response, "type"))
+            .thenApply(this::getBodyOrThrow)
             .thenApply(response -> response.mapBody(body -> body.equals("confirm")));
     }
 
@@ -92,7 +100,8 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
             .build();
 
         return makeCall(request)
-            .thenApply(response -> parseField(response, "data"));
+            .thenApply(response -> parseField(response, "data"))
+            .thenApply(this::getBodyOrThrow);
     }
 
     @Override
@@ -101,7 +110,9 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
             .url(makeUrl(SCHEMA).replace(":modeluri", modelUri))
             .build();
 
-        return makeCall(request).thenApply(response -> parseField(response, "data"));
+        return makeCall(request)
+            .thenApply(response -> parseField(response, "data"))
+            .thenApply(this::getBodyOrThrow);
     }
 
     @Override
@@ -118,6 +129,7 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
 
         return makeCall(request)
             .thenApply(response -> parseField(response, "type"))
+            .thenApply(this::getBodyOrThrow)
             .thenApply(response -> response.mapBody(body -> body.equals("success")));
     }
 
@@ -129,7 +141,63 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
 
         return makeCall(request)
             .thenApply(response -> parseField(response, "type"))
+            .thenApply(this::getBodyOrThrow)
             .thenApply(response -> response.mapBody(body -> body.equals("success")));
+    }
+
+    @Override
+    public void subscribe(String modelUri, SubscriptionListener subscriptionListener) {
+        final String queryParams = modelUri.contains("?") ? modelUri.substring(modelUri.indexOf("?")) : "";
+        Request request = new Request.Builder()
+            .url(makeUrl(SUBSCRIPTION)
+                .replace("http", "ws")
+                .replace(":modeluri", modelUri.substring(0, modelUri.indexOf("?")))
+                .concat(queryParams)
+            )
+            .build();
+        final WebSocket socket = client.newWebSocket(request, new WebSocketListener() {
+            @Override
+            public void onOpen(@NotNull WebSocket webSocket, @NotNull okhttp3.Response response) {
+                subscriptionListener.onOpen(new Response<>(response));
+            }
+
+            @Override
+            public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+                ModelServerClient.this.parseJsonField(text, "data")
+                    .ifPresent(subscriptionListener::onMessage);
+            }
+
+            @Override
+            public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+                subscriptionListener.onClosing(code, reason);
+            }
+
+            @Override
+            public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+                subscriptionListener.onClosed(code, reason);
+            }
+
+            @Override
+            public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable okhttp3.Response response) {
+                if (response != null) {
+                    subscriptionListener.onFailure(t, new Response<>(response));
+                } else {
+                    subscriptionListener.onFailure(t);
+                }
+            }
+        });
+        openSockets.put(modelUri, socket);
+    }
+
+    public boolean unsubscribe(String modelUri) {
+        final WebSocket webSocket = openSockets.get(modelUri);
+        if (webSocket != null) {
+            final boolean closed = webSocket.close(1000, "Websocket closed by client.");
+            client.dispatcher().executorService().shutdown();
+            client.connectionPool().evictAll();
+            return closed;
+        }
+        return false;
     }
 
 
@@ -154,17 +222,30 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
         return future;
     }
 
-    private Response<String> parseField(Response<String> response, String field) {
-        return response.mapBody(body -> {
-            try {
-                final JsonNode data = Json.parse(body).get(field);
-                if (data.isTextual()) {
-                    return data.textValue();
-                }
-                return data.toString();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+    private Response<Optional<String>> parseField(Response<String> response, String field) {
+        return response.mapBody(body -> parseJsonField(body, field));
+    }
+
+    private Optional<String> parseJsonField(String jsonAsString, String field) {
+        try {
+            final JsonNode data = Json.parse(jsonAsString).get(field);
+            if (data == null) {
+                return Optional.empty();
             }
-        });
+            if (data.isTextual()) {
+                return Optional.of(data.textValue());
+            }
+            return Optional.of(data.toString());
+        } catch (IOException e) {
+            LOG.error("Could not parse JSON", e);
+            return Optional.empty();
+        }
+    }
+
+    private Response<String> getBodyOrThrow(Response<Optional<String>> response) {
+        return response
+            .mapBody(maybeBody ->
+                maybeBody.orElseThrow(() -> new RuntimeException("Could not parse 'data' field"))
+            );
     }
 }

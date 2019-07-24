@@ -15,26 +15,19 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import org.jetbrains.annotations.NotNull;
 
-public interface ModelServerClientApiV1 {
+public interface SubscriptionListener {
+    void onOpen(Response<String> response);
 
-    CompletableFuture<Response<String>> get(String modelUri);
+    void onMessage(String response);
 
-    CompletableFuture<Response<List<String>>> getAll();
+    void onClosing(int code, @NotNull String reason);
 
-    CompletableFuture<Response<Boolean>> delete(String modelUri);
+    void onClosed(int code, @NotNull String reason);
 
-    CompletableFuture<Response<String>> update(String modelUri, String updatedModel, String mediaType);
+    void onFailure(Throwable t, Response<String> response);
 
-    CompletableFuture<Response<String>> getSchema(String modelUri);
-
-    CompletableFuture<Response<Boolean>> configure(ServerConfiguration configuration);
-
-    CompletableFuture<Response<Boolean>> ping();
-
-    void subscribe(String modelUri, SubscriptionListener subscriptionListener);
-
-    boolean unsubscribe(String modelUri);
+    void onFailure(Throwable t);
 }
+
