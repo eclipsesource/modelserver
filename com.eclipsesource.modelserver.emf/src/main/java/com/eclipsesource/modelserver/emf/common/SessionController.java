@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import com.eclipsesource.modelserver.emf.common.codecs.Encoder;
-import com.eclipsesource.modelserver.emf.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.emf.common.codecs.Codecs;
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -44,10 +44,10 @@ public class SessionController extends WsHandler {
 	@Inject
 	private ModelRepository modelRepository;
 
-	private Encoder encoder;
+	private Codecs encoder;
 
 	public SessionController() {
-		this.encoder = new Encoder();
+		this.encoder = new Codecs();
 	}
 
 	public void subscribe(WsContext ctx, String modeluri) {

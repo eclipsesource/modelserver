@@ -13,24 +13,31 @@
  *
  *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  *******************************************************************************/
-package com.eclipsesource.modelserver.emf.common.codecs;
+package com.eclipsesource.modelserver.common.codecs;
 
-import com.eclipsesource.modelserver.common.codecs.DefaultJsonCodec;
-import com.eclipsesource.modelserver.common.codecs.EncodingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.javalin.plugin.json.JavalinJackson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.emf.ecore.EObject;
 
-public class JsonCodec extends DefaultJsonCodec {
+import java.util.Optional;
 
-    @Override
+public class DefaultJsonCodec implements Codec {
+
+    final EMFJsonConverter emfJsonConverter = new EMFJsonConverter();
+
     public JsonNode encode(EObject obj) throws EncodingException {
         return encode((Object) obj);
     }
 
+    @Override
+    public Optional<EObject> decode(String payload) {
+        return emfJsonConverter.fromJson(payload);
+    }
+
     public static JsonNode encode(Object obj) throws EncodingException {
         try {
-            return JavalinJackson.getObjectMapper().valueToTree(obj);
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.valueToTree(obj);
         } catch (IllegalArgumentException ex) {
             throw new EncodingException(ex);
         }

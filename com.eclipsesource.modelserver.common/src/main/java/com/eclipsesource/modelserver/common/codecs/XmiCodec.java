@@ -13,7 +13,7 @@
  *
  *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  *******************************************************************************/
-package com.eclipsesource.modelserver.emf.common.codecs;
+package com.eclipsesource.modelserver.common.codecs;
 
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,19 +24,16 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Optional;
 
 public class XmiCodec implements Codec {
 
     public JsonNode encode(EObject eObject) throws EncodingException {
-        ResourceSet resourceSet = new ResourceSetImpl();
-        resourceSet
-            .getResourceFactoryRegistry()
-            .getProtocolToFactoryMap()
-            .put(null, new XMIResourceFactoryImpl());
-
-        final Resource resource = resourceSet.createResource(URI.createURI("virtual.xmi"));
+        final Resource resource = createResource();
         resource.getContents().add(eObject);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
@@ -48,4 +45,23 @@ public class XmiCodec implements Codec {
         return Json.text(outputStream.toString());
     }
 
+    @Override
+    public Optional<EObject> decode(String payload) throws DecodingException {
+        final Resource resource = createResource();
+        try {
+            resource.load(new ByteArrayInputStream(payload.getBytes()), Collections.emptyMap());
+        } catch (IOException e) {
+            throw new DecodingException(e);
+        }
+        return Optional.ofNullable(resource.getContents().get(0));
+    }
+
+    private Resource createResource() {
+        ResourceSet resourceSet = new ResourceSetImpl();
+        resourceSet
+            .getResourceFactoryRegistry()
+            .getProtocolToFactoryMap()
+            .put(null, new XMIResourceFactoryImpl());
+        return resourceSet.createResource(URI.createURI("virtual.xmi"));
+    }
 }

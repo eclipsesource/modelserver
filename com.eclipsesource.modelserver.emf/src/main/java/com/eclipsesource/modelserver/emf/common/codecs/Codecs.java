@@ -15,21 +15,26 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common.codecs;
 
+import com.eclipsesource.modelserver.common.codecs.Codec;
+import com.eclipsesource.modelserver.common.codecs.DecodingException;
+import com.eclipsesource.modelserver.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.common.codecs.XmiCodec;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.javalin.http.Context;
 import io.javalin.websocket.WsContext;
 import org.eclipse.emf.ecore.EObject;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class Encoder {
+public class Codecs {
 
     private Map<String, Codec> formatToCodec = new LinkedHashMap<>();
 
-    public Encoder() {
+    public Codecs() {
         formatToCodec.put("xmi", new XmiCodec());
         formatToCodec.put("json", new JsonCodec());
     }
@@ -40,6 +45,10 @@ public class Encoder {
 
     public JsonNode encode(WsContext context, EObject eObject) throws EncodingException {
         return findFormat(context.queryParamMap()).encode(eObject);
+    }
+
+    public Optional<EObject> decode(Context context, String payload) throws DecodingException {
+        return findFormat(context.queryParamMap()).decode(payload);
     }
 
     private Codec findFormat(Map<String, List<String>> queryParams) {

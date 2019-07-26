@@ -18,6 +18,7 @@ package com.eclipsesource.modelserver.emf;
 import java.io.IOException;
 import java.util.Collections;
 
+import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;

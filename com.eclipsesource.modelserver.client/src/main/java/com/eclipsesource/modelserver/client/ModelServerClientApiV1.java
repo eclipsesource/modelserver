@@ -26,7 +26,7 @@ public interface ModelServerClientApiV1 {
 
     CompletableFuture<Response<Boolean>> delete(String modelUri);
 
-    CompletableFuture<Response<String>> update(String modelUri, String updatedModel, String mediaType);
+    CompletableFuture<Response<String>> update(String modelUri, String updatedModel);
 
     CompletableFuture<Response<String>> getSchema(String modelUri);
 

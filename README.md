@@ -103,7 +103,16 @@ client.get("SuperBrewer3000.json?format=xmi")
       
 // perform POST
 client.update("SuperBrewer3000.json", "{ \"data\": <payload> }")
-      .thenAccept(response -> System.out.println(response.body()));      
+      .thenAccept(response -> System.out.println(response.body()));
+
+// perform POST with XMI format
+client.update("SuperBrewer3000.json?format=xmi", client.encode(brewingUnit, "xmi"))
+  .thenAccept(response -> {
+    client.get("SuperBrewer3000.json?format=xmi").thenAccept(resp -> {
+      System.out.println(client.decode(resp.body(), "xmi"));
+    });
+  });
+}
 ```
 
 ### Subscriptions Example

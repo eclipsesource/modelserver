@@ -13,7 +13,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
-package com.eclipsesource.modelserver.emf;
+package com.eclipsesource.modelserver.common.codecs;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -23,12 +23,12 @@ import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EObject;
-import org.emfjson.jackson.module.EMFModule;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.emfjson.jackson.module.EMFModule;
 
 public class EMFJsonConverter {
 	private static Logger LOG = Logger.getLogger(EMFJsonConverter.class.getSimpleName());

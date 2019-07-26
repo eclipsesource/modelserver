@@ -16,11 +16,16 @@
 package com.eclipsesource.modelserver.client;
 
 import com.eclipsesource.modelserver.common.ModelServerPaths;
+import com.eclipsesource.modelserver.common.codecs.DecodingException;
+import com.eclipsesource.modelserver.common.codecs.DefaultJsonCodec;
+import com.eclipsesource.modelserver.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.common.codecs.XmiCodec;
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import okhttp3.*;
 import org.apache.log4j.Logger;
+import org.eclipse.emf.ecore.EObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -93,10 +98,12 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
     }
 
     @Override
-    public CompletableFuture<Response<String>> update(String modelUri, String updatedModel, String mediaType) {
+    public CompletableFuture<Response<String>> update(String modelUri, String updatedModel) {
         final Request request = new Request.Builder()
             .url(makeUrl(MODEL_CRUD).replace(":modeluri", modelUri))
-            .patch(RequestBody.create(updatedModel, MediaType.parse(mediaType)))
+            .patch(
+                RequestBody.create(Json.object(Json.prop("data", Json.text(updatedModel))).toString(), MediaType.parse("application/json"))
+            )
             .build();
 
         return makeCall(request)
@@ -247,5 +254,36 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
             .mapBody(maybeBody ->
                 maybeBody.orElseThrow(() -> new RuntimeException("Could not parse 'data' field"))
             );
+    }
+
+    public String encode(EObject eObject) {
+        return encode(eObject, "json");
+    }
+
+    public String encode(EObject eObject, String format) {
+        try {
+            if (format.equals("xmi")) {
+                return new XmiCodec().encode(eObject).asText();
+            }
+            return new DefaultJsonCodec().encode(eObject).toString();
+        } catch (EncodingException e) {
+            LOG.error("Encoding of " + eObject + " with " + format + " format failed");
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Optional<EObject> decode(String payload) {
+        return decode(payload, "json");
+    }
+
+    public Optional<EObject> decode(String payload, String format) {
+        try {
+            if (format.equals("xmi")) {
+                return new XmiCodec().decode(payload);
+            }
+        } catch (DecodingException e) {
+            LOG.error("Decoding of " + payload + " with " + format + " format failed");
+        }
+        return new DefaultJsonCodec().decode(payload);
     }
 }

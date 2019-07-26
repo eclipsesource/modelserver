@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
+import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.BasicConfigurator;
 import org.eclipse.emf.ecore.EClass;

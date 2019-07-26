@@ -17,9 +17,9 @@ package com.eclipsesource.modelserver.emf.common;
 
 import com.eclipsesource.modelserver.coffee.model.coffee.BrewingUnit;
 import com.eclipsesource.modelserver.coffee.model.coffee.CoffeeFactory;
-import com.eclipsesource.modelserver.emf.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.common.codecs.XmiCodec;
 import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
-import com.eclipsesource.modelserver.emf.common.codecs.XmiCodec;
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.javalin.http.Context;
@@ -109,5 +109,19 @@ public class ModelControllerTest {
         modelController.getOne(context, "test");
 
         assertThat(response.get().get("data"), is(equalTo(new JsonCodec().encode(brewingUnit))));
+    }
+
+    @Test
+    public void updateXmi() throws EncodingException {
+        final BrewingUnit brewingUnit = CoffeeFactory.eINSTANCE.createBrewingUnit();
+        final LinkedHashMap<String, List<String>> queryParams = new LinkedHashMap<>();
+        queryParams.put("format", Collections.singletonList("xmi"));
+        when(context.queryParamMap()).thenReturn(queryParams);
+        when(context.body()).thenReturn(
+            Json.object(Json.prop("data", new XmiCodec().encode(brewingUnit))).toString()
+        );
+        modelController.update(context, "SuperBrewer3000.json");
+        verify(modelRepository, times(1))
+            .updateModel(eq("SuperBrewer3000.json"), any(BrewingUnit.class));
     }
 }

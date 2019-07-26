@@ -13,11 +13,15 @@
  *
  *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  *******************************************************************************/
-package com.eclipsesource.modelserver.emf.common.codecs;
+package com.eclipsesource.modelserver.common.codecs;
 
-public class EncodingException extends Exception {
+import com.fasterxml.jackson.databind.JsonNode;
+import org.eclipse.emf.ecore.EObject;
 
-    public EncodingException(Exception underlyingCause) {
-        super(underlyingCause);
-    }
+import java.util.Optional;
+
+public interface Codec {
+
+    JsonNode encode(EObject eObject) throws EncodingException;
+    Optional<EObject> decode(String payload) throws DecodingException;
 }

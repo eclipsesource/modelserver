@@ -15,10 +15,11 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import com.eclipsesource.modelserver.emf.EMFJsonConverter;
-import com.eclipsesource.modelserver.emf.common.codecs.Encoder;
-import com.eclipsesource.modelserver.emf.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.common.codecs.DecodingException;
+import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
+import com.eclipsesource.modelserver.common.codecs.EncodingException;
 import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
+import com.eclipsesource.modelserver.emf.common.codecs.Codecs;
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Maps;
@@ -42,11 +43,11 @@ public class ModelController implements CrudHandler {
 
 	private ModelRepository modelRepository;
 	private SessionController sessionController;
-	private Encoder encoder;
+	private Codecs codecs;
 
 	@Inject public ModelController(ModelRepository modelRepository, SessionController sessionController) {
 		JavalinJackson.configure(EMFJsonConverter.setupDefaultMapper());
-		encoder = new Encoder();
+		codecs = new Codecs();
 		this.modelRepository = modelRepository;
 		this.sessionController = sessionController;
 	}
@@ -63,7 +64,7 @@ public class ModelController implements CrudHandler {
 			String modeluri = eObject.eGet(name).toString().replaceAll(" ", "");
 			this.modelRepository.addModel(modeluri, eObject);
 			try {
-				final JsonNode encoded = encoder.encode(ctx, eObject);
+				final JsonNode encoded = codecs.encode(ctx, eObject);
 				ctx.json(JsonResponse.data(encoded));
 				this.sessionController.modelChanged(modeluri);
 			} catch (EncodingException ex) {
@@ -89,7 +90,7 @@ public class ModelController implements CrudHandler {
 		try {
 			Map<URI, JsonNode> encodedEntries = Maps.newLinkedHashMap();
 			for (Map.Entry<URI, EObject> entry : allModels.entrySet()) {
-				final JsonNode encoded = encoder.encode(ctx, entry.getValue());
+				final JsonNode encoded = codecs.encode(ctx, entry.getValue());
 				encodedEntries.put(entry.getKey(), encoded);
 			}
 			ctx.json(JsonResponse.data(JsonCodec.encode(encodedEntries)));
@@ -106,7 +107,7 @@ public class ModelController implements CrudHandler {
 					ctx.json(JsonResponse.data(Json.text("")));
 				} else {
 					try {
-						ctx.json(JsonResponse.data(encoder.encode(ctx, model)));
+						ctx.json(JsonResponse.data(codecs.encode(ctx, model)));
 					} catch (EncodingException ex) {
 						handleEncodingError(ctx, ex);
 					}
@@ -122,7 +123,7 @@ public class ModelController implements CrudHandler {
 			eObject -> {
 				modelRepository.updateModel(modeluri, eObject);
 				try {
-					ctx.json(JsonResponse.data(encoder.encode(ctx, eObject)));
+					ctx.json(JsonResponse.data(codecs.encode(ctx, eObject)));
 				} catch (EncodingException e) {
 					handleEncodingError(ctx, e);
 				}
@@ -131,26 +132,22 @@ public class ModelController implements CrudHandler {
 		);
 	}
 
-	public Handler modelUrisHandler = ctx -> {
-		ctx.json(JsonResponse.data(JsonCodec.encode(this.modelRepository.getAllModelUris())));
-	};
+	public Handler modelUrisHandler = ctx -> ctx.json(JsonResponse.data(JsonCodec.encode(this.modelRepository.getAllModelUris())));
 
 	private Optional<EObject> readEObject(Context ctx) {
-		final EMFJsonConverter emfJsonConverter = new EMFJsonConverter();
-
 		try {
 			JsonNode json = JavalinJackson.getObjectMapper().readTree(ctx.body());
 			if (!json.has("data")) {
 				handleError(ctx, 400, "Empty JSON");
 				return Optional.empty();
 			}
-			String jsonData = json.get("data").toString();
+			String jsonData = json.get("data").asText();
 			if (jsonData.equals("{}")) {
 				handleError(ctx, 400, "Empty JSON");
 				return Optional.empty();
 			}
-			return emfJsonConverter.fromJson(jsonData);
-		} catch (IOException e) {
+			return codecs.decode(ctx, jsonData);
+		} catch (DecodingException | IOException e) {
 			handleError(ctx, 400, "Invalid JSON");
 		}
 		return Optional.empty();

@@ -18,7 +18,7 @@ package com.eclipsesource.modelserver.client;
 import com.eclipsesource.modelserver.coffee.model.coffee.CoffeeFactory;
 import com.eclipsesource.modelserver.coffee.model.coffee.Display;
 import com.eclipsesource.modelserver.emf.common.JsonResponse;
-import com.eclipsesource.modelserver.emf.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.common.codecs.EncodingException;
 import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -106,8 +106,7 @@ public class ModelServerClientTest {
 
         final CompletableFuture<Response<String>> f = client.update(
             "SuperBrewer3000.json",
-            expected.toString(),
-            "application/json"
+            expected.toString()
         );
 
         assertThat(f.get().body(), equalTo(expected.toString()));
