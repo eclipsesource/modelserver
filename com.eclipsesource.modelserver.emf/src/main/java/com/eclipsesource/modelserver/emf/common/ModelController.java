@@ -54,23 +54,26 @@ public class ModelController implements CrudHandler {
 
 	@Override
 	public void create(Context ctx) {
-		readEObject(ctx).ifPresent(eObject -> {
-			EStructuralFeature name = eObject.eClass().getEStructuralFeature("name");
-			if (eObject.eGet(name) == null) {
-				handleError(ctx, 400, "Create new model failed: Model identifier (name) is missing");
-				return;
-			}
-
-			String modeluri = eObject.eGet(name).toString().replaceAll(" ", "");
-			this.modelRepository.addModel(modeluri, eObject);
-			try {
-				final JsonNode encoded = codecs.encode(ctx, eObject);
-				ctx.json(JsonResponse.data(encoded));
-				this.sessionController.modelChanged(modeluri);
-			} catch (EncodingException ex) {
-				handleEncodingError(ctx, ex);
-			}
-		});
+		readEObject(ctx).ifPresentOrElse(
+				eObject -> {
+					EStructuralFeature name = eObject.eClass().getEStructuralFeature("name");
+					if (eObject.eGet(name) == null) {
+						handleError(ctx, 400, "Create new model failed: Model identifier (name) is missing");
+						return;
+					}
+		
+					String modeluri = eObject.eGet(name).toString().replaceAll(" ", "");
+					this.modelRepository.addModel(modeluri, eObject);
+					try {
+						final JsonNode encoded = codecs.encode(ctx, eObject);
+						ctx.json(JsonResponse.data(encoded));
+						this.sessionController.modelChanged(modeluri);
+					} catch (EncodingException ex) {
+						handleEncodingError(ctx, ex);
+					}
+				},
+				() -> handleError(ctx, 400, "Create new model failed")
+		);
 	}
 
 	@Override
@@ -119,7 +122,7 @@ public class ModelController implements CrudHandler {
 
 	@Override
 	public void update(Context ctx, String modeluri) {
-		readEObject(ctx).ifPresent(
+		readEObject(ctx).ifPresentOrElse(
 			eObject -> {
 				modelRepository.updateModel(modeluri, eObject);
 				try {
@@ -128,7 +131,8 @@ public class ModelController implements CrudHandler {
 					handleEncodingError(ctx, e);
 				}
 				sessionController.modelChanged(modeluri);
-			}
+			},
+			() -> handleError(ctx, 400, "Update model failed")
 		);
 	}
 
@@ -141,7 +145,8 @@ public class ModelController implements CrudHandler {
 				handleError(ctx, 400, "Empty JSON");
 				return Optional.empty();
 			}
-			String jsonData = json.get("data").asText();
+			JsonNode jsonDataNode =  json.get("data");
+			String jsonData = !jsonDataNode.asText().isEmpty() ? jsonDataNode.asText() : jsonDataNode.toString();
 			if (jsonData.equals("{}")) {
 				handleError(ctx, 400, "Empty JSON");
 				return Optional.empty();

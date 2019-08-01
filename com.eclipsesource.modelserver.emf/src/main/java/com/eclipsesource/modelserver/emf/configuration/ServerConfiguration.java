@@ -16,8 +16,16 @@
 package com.eclipsesource.modelserver.emf.configuration;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
@@ -41,6 +49,25 @@ public class ServerConfiguration {
 		toFilePath(workspaceRoot).ifPresent(path -> this.workspaceRoot = path);
 	}
 
+	public Set<String> getWorkspaceEntries() {
+		Set<String> filePaths = new HashSet<>();
+		
+		if (!this.workspaceRoot.isEmpty()) {
+			try (Stream<Path> paths = Files.walk(Paths.get(this.workspaceRoot))) {
+				paths
+					.filter(Files::isRegularFile)
+					.forEach(file -> filePaths.add(file.toString()));
+			} catch (InvalidPathException i) {
+				LOG.error(String.format("Could not get workspace path! ’%s’ cannot be converted to a valid Path", this.workspaceRoot));
+			} catch (IOException io) {
+				LOG.error(String.format("IOException occured while reading files in workspace ’%s’: " + io.getMessage(), this.workspaceRoot));
+			} catch (SecurityException s) {
+				LOG.error("Security manager denies access to files under workspace " + this.workspaceRoot);
+			}
+		}
+		return filePaths;
+	}
+
 	public int getServerPort() {
 		return serverPort;
 	}
@@ -55,7 +82,6 @@ public class ServerConfiguration {
 
 	public static boolean isValidPort(Integer port) {
 		return port >= 0 && port <= 65535;
-
 	}
 
 	private static Optional<String> toFilePath(String fileUrl) {

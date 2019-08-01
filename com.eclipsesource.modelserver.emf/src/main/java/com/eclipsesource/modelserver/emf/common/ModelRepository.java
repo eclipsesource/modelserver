@@ -33,6 +33,7 @@ import com.google.inject.Inject;
 public class ModelRepository {
 
 	private Map<URI, EObject> models;
+	private boolean ensureModelsAreLoaded;
 
 	@Inject
 	private ServerConfiguration serverConfiguration;
@@ -56,6 +57,7 @@ public class ModelRepository {
 	}
 
 	public Map<URI, EObject> getAllModels() {
+		this.ensureModelsAreLoaded();
 		return new LinkedHashMap<>(this.models);
 	}
 
@@ -72,6 +74,8 @@ public class ModelRepository {
 	}
 
 	public Set<String> getAllModelUris() {
+		this.ensureModelsAreLoaded();
+		
 		Set<String> modeluris = new HashSet<>();
 		for(URI uri: this.models.keySet()){
 			modeluris.add(uri.toString());
@@ -89,12 +93,18 @@ public class ModelRepository {
 		return Optional.ofNullable(this.models.get(uri));
 	}
 
+	private void ensureModelsAreLoaded() {
+		if (!this.ensureModelsAreLoaded) {
+			serverConfiguration.getWorkspaceEntries().forEach(this::loadModel);
+			this.ensureModelsAreLoaded = true;
+		}
+	}
+
 	private URI getWorkspaceUri(String modeluri) {
 		String baseURL = serverConfiguration.getWorkspaceRoot();
 		if (!modeluri.startsWith(baseURL)) {
-			modeluri = baseURL + "/" + modeluri.replaceAll(" ", "");
+			modeluri = baseURL + modeluri.replaceAll(" ", "");
 		}
 		return URI.createURI(modeluri);
 	}
-
 }
