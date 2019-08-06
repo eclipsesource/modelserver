@@ -85,11 +85,12 @@ public class ExampleServerLauncher {
 		cleanupTempTestWorkspace(workspaceRoot);
 		boolean result = workspaceRoot.mkdirs();
 		result &= ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + ECORE_TEST_FILE,
-				new File(workspaceRoot, ECORE_TEST_FILE));
+				new File(workspaceRoot, ECORE_TEST_FILE.toLowerCase())
+		);
 		result &= result && ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + COFFEE_TEST_FILE,
-				new File(workspaceRoot, COFFEE_TEST_FILE));
+				new File(workspaceRoot, COFFEE_TEST_FILE.toLowerCase()));
 		result &= result && ResourceUtil.copyFromResource(WORKSPACE_ROOT + "/" + JSON_TEST_FILE,
-				new File(workspaceRoot, JSON_TEST_FILE));
+				new File(workspaceRoot, JSON_TEST_FILE.toLowerCase()));
 		return result;
 	}
 
