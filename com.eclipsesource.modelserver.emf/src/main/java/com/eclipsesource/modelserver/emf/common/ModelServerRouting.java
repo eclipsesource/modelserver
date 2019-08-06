@@ -92,7 +92,8 @@ public class ModelServerRouting extends Routing {
 
 	private Optional<String> getQueryParam(Context ctx, String paramKey) {
 		if (ctx.queryParamMap().containsKey(paramKey))
-			return Optional.of(ctx.queryParamMap().get(paramKey).get(0));
+			return Optional.of(ctx.queryParamMap().get(paramKey).get(0))
+					.map(String::toLowerCase);
 		
 		return Optional.empty();
 	}
