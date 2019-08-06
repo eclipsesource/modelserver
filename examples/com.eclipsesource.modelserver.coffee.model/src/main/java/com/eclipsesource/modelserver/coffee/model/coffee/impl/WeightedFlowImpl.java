@@ -17,6 +17,7 @@
 package com.eclipsesource.modelserver.coffee.model.coffee.impl;
 
 import com.eclipsesource.modelserver.coffee.model.coffee.CoffeePackage;
+import com.eclipsesource.modelserver.coffee.model.coffee.Probability;
 import com.eclipsesource.modelserver.coffee.model.coffee.WeightedFlow;
 
 import org.eclipse.emf.common.notify.Notification;
@@ -47,7 +48,7 @@ public class WeightedFlowImpl extends FlowImpl implements WeightedFlow {
 	 * @generated
 	 * @ordered
 	 */
-	protected static final double PROBABILITY_EDEFAULT = 0.0;
+	protected static final Probability PROBABILITY_EDEFAULT = Probability.LOW;
 
 	/**
 	 * The cached value of the '{@link #getProbability() <em>Probability</em>}'
@@ -57,7 +58,7 @@ public class WeightedFlowImpl extends FlowImpl implements WeightedFlow {
 	 * @generated
 	 * @ordered
 	 */
-	protected double probability = PROBABILITY_EDEFAULT;
+	protected Probability probability = PROBABILITY_EDEFAULT;
 
 	/**
 	 * <!-- begin-user-doc --> <!-- end-user-doc -->
@@ -84,7 +85,7 @@ public class WeightedFlowImpl extends FlowImpl implements WeightedFlow {
 	 * @generated
 	 */
 	@Override
-	public double getProbability() {
+	public Probability getProbability() {
 		return probability;
 	}
 
@@ -94,9 +95,9 @@ public class WeightedFlowImpl extends FlowImpl implements WeightedFlow {
 	 * @generated
 	 */
 	@Override
-	public void setProbability(double newProbability) {
-		double oldProbability = probability;
-		probability = newProbability;
+	public void setProbability(Probability newProbability) {
+		Probability oldProbability = probability;
+		probability = newProbability == null ? PROBABILITY_EDEFAULT : newProbability;
 		if (eNotificationRequired())
 			eNotify(new ENotificationImpl(this, Notification.SET, CoffeePackage.WEIGHTED_FLOW__PROBABILITY,
 					oldProbability, probability));
@@ -125,7 +126,7 @@ public class WeightedFlowImpl extends FlowImpl implements WeightedFlow {
 	public void eSet(int featureID, Object newValue) {
 		switch (featureID) {
 		case CoffeePackage.WEIGHTED_FLOW__PROBABILITY:
-			setProbability((Double) newValue);
+			setProbability((Probability) newValue);
 			return;
 		}
 		super.eSet(featureID, newValue);

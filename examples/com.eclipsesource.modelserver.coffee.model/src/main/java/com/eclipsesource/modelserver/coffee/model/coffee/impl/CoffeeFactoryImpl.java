@@ -126,6 +126,8 @@ public class CoffeeFactoryImpl extends EFactoryImpl implements CoffeeFactory {
 			return createManufactoringProcessFromString(eDataType, initialValue);
 		case CoffeePackage.RAM_TYPE:
 			return createRamTypeFromString(eDataType, initialValue);
+		case CoffeePackage.PROBABILITY:
+			return createProbabilityFromString(eDataType, initialValue);
 		default:
 			throw new IllegalArgumentException("The datatype '" + eDataType.getName() + "' is not a valid classifier"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -145,6 +147,8 @@ public class CoffeeFactoryImpl extends EFactoryImpl implements CoffeeFactory {
 			return convertManufactoringProcessToString(eDataType, instanceValue);
 		case CoffeePackage.RAM_TYPE:
 			return convertRamTypeToString(eDataType, instanceValue);
+		case CoffeePackage.PROBABILITY:
+			return convertProbabilityToString(eDataType, instanceValue);
 		default:
 			throw new IllegalArgumentException("The datatype '" + eDataType.getName() + "' is not a valid classifier"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -411,6 +415,28 @@ public class CoffeeFactoryImpl extends EFactoryImpl implements CoffeeFactory {
 	 * @generated
 	 */
 	public String convertRamTypeToString(EDataType eDataType, Object instanceValue) {
+		return instanceValue == null ? null : instanceValue.toString();
+	}
+
+	/**
+	 * <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 */
+	public Probability createProbabilityFromString(EDataType eDataType, String initialValue) {
+		Probability result = Probability.get(initialValue);
+		if (result == null)
+			throw new IllegalArgumentException(
+					"The value '" + initialValue + "' is not a valid enumerator of '" + eDataType.getName() + "'"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		return result;
+	}
+
+	/**
+	 * <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 */
+	public String convertProbabilityToString(EDataType eDataType, Object instanceValue) {
 		return instanceValue == null ? null : instanceValue.toString();
 	}
 

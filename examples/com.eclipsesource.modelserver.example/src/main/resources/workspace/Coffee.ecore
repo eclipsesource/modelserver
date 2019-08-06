@@ -62,6 +62,7 @@
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="height" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Workflow">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="nodes" upperBound="-1"
         eType="#//Node" containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="flows" upperBound="-1"
@@ -89,6 +90,11 @@
         eType="#//Node"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="WeightedFlow" eSuperTypes="#//Flow">
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="probability" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDouble"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="probability" eType="#//Probability"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="Probability">
+    <eLiterals name="low" literal="low"/>
+    <eLiterals name="medium" value="1" literal="medium"/>
+    <eLiterals name="high" value="2" literal="high"/>
   </eClassifiers>
 </ecore:EPackage>

@@ -43,7 +43,7 @@ public interface WeightedFlow extends Flow {
 	 * @model
 	 * @generated
 	 */
-	double getProbability();
+	Probability getProbability();
 
 	/**
 	 * Sets the value of the
@@ -52,9 +52,10 @@ public interface WeightedFlow extends Flow {
 	 * -->
 	 * 
 	 * @param value the new value of the '<em>Probability</em>' attribute.
+	 * @see com.eclipsesource.modelserver.coffee.model.coffee.Probability
 	 * @see #getProbability()
 	 * @generated
 	 */
-	void setProbability(double value);
+	void setProbability(Probability value);
 
 } // WeightedFlow
