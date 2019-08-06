@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableSet;
 
 import okhttp3.*;
 import org.apache.log4j.Logger;
-import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.ecore.EObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -64,7 +63,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         client.dispatcher().executorService().shutdown();
         client.connectionPool().evictAll();
     }
@@ -72,7 +71,11 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     @Override
     public CompletableFuture<Response<String>> get(String modelUri) {
         final Request request = new Request.Builder()
-            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri))
+            .url(
+                createHttpUrlBuilder(makeUrl(MODEL_BASE_PATH))
+                    .addQueryParameter("modeluri", modelUri)
+                    .build()
+            )
             .build();
 
         return makeCall(request)
@@ -85,7 +88,12 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     	String format = checkedFormat(_format);
 
         final Request request = new Request.Builder()
-            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri) + addFormatParam(format))
+            .url(
+                createHttpUrlBuilder(makeUrl(MODEL_BASE_PATH))
+                    .addQueryParameter("modeluri", modelUri)
+                    .addQueryParameter("format", format)
+                    .build()
+            )
             .build();
 
         return call(request)
@@ -120,7 +128,11 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     @Override
     public CompletableFuture<Response<Boolean>> delete(String modelUri) {
         final Request request = new Request.Builder()
-            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri))
+            .url(
+                createHttpUrlBuilder(makeUrl(MODEL_BASE_PATH))
+                    .addQueryParameter("modeluri", modelUri)
+                    .build()
+            )
             .delete()
             .build();
 
@@ -133,7 +145,11 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     @Override
     public CompletableFuture<Response<String>> update(String modelUri, String updatedModel) {
         final Request request = new Request.Builder()
-            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri))
+            .url(
+                createHttpUrlBuilder(makeUrl(MODEL_BASE_PATH))
+                    .addQueryParameter("modeluri", modelUri)
+                    .build()
+            )
             .patch(
                 RequestBody.create(
                     Json.object(Json.prop("data", Json.text(updatedModel))).toString(), MediaType.parse("application/json"))
@@ -148,9 +164,13 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     @Override
     public CompletableFuture<Response<EObject>> update(String modelUri, EObject updatedModel, String _format) {
     	String format = checkedFormat(_format);
-
         final Request request = new Request.Builder()
-            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri) + addFormatParam(format))
+            .url(
+                createHttpUrlBuilder(makeUrl(MODEL_BASE_PATH))
+                    .addQueryParameter("modeluri", modelUri)
+                    .addQueryParameter("format", format)
+                    .build()
+            )
             .patch(
                 RequestBody.create(
                     Json.object(
@@ -188,7 +208,11 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     @Override
     public CompletableFuture<Response<String>> getSchema(String modelUri) {
         final Request request = new Request.Builder()
-            .url(makeUrl(SCHEMA) + queryParam("modeluri", modelUri))
+            .url(
+                createHttpUrlBuilder(makeUrl(SCHEMA))
+                    .addQueryParameter("modeluri", modelUri)
+                    .build()
+            )
             .build();
 
         return makeCall(request)
@@ -233,28 +257,27 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
 
     @Override
     public void subscribe(String modelUri, TypedSubscriptionListener<EObject> subscriptionListener, String _format) {
-    	subscribe(modelUri, subscriptionListener, _format, (body, format) -> decode(body, format));
+    	subscribe(modelUri, subscriptionListener, _format, this::decode);
    }
 
     private <A> void subscribe(String modelUri, TypedSubscriptionListener<A> subscriptionListener,
     		String _format, BiFunction<String, String, Optional<A>> bodyFunction) {
     	
     	final String format = checkedFormat(_format);
-        final String queryParams = modelUri.contains("?") ? modelUri.substring(modelUri.indexOf("?")) : "";
         Request request = new Request.Builder()
-            .url(makeWsUrl(SUBSCRIPTION)
-                .replace(":modeluri", modelUri.substring(0, modelUri.indexOf("?")))
-                .concat(queryParams)
-                .concat(modelURIParam)
-                .concat(addFormatParam(format))
+            .url(
+                createHttpUrlBuilder(makeWsUrl(SUBSCRIPTION))
+                    .addQueryParameter("modeluri", modelUri)
+                    .addQueryParameter("format", format)
+                    .build()
             )
             .build();
         
         final WebSocket socket = client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onOpen(@NotNull WebSocket webSocket, @NotNull okhttp3.Response response) {
-                subscriptionListener.onOpen(new Response<A>(response,
-                		body -> require(bodyFunction.apply(body, format))));
+                subscriptionListener.onOpen(new Response<>(response,
+                    body -> require(bodyFunction.apply(body, format))));
             }
 
             @Override
@@ -289,32 +312,24 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     public boolean unsubscribe(String modelUri) {
         final WebSocket webSocket = openSockets.get(modelUri);
         if (webSocket != null) {
-            final boolean closed = webSocket.close(1000, "Websocket closed by client.");
-            return closed;
+            return webSocket.close(1000, "Websocket closed by client.");
         }
         return false;
     }
 
 
+    private String makeWsUrl(String path) {
+        return makeUrl(path).replaceFirst("^http(s?):", "^ws$1:");
+    }
+
     private String makeUrl(String path) {
         return baseUrl + path;
     }
 
-    private String makeWsUrl(String path) {
-        return (baseUrl + path).replaceFirst("^http(s?):", "^ws$1:");
+    private HttpUrl.Builder createHttpUrlBuilder(String path) {
+        return Objects.requireNonNull(HttpUrl.parse(path)).newBuilder();
     }
 
-    private String queryParam(String param, String paramValue) {
-        return "?" + param + "=" + paramValue;
-    }
-
-    private String addQueryParam(String param, String paramValue) {
-        return "&" + param + "=" + paramValue;
-    }
-    
-    private String addFormatParam(String paramValue) {
-        return "&format=" + paramValue;
-    }
 
     private CompletableFuture<Response<String>> makeCall(final Request request) {
         CompletableFuture<Response<String>> future = new CompletableFuture<>();
@@ -418,8 +433,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     	if (((EditingContextImpl)editingContext).release()) {
     		final WebSocket webSocket = openEditingSockets.remove(editingContext);
 	        if (webSocket != null) {
-	            final boolean closed = webSocket.close(1000, "Websocket closed by client.");
-	            return closed;
+                return webSocket.close(1000, "Websocket closed by client.");
 	        }
     	}
         return false;

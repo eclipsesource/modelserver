@@ -75,6 +75,20 @@ public class ModelServerClientTest {
     }
 
     @Test
+    public void getXmi() throws ExecutionException, InterruptedException, EncodingException, MalformedURLException {
+        final BrewingUnit brewingUnit = CoffeeFactory.eINSTANCE.createBrewingUnit();
+        interceptor.addRule()
+            .get()
+            .url(BASE_URL + ModelServerClient.MODEL_BASE_PATH + "?modeluri=SuperBrewer3000.json&format=xmi")
+            .respond(createDataResponse(new XmiCodec().encode(brewingUnit)).toString());
+        ModelServerClient client = createClient();
+
+        final CompletableFuture<Response<EObject>> f = client.get("SuperBrewer3000.json", "xmi");
+
+        assertTrue(EcoreUtil.equals(f.get().body(), brewingUnit));
+    }
+
+    @Test
     public void getAll() throws EncodingException, ExecutionException, InterruptedException, MalformedURLException {
         interceptor.addRule()
             .get()
