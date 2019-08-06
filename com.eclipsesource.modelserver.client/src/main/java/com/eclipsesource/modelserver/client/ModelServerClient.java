@@ -266,10 +266,13 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     	final String format = checkedFormat(_format);
         Request request = new Request.Builder()
             .url(
-                createHttpUrlBuilder(makeWsUrl(SUBSCRIPTION))
-                    .addQueryParameter("modeluri", modelUri)
-                    .addQueryParameter("format", format)
-                    .build()
+                makeWsUrl(
+                    createHttpUrlBuilder(makeUrl(SUBSCRIPTION))
+                        .addQueryParameter("modeluri", modelUri)
+                        .addQueryParameter("format", format)
+                        .build()
+                        .toString()
+                )
             )
             .build();
         
@@ -319,7 +322,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
 
 
     private String makeWsUrl(String path) {
-        return makeUrl(path).replaceFirst("^http(s?):", "^ws$1:");
+        return path.replaceFirst("http:", "ws:");
     }
 
     private String makeUrl(String path) {
