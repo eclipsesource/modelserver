@@ -17,6 +17,8 @@ package com.eclipsesource.modelserver.common.codecs;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 
 import java.util.Optional;
 
@@ -24,4 +26,5 @@ public interface Codec {
 
     JsonNode encode(EObject eObject) throws EncodingException;
     Optional<EObject> decode(String payload) throws DecodingException;
+    Optional<Resource> decode(ResourceSet resourceSet, String modelURI, String payload) throws DecodingException;
 }

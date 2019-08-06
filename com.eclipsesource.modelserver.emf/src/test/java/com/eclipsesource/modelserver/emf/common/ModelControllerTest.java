@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.javalin.http.Context;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.Answer;
@@ -120,6 +121,7 @@ public class ModelControllerTest {
         when(context.body()).thenReturn(
             Json.object(Json.prop("data", new XmiCodec().encode(brewingUnit))).toString()
         );
+        when(modelRepository.getResourceSet()).thenReturn(new ResourceSetImpl());
         modelController.update(context, "SuperBrewer3000.json");
         verify(modelRepository, times(1))
             .updateModel(eq("SuperBrewer3000.json"), any(BrewingUnit.class));

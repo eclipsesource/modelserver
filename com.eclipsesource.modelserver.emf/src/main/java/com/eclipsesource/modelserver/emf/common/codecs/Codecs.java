@@ -15,6 +15,15 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common.codecs;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+
 import com.eclipsesource.modelserver.common.codecs.Codec;
 import com.eclipsesource.modelserver.common.codecs.DecodingException;
 import com.eclipsesource.modelserver.common.codecs.EncodingException;
@@ -22,13 +31,6 @@ import com.eclipsesource.modelserver.common.codecs.XmiCodec;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.javalin.http.Context;
 import io.javalin.websocket.WsContext;
-import org.eclipse.emf.ecore.EObject;
-
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 public class Codecs {
 
@@ -49,6 +51,10 @@ public class Codecs {
 
     public Optional<EObject> decode(Context context, String payload) throws DecodingException {
         return findFormat(context.queryParamMap()).decode(payload);
+    }
+
+    public Optional<Resource> decode(Context context, ResourceSet resourceSet, String modelURI, String payload) throws DecodingException {
+        return findFormat(context.queryParamMap()).decode(resourceSet, modelURI, payload);
     }
 
     private Codec findFormat(Map<String, List<String>> queryParams) {

@@ -33,6 +33,7 @@
 	<modules>
 		<module>com.eclipsesource.modelserver.common</module>
 		<module>com.eclipsesource.modelserver.emf</module>
+		<module>com.eclipsesource.modelserver.edit</module>
 		<module>examples/com.eclipsesource.modelserver.example</module>
 		<module>examples/com.eclipsesource.modelserver.coffee.model</module>
 		<module>com.eclipsesource.modelserver.client</module>

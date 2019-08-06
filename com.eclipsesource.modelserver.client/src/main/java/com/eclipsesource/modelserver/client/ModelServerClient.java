@@ -20,11 +20,13 @@ import com.eclipsesource.modelserver.common.codecs.DecodingException;
 import com.eclipsesource.modelserver.common.codecs.DefaultJsonCodec;
 import com.eclipsesource.modelserver.common.codecs.EncodingException;
 import com.eclipsesource.modelserver.common.codecs.XmiCodec;
+import com.eclipsesource.modelserver.internal.client.EditingContextImpl;
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import okhttp3.*;
 import org.apache.log4j.Logger;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.ecore.EObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +39,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-public class ModelServerClient implements ModelServerClientApi<EObject>, ModelServerPaths {
+public class ModelServerClient implements ModelServerClientApi<EObject>, ModelServerPaths, AutoCloseable {
 
     private static final List<String> SUPPORTED_FORMATS = Arrays.asList("json", "xmi");
 
@@ -46,6 +48,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     private OkHttpClient client;
     private String baseUrl;
     private Map<String, WebSocket> openSockets = new LinkedHashMap<>();
+    private Map<EditingContextImpl, WebSocket> openEditingSockets = new LinkedHashMap<>();
 
     public ModelServerClient(String baseUrl) throws MalformedURLException {
         this(new OkHttpClient(), baseUrl);
@@ -54,6 +57,12 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     public ModelServerClient(OkHttpClient client, String baseUrl) throws MalformedURLException {
         this.client = client;
         this.baseUrl = new URL(baseUrl).toString();
+    }
+
+    @Override
+    public void close() throws Exception {
+        client.dispatcher().executorService().shutdown();
+        client.connectionPool().evictAll();
     }
 
     @Override
@@ -195,8 +204,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     public void subscribe(String modelUri, SubscriptionListener subscriptionListener) {
         final String queryParams = modelUri.contains("?") ? modelUri.substring(modelUri.indexOf("?")) : "";
         Request request = new Request.Builder()
-            .url(makeUrl(SUBSCRIPTION)
-                .replace("http", "ws")
+            .url(makeWsUrl(SUBSCRIPTION)
                 .replace(":modeluri", modelUri.substring(0, modelUri.indexOf("?")))
                 .concat(queryParams)
                 .concat(queryParam("modeluri", modelUri))
@@ -240,8 +248,6 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
         final WebSocket webSocket = openSockets.get(modelUri);
         if (webSocket != null) {
             final boolean closed = webSocket.close(1000, "Websocket closed by client.");
-            client.dispatcher().executorService().shutdown();
-            client.connectionPool().evictAll();
             return closed;
         }
         return false;
@@ -250,6 +256,10 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
 
     private String makeUrl(String path) {
         return baseUrl + path;
+    }
+
+    private String makeWsUrl(String path) {
+        return (baseUrl + path).replaceFirst("^http(s?):", "^ws$1:");
     }
 
     private String queryParam(String param, String paramValue) {
@@ -334,4 +344,38 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
         }
         return new DefaultJsonCodec().decode(payload);
     }
+    
+    @Override
+    public EditingContext edit() {
+    	EditingContextImpl result;
+    	
+    	if (!openEditingSockets.isEmpty()) {
+    		result = openEditingSockets.keySet().iterator().next();
+    		result.retain();
+    		return result;
+    	}
+    	
+        Request request = new Request.Builder()
+            .url(makeWsUrl(EDIT))
+            .build();
+        result = new EditingContextImpl(this);
+        
+        final WebSocket socket = client.newWebSocket(request, result);
+        openEditingSockets.put(result, socket);
+        
+        return result;
+    }
+    
+    @Override
+    public boolean close(EditingContext editingContext) {
+    	if (((EditingContextImpl)editingContext).release()) {
+    		final WebSocket webSocket = openEditingSockets.remove(editingContext);
+	        if (webSocket != null) {
+	            final boolean closed = webSocket.close(1000, "Websocket closed by client.");
+	            return closed;
+	        }
+    	}
+        return false;
+    }
+    
 }

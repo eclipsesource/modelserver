@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
+import com.eclipsesource.modelserver.command.CCommand;
 import com.eclipsesource.modelserver.common.codecs.EncodingException;
 import com.eclipsesource.modelserver.emf.common.codecs.Codecs;
 import com.eclipsesource.modelserver.jsonschema.Json;
@@ -71,6 +72,14 @@ public class SessionController extends WsHandler {
 	public void modelChanged(String modeluri) {
 		modelRepository.getModel(modeluri).ifPresentOrElse(
 				eObject -> broadcastModelUpdate(modeluri, eObject),
+				() -> broadcastError(modeluri, "Could not load changed object")
+		);
+	}
+
+	public void modelChanged(String modeluri, CCommand command) {
+		// TODO: Distinguish from wholesale update?
+		modelRepository.getModel(modeluri).ifPresentOrElse(
+				eObject -> broadcastModelUpdate(modeluri, command),
 				() -> broadcastError(modeluri, "Could not load changed object")
 		);
 	}

@@ -22,6 +22,7 @@ public interface ModelServerPathsV1 {
 	String MODEL_URIS = "modeluris";
 
 	String SUBSCRIPTION = "subscribe"; // accepts query parameter "modeluri"
+	String EDIT = "edit"; // accepts query parameter "modeluri"
 
 	String SCHEMA = "schema"; // accepts query parameter "modeluri"
 

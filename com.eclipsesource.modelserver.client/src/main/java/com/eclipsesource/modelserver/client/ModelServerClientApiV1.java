@@ -39,4 +39,9 @@ public interface ModelServerClientApiV1<A> {
     void subscribe(String modelUri, SubscriptionListener subscriptionListener);
 
     boolean unsubscribe(String modelUri);
+    
+    EditingContext edit();
+    
+    boolean close(EditingContext editingContext);
+    
 }

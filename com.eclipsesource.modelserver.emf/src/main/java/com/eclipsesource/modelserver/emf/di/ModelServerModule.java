@@ -19,16 +19,23 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.log4j.Logger;
+import org.eclipse.emf.common.notify.AdapterFactory;
+import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
+import org.emfjson.jackson.handlers.BaseURIHandler;
+import org.emfjson.jackson.handlers.URIHandler;
 
 import com.eclipsesource.modelserver.common.AppEntryPoint;
 import com.eclipsesource.modelserver.common.EntryPointType;
 import com.eclipsesource.modelserver.common.Routing;
+import com.eclipsesource.modelserver.edit.CommandCodec;
+import com.eclipsesource.modelserver.edit.DefaultCommandCodec;
 import com.eclipsesource.modelserver.emf.ResourceManager;
 import com.eclipsesource.modelserver.emf.common.ModelController;
 import com.eclipsesource.modelserver.emf.common.ModelRepository;
 import com.eclipsesource.modelserver.emf.common.ModelServerRouting;
 import com.eclipsesource.modelserver.emf.common.SchemaController;
 import com.eclipsesource.modelserver.emf.common.SessionController;
+import com.eclipsesource.modelserver.emf.configuration.CommandPackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.EPackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.EcorePackageConfiguration;
 import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
@@ -50,7 +57,9 @@ public class ModelServerModule extends AbstractModule {
 	protected ArrayList<Class<? extends EPackageConfiguration>> ePackageConfigurations;
 
 	protected ModelServerModule() {
-		ePackageConfigurations = Lists.newArrayList(EcorePackageConfiguration.class);
+		ePackageConfigurations = Lists.newArrayList(
+				EcorePackageConfiguration.class,
+				CommandPackageConfiguration.class);
 	}
 
 	private ModelServerModule(Javalin app) {
@@ -89,6 +98,9 @@ public class ModelServerModule extends AbstractModule {
 		Multibinder.newSetBinder(binder(), Routing.class).addBinding().to(ModelServerRouting.class).in(Singleton.class);
 		MapBinder.newMapBinder(binder(), EntryPointType.class, AppEntryPoint.class).addBinding(EntryPointType.REST)
 				.to(ModelServerEntryPoint.class);
+		
+		bind(CommandCodec.class).to(DefaultCommandCodec.class).in(Singleton.class);
+		bind(AdapterFactory.class).toInstance(new ComposedAdapterFactory()); // TODO: Configure?
 	}
 
 	public void addEPackageConfigurations(Collection<Class<? extends EPackageConfiguration>> configs) {

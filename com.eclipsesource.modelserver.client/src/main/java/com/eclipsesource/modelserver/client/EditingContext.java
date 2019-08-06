@@ -13,28 +13,37 @@
  *
  *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  *******************************************************************************/
-package com.eclipsesource.modelserver.emf.common.codecs;
+package com.eclipsesource.modelserver.client;
 
-import com.eclipsesource.modelserver.common.codecs.DefaultJsonCodec;
+import org.eclipse.emf.common.command.Command;
+
 import com.eclipsesource.modelserver.common.codecs.EncodingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.javalin.plugin.json.JavalinJackson;
+/**
+ * Client interface for editing operations on managed models.
+ */
+public interface EditingContext {
 
-public class JsonCodec extends DefaultJsonCodec {
+	/**
+	 * Execute a {@code command} to change the model.
+	 * 
+	 * @param command a JSON representation of the command to execute
+	 * 
+	 * @return whether the command was successfully applied on the model. If
+	 *         {@code false}, the model is unchanged
+	 *         
+	 * @throws EncodingException if the {@code command} is not supported for serialization
+	 */
+	boolean execute(Command command) throws EncodingException;
 
-	public static JsonNode encode(Object obj) throws EncodingException {
-		try {
-			return JavalinJackson.getObjectMapper().valueToTree(obj);
-		} catch (IllegalArgumentException ex) {
-			throw new EncodingException(ex);
-		}
-	}
-
-	@Override
-	protected ObjectMapper getObjectMapper() {
-		return JavalinJackson.getObjectMapper();
-	}
+	/**
+	 * Execute a {@code command} to change the model.
+	 * 
+	 * @param command a JSON representation of the command to execute
+	 * 
+	 * @return whether the command was successfully applied on the model. If
+	 *         {@code false}, the model is unchanged
+	 */
+	boolean execute(String command);
 
 }

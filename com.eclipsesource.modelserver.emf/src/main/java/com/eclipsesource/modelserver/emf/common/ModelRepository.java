@@ -25,13 +25,24 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.eclipse.emf.common.command.BasicCommandStack;
+import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.edit.command.SetCommand;
+import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
+import org.eclipse.emf.edit.domain.EditingDomain;
 
+import com.eclipsesource.modelserver.command.CCommand;
+import com.eclipsesource.modelserver.common.codecs.DecodingException;
+import com.eclipsesource.modelserver.edit.CommandCodec;
 import com.eclipsesource.modelserver.emf.ResourceManager;
+import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
 import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
 /**
@@ -47,12 +58,16 @@ public class ModelRepository {
 	private ServerConfiguration serverConfiguration;
 	@Inject
 	private ResourceManager resourceManager;
+	@Inject
+	private CommandCodec commandCodec;
 
 	private ResourceSet resourceSet = new ResourceSetImpl();
+	private EditingDomain domain;
 
 	@Inject
-	public ModelRepository() {
+	public ModelRepository(AdapterFactory adapterFactory) {
 		this.models = new HashMap<>();
+		this.domain = new AdapterFactoryEditingDomain(adapterFactory, new BasicCommandStack(), resourceSet);
 	}
 
 	boolean hasModel(String modeluri) {
@@ -76,6 +91,11 @@ public class ModelRepository {
 	public void updateModel(String modeluri, EObject model) {
 		this.models.put(createURI(modeluri), model);
 	}
+	
+	public void updateModel(String modelURI, CCommand command) throws DecodingException {
+		Command decoded = commandCodec.decode(domain, command);
+		domain.getCommandStack().execute(decoded);
+	}
 
 	public void removeModel(String modeluri) {
 		this.models.remove(createURI(modeluri));
@@ -89,6 +109,10 @@ public class ModelRepository {
 			modeluris.add(uri.toString());
 		}
 		return modeluris;
+	}
+
+	ResourceSet getResourceSet() {
+		return resourceSet;
 	}
 
 	private Optional<EObject> loadModel(String modeluri) {

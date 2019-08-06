@@ -15,53 +15,77 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.common.codecs;
 
-import com.eclipsesource.modelserver.jsonschema.Json;
-import com.fasterxml.jackson.databind.JsonNode;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Optional;
+
+import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Optional;
+import com.eclipsesource.modelserver.jsonschema.Json;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class XmiCodec implements Codec {
 
-    public JsonNode encode(EObject eObject) throws EncodingException {
-        final Resource resource = createResource();
-        resource.getContents().add(eObject);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            resource.save(outputStream, null);
-        } catch (IOException e) {
-            throw new EncodingException(e);
-        }
+	private static Logger LOG = Logger.getLogger(XmiCodec.class.getSimpleName());
 
-        return Json.text(outputStream.toString());
-    }
+	public JsonNode encode(EObject eObject) throws EncodingException {
+		final Resource resource = createResource();
+		resource.getContents().add(eObject);
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		try {
+			resource.save(outputStream, null);
+		} catch (IOException e) {
+			throw new EncodingException(e);
+		}
 
-    @Override
-    public Optional<EObject> decode(String payload) throws DecodingException {
-        final Resource resource = createResource();
-        try {
-            resource.load(new ByteArrayInputStream(payload.getBytes()), Collections.emptyMap());
-        } catch (IOException e) {
-            throw new DecodingException(e);
-        }
-        return Optional.ofNullable(resource.getContents().get(0));
-    }
+		return Json.text(outputStream.toString());
+	}
 
-    private Resource createResource() {
-        ResourceSet resourceSet = new ResourceSetImpl();
-        resourceSet
-            .getResourceFactoryRegistry()
-            .getProtocolToFactoryMap()
-            .put(null, new XMIResourceFactoryImpl());
-        return resourceSet.createResource(URI.createURI("virtual.xmi"));
-    }
+	@Override
+	public Optional<EObject> decode(String payload) throws DecodingException {
+		ResourceSet resourceSet = new ResourceSetImpl();
+		Optional<Resource> resource = decode(resourceSet, "virtual.xmi", payload);
+		return resource.map(r -> r.getContents().isEmpty() ? null : r.getContents().get(0));
+	}
+
+	private Resource createResource() {
+		ResourceSet resourceSet = new ResourceSetImpl();
+		resourceSet.getResourceFactoryRegistry().getProtocolToFactoryMap().put(null, new XMIResourceFactoryImpl());
+		return resourceSet.createResource(URI.createURI("virtual.xmi"));
+	}
+
+	@Override
+	public Optional<Resource> decode(ResourceSet resourceSet, String modelURI, String payload)
+			throws DecodingException {
+
+		URI uri = URI.createURI(modelURI);
+		Resource result = resourceSet.getResource(uri, false);
+		if (result != null && !(result instanceof XMIResource)) {
+			// Replace it
+			LOG.warn(String.format("Replacing resource '%s' with a XMIResource", modelURI));
+			result.unload();
+			resourceSet.getResources().remove(result);
+			result = null;
+		}
+		if (result == null) {
+			result = new XMIResourceFactoryImpl().createResource(URI.createURI(modelURI));
+			resourceSet.getResources().add(result);
+		}
+		try {
+			result.load(new ByteArrayInputStream(payload.getBytes()), resourceSet.getLoadOptions());
+		} catch (IOException e) {
+			throw new DecodingException(e);
+		}
+
+		return Optional.of(result);
+	}
+
 }

@@ -20,5 +20,21 @@ public class DecodingException extends Exception {
     public DecodingException(Exception underlyingCause) {
         super(underlyingCause);
     }
+    
+	/**
+	 * @param message
+	 */
+	public DecodingException(String message) {
+		super(message);
+	}
+
+	/**
+	 * @param message
+	 * @param cause
+	 */
+	public DecodingException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
 }
 

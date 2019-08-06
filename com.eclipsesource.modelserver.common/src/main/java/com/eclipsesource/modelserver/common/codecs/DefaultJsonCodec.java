@@ -15,31 +15,85 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.common.codecs;
 
+import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.eclipse.emf.ecore.EObject;
 
+import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.emfjson.jackson.errors.JSONException;
+import org.emfjson.jackson.resource.JsonResource;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 
 public class DefaultJsonCodec implements Codec {
 
-    final EMFJsonConverter emfJsonConverter = new EMFJsonConverter();
+	private static Logger LOG = Logger.getLogger(DefaultJsonCodec.class.getSimpleName());
 
-    public JsonNode encode(EObject obj) throws EncodingException {
-        return encode((Object) obj);
-    }
+	final EMFJsonConverter emfJsonConverter = new EMFJsonConverter();
 
-    @Override
-    public Optional<EObject> decode(String payload) {
-        return emfJsonConverter.fromJson(payload);
-    }
+	public JsonNode encode(EObject obj) throws EncodingException {
+		return encode((Object) obj, getObjectMapper());
+	}
 
-    public static JsonNode encode(Object obj) throws EncodingException {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.valueToTree(obj);
-        } catch (IllegalArgumentException ex) {
-            throw new EncodingException(ex);
-        }
-    }
+	@Override
+	public Optional<EObject> decode(String payload) {
+		return emfJsonConverter.fromJson(payload);
+	}
+
+	public static JsonNode encode(Object obj) throws EncodingException {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			return mapper.valueToTree(obj);
+		} catch (IllegalArgumentException ex) {
+			throw new EncodingException(ex);
+		}
+	}
+
+	public static JsonNode encode(Object obj, ObjectMapper mapper) throws EncodingException {
+		try {
+			return mapper.valueToTree(obj);
+		} catch (IllegalArgumentException ex) {
+			throw new EncodingException(ex);
+		}
+	}
+
+	protected ObjectMapper getObjectMapper() {
+		return new ObjectMapper();
+	}
+
+	@Override
+	public Optional<Resource> decode(ResourceSet resourceSet, String modelURI, String payload)
+			throws DecodingException {
+
+		URI uri = URI.createURI(modelURI);
+		Resource result = resourceSet.getResource(uri, false);
+		if (result != null && !(result instanceof JsonResource)) {
+			// Replace it
+			LOG.warn(String.format("Replacing resource '%s' with a JsonResource", modelURI));
+			result.unload();
+			resourceSet.getResources().remove(result);
+			result = null;
+		}
+
+		if (result == null) {
+			result = new JsonResource(uri, getObjectMapper());
+			resourceSet.getResources().add(result);
+		}
+
+		try (InputStream input = new ByteArrayInputStream(payload.getBytes())) {
+			result.load(input, resourceSet.getLoadOptions());
+		} catch (IOException e) {
+			result.getErrors().add(new JSONException(e, JsonLocation.NA));
+		}
+
+		return Optional.of(result);
+	}
+
 }

@@ -29,6 +29,11 @@
             <artifactId>com.eclipsesource.modelserver.common</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+		<dependency>
+			<groupId>com.eclipsesource.modelserver</groupId>
+			<artifactId>com.eclipsesource.modelserver.edit</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
         <dependency>
             <groupId>com.eclipsesource.modelserver</groupId>
             <artifactId>com.eclipsesource.modelserver.coffee.model</artifactId>

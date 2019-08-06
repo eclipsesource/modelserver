@@ -72,6 +72,14 @@ public class ModelServerRouting extends Routing {
 							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
 					);
 				});
+				
+				// Execute commands
+				patch(ModelServerPaths.EDIT,  ctx -> {
+					getQueryParam(ctx, "modeluri").ifPresentOrElse(
+							param -> getController(ModelController.class).executeCommand(ctx, param),
+							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
+							);
+				});
 
 				// GET MODELURIS
 				get(ModelServerPaths.MODEL_URIS, getController(ModelController.class).modelUrisHandler);
@@ -79,13 +87,15 @@ public class ModelServerRouting extends Routing {
 				get(ModelServerPaths.SCHEMA, getController(SchemaController.class));
 				put(ModelServerPaths.SERVER_CONFIGURE, getController(ServerController.class).configureHandler);
 				get(ModelServerPaths.SERVER_PING, getController(ServerController.class).pingHandler);
-
+				
 				ws(ModelServerPaths.SUBSCRIPTION, wsHandler -> {
 					wsHandler.onConnect(ctx -> getController(SessionController.class).subscribe(ctx, ctx.queryParam("modeluri", "")));
 					wsHandler.onClose(ctx -> getController(SessionController.class).unsubscribe(ctx));
 					wsHandler.onError(ctx -> {});
 					wsHandler.onMessage(ctx -> {});
 				});
+				
+				// TODO: ws for the commands
 			});
 		});
 	}

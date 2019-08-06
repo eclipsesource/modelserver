@@ -20,4 +20,20 @@ public class EncodingException extends Exception {
     public EncodingException(Exception underlyingCause) {
         super(underlyingCause);
     }
+    
+	/**
+	 * @param message
+	 */
+	public EncodingException(String message) {
+		super(message);
+	}
+
+	/**
+	 * @param message
+	 * @param cause
+	 */
+	public EncodingException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
 }

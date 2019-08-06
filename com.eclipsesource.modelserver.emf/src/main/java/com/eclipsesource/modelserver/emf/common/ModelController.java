@@ -22,7 +22,9 @@ import java.util.Optional;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
 
+import com.eclipsesource.modelserver.command.CCommand;
 import com.eclipsesource.modelserver.common.codecs.DecodingException;
 import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
 import com.eclipsesource.modelserver.common.codecs.EncodingException;
@@ -53,7 +55,7 @@ public class ModelController {
 	}
 
 	public void create(Context ctx, String modeluri) {
-		readEObject(ctx).ifPresentOrElse(
+		getContents(readResource(ctx, modeluri)).ifPresentOrElse(
 				eObject -> {
 					this.modelRepository.addModel(modeluri, eObject);
 					try {
@@ -110,13 +112,17 @@ public class ModelController {
 	}
 
 	public void update(Context ctx, String modeluri) {
-		readEObject(ctx).ifPresentOrElse(
+		Optional<Resource> resource = readResource(ctx, "temp$update.json");
+		getContents(resource).ifPresentOrElse(
 			eObject -> {
 				modelRepository.updateModel(modeluri, eObject);
 				try {
 					ctx.json(JsonResponse.data(codecs.encode(ctx, eObject)));
 				} catch (EncodingException e) {
 					handleEncodingError(ctx, e);
+				} finally {
+					// Ditch the temporary resource
+					resource.get().getResourceSet().getResources().remove(resource.get());
 				}
 				sessionController.modelChanged(modeluri);
 			},
@@ -126,7 +132,7 @@ public class ModelController {
 
 	public Handler modelUrisHandler = ctx -> ctx.json(JsonResponse.data(JsonCodec.encode(this.modelRepository.getAllModelUris())));
 
-	private Optional<EObject> readEObject(Context ctx) {
+	private Optional<Resource> readResource(Context ctx, String modelURI) {
 		try {
 			JsonNode json = JavalinJackson.getObjectMapper().readTree(ctx.body());
 			if (!json.has("data")) {
@@ -139,15 +145,63 @@ public class ModelController {
 				handleError(ctx, 400, "Empty JSON");
 				return Optional.empty();
 			}
-			return codecs.decode(ctx, jsonData);
+			return codecs.decode(ctx, modelRepository.getResourceSet(), modelURI, jsonData);
 		} catch (DecodingException | IOException e) {
 			handleError(ctx, 400, "Invalid JSON");
 		}
 		return Optional.empty();
 	}
+	
+	/**
+	 * Get the first {@link EObject} in a {@code resource}'s {@link Resource#getContents() contents}, or
+	 * an {@linkplain Optional#empty() empty optional} if the {@code resource} is empty.
+	 * 
+	 * @param resource an optional resource from which to get its optional content
+	 * @return the optional content, or empty if no resource or no content in the resource
+	 */
+	private Optional<EObject> getContents(Optional<Resource> resource) {
+		return resource.map(r -> r.getContents().isEmpty() ? null : r.getContents().get(0));
+	}
 
+	public void executeCommand(Context ctx, String modelURI) {
+		this.modelRepository.getModel(modelURI).ifPresentOrElse(
+				model -> {
+					if (model == null) {
+						handleError(ctx, 404, String.format("Model '%s' not found!", modelURI));
+					} else {
+						try {
+							String commandURI = "command$1.command";
+							Optional<Resource> resource = readResource(ctx, commandURI);
+							getContents(resource).filter(CCommand.class::isInstance)//
+									.map(CCommand.class::cast) //
+									.ifPresent(cmd -> {
+										try {
+											modelRepository.updateModel(modelURI, cmd);
+											sessionController.modelChanged(modelURI, cmd);
+											ctx.json(JsonResponse.success());
+										} catch (DecodingException e) {
+											handleDecodingError(ctx, e);
+										} finally {
+											// Ditch the temporary resource
+											resource.get().getResourceSet().getResources().remove(resource.get());
+										}
+									});
+							ctx.json(JsonResponse.data(codecs.encode(ctx, model)));
+						} catch (EncodingException ex) {
+							handleEncodingError(ctx, ex);
+						}
+					}
+				},
+				() -> handleError(ctx, 404, String.format("Model '%s' not found!", modelURI))
+			);
+	}
+	
 	private void handleEncodingError(Context context, EncodingException ex) {
 		handleError(context, 500, "An error occurred during data encoding", ex);
+	}
+	
+	private void handleDecodingError(Context context, DecodingException ex) {
+		handleError(context, 500, "An error occurred during data decoding", ex);
 	}
 
 	private void handleError(Context ctx, int statusCode, String errorMsg) {
