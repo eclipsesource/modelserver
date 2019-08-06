@@ -46,7 +46,9 @@ public class ServerConfiguration {
 	}
 
 	public void setWorkspaceRoot(String workspaceRoot) {
-		toFilePath(workspaceRoot).ifPresent(path -> this.workspaceRoot = path);
+		toFilePath(workspaceRoot)
+			.map(this::normalizePath)
+			.ifPresent(path -> this.workspaceRoot = path);
 	}
 
 	public Set<String> getWorkspaceEntries() {
@@ -94,4 +96,10 @@ public class ServerConfiguration {
 		}
 	}
 
+	private String normalizePath(String path) {
+		if (path.endsWith("/")) {
+			return path;
+		}
+		return path + "/";
+	}
 }
