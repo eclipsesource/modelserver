@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableSet;
 import okhttp3.*;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -173,7 +174,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
             .patch(
                 RequestBody.create(
                     Json.object(
-                        Json.prop("data", Json.text(encode(updatedModel, format)))
+                        Json.prop("data", Json.text(encode(EcoreUtil.copy(updatedModel), format)))
                     ).toString(),
                     MediaType.parse("application/json")
                 )
