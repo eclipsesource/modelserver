@@ -241,8 +241,6 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     	
     	final String format = checkedFormat(_format);
         final String queryParams = modelUri.contains("?") ? modelUri.substring(modelUri.indexOf("?")) : "";
-        final String modelURIParam = queryParams.isEmpty() ? queryParam("modeluri", modelUri) : addQueryParam("modeluri", modelUri);
-        
         Request request = new Request.Builder()
             .url(makeWsUrl(SUBSCRIPTION)
                 .replace(":modeluri", modelUri.substring(0, modelUri.indexOf("?")))
