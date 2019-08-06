@@ -15,11 +15,6 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common.codecs;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -31,6 +26,11 @@ import com.eclipsesource.modelserver.common.codecs.XmiCodec;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.javalin.http.Context;
 import io.javalin.websocket.WsContext;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class Codecs {
 

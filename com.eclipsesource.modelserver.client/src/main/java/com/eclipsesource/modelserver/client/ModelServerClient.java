@@ -24,6 +24,9 @@ import com.eclipsesource.modelserver.internal.client.EditingContextImpl;
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
+
 import okhttp3.*;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.command.Command;
@@ -38,10 +41,11 @@ import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.function.BiFunction;
 
 public class ModelServerClient implements ModelServerClientApi<EObject>, ModelServerPaths, AutoCloseable {
 
-    private static final List<String> SUPPORTED_FORMATS = Arrays.asList("json", "xmi");
+    private static final Set<String> SUPPORTED_FORMATS = ImmutableSet.of("json", "xmi");
 
     private static Logger LOG = Logger.getLogger(ModelServerClient.class.getSimpleName());
 
@@ -77,13 +81,30 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     }
 
     @Override
+    public CompletableFuture<Response<EObject>> get(String modelUri, String _format) {
+    	String format = checkedFormat(_format);
+
+        final Request request = new Request.Builder()
+            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri) + addFormatParam(format))
+            .build();
+
+        return call(request)
+            .thenApply(resp -> resp.mapBody(body -> body.flatMap(b -> decode(b, format))))
+            .thenApply(this::getBodyOrThrow);
+    }
+    
+    private CompletableFuture<Response<Optional<String>>> call(Request request) {
+    	return makeCall(request)
+    			.thenApply(response -> parseField(response, "data"));
+    }
+
+    @Override
     public CompletableFuture<Response<List<String>>> getAll() {
         final Request request = new Request.Builder()
             .url(makeUrl(MODEL_URIS))
             .build();
 
-        return makeCall(request)
-            .thenApply(response -> parseField(response, "data"))
+        return call(request)
             .thenApply(this::getBodyOrThrow)
             .thenApply(response -> response.mapBody(body -> {
                 List<String> uris = new ArrayList<>();
@@ -125,20 +146,11 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     }
 
     @Override
-    public CompletableFuture<Response<EObject>> update(String modelUri, EObject updatedModel, String format) {
-
-        String f = format;
-
-        if (f.isEmpty()) {
-            f = "json";
-        }
-
-        if (!isSupportedFormat(f)) {
-            throw new CancellationException("Unsupported format "  + format);
-        }
+    public CompletableFuture<Response<EObject>> update(String modelUri, EObject updatedModel, String _format) {
+    	String format = checkedFormat(_format);
 
         final Request request = new Request.Builder()
-            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri) + addQueryParam("format", format))
+            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri) + addFormatParam(format))
             .patch(
                 RequestBody.create(
                     Json.object(
@@ -153,6 +165,20 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
             .thenApply(response -> parseField(response, "data"))
             .thenApply(resp -> resp.mapBody(body -> body.flatMap(b -> decode(b, format))))
             .thenApply(this::getBodyOrThrow);
+    }
+    
+    private String checkedFormat(String format) {
+        if (Strings.isNullOrEmpty(format)) {
+            return "json";
+        }
+    	
+        String result = format.toLowerCase();
+        
+        if (!isSupportedFormat(result)) {
+            throw new CancellationException("Unsupported format "  + format);
+        }
+        
+        return result;
     }
 
     private boolean isSupportedFormat(String format) {
@@ -202,23 +228,41 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
 
     @Override
     public void subscribe(String modelUri, SubscriptionListener subscriptionListener) {
+    	subscribe(modelUri, subscriptionListener, "json", (body, __) -> Optional.ofNullable(body));
+    }
+
+    @Override
+    public void subscribe(String modelUri, TypedSubscriptionListener<EObject> subscriptionListener, String _format) {
+    	subscribe(modelUri, subscriptionListener, _format, (body, format) -> decode(body, format));
+   }
+
+    private <A> void subscribe(String modelUri, TypedSubscriptionListener<A> subscriptionListener,
+    		String _format, BiFunction<String, String, Optional<A>> bodyFunction) {
+    	
+    	final String format = checkedFormat(_format);
         final String queryParams = modelUri.contains("?") ? modelUri.substring(modelUri.indexOf("?")) : "";
+        final String modelURIParam = queryParams.isEmpty() ? queryParam("modeluri", modelUri) : addQueryParam("modeluri", modelUri);
+        
         Request request = new Request.Builder()
             .url(makeWsUrl(SUBSCRIPTION)
                 .replace(":modeluri", modelUri.substring(0, modelUri.indexOf("?")))
                 .concat(queryParams)
-                .concat(queryParam("modeluri", modelUri))
+                .concat(modelURIParam)
+                .concat(addFormatParam(format))
             )
             .build();
+        
         final WebSocket socket = client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onOpen(@NotNull WebSocket webSocket, @NotNull okhttp3.Response response) {
-                subscriptionListener.onOpen(new Response<>(response));
+                subscriptionListener.onOpen(new Response<A>(response,
+                		body -> require(bodyFunction.apply(body, format))));
             }
 
             @Override
             public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
                 ModelServerClient.this.parseJsonField(text, "data")
+                	.flatMap(body -> bodyFunction.apply(body, format))
                     .ifPresent(subscriptionListener::onMessage);
             }
 
@@ -269,6 +313,10 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     private String addQueryParam(String param, String paramValue) {
         return "&" + param + "=" + paramValue;
     }
+    
+    private String addFormatParam(String paramValue) {
+        return "&format=" + paramValue;
+    }
 
     private CompletableFuture<Response<String>> makeCall(final Request request) {
         CompletableFuture<Response<String>> future = new CompletableFuture<>();
@@ -308,10 +356,11 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     }
 
     private <A> Response<A> getBodyOrThrow(Response<Optional<A>> response) {
-        return response
-            .mapBody(maybeBody ->
-                maybeBody.orElseThrow(() -> new RuntimeException("Could not parse 'data' field"))
-            );
+        return response.mapBody(this::require);
+    }
+    
+    private <A> A require(Optional<A> value) {
+    	return value.orElseThrow(() -> new RuntimeException("Could not parse 'data' field"));
     }
 
     public String encode(EObject eObject) {

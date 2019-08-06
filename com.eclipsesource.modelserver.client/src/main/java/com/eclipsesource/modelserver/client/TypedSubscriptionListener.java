@@ -15,7 +15,19 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
-public interface SubscriptionListener extends TypedSubscriptionListener<String> {
-    // Nothing to add
+import org.jetbrains.annotations.NotNull;
+
+public interface TypedSubscriptionListener<A> {
+    void onOpen(Response<A> response);
+
+    void onMessage(A response);
+
+    void onClosing(int code, @NotNull String reason);
+
+    void onClosed(int code, @NotNull String reason);
+
+    void onFailure(Throwable t, Response<String> response);
+
+    void onFailure(Throwable t);
 }
 

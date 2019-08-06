@@ -22,6 +22,8 @@ public interface ModelServerClientApiV1<A> {
 
     CompletableFuture<Response<String>> get(String modelUri);
 
+    CompletableFuture<Response<A>> get(String modelUri, String format);
+
     CompletableFuture<Response<List<String>>> getAll();
 
     CompletableFuture<Response<Boolean>> delete(String modelUri);
@@ -37,6 +39,8 @@ public interface ModelServerClientApiV1<A> {
     CompletableFuture<Response<Boolean>> ping();
 
     void subscribe(String modelUri, SubscriptionListener subscriptionListener);
+
+    void subscribe(String modelUri, TypedSubscriptionListener<A> subscriptionListener, String format);
 
     boolean unsubscribe(String modelUri);
     
