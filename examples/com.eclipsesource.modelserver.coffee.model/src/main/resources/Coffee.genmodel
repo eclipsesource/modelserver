@@ -26,6 +26,11 @@
       <genEnumLiterals ecoreEnumLiteral="Coffee.ecore#//RamType/SODIMM"/>
       <genEnumLiterals ecoreEnumLiteral="Coffee.ecore#//RamType/SIDIMM"/>
     </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="Coffee.ecore#//Probability">
+      <genEnumLiterals ecoreEnumLiteral="Coffee.ecore#//Probability/low"/>
+      <genEnumLiterals ecoreEnumLiteral="Coffee.ecore#//Probability/medium"/>
+      <genEnumLiterals ecoreEnumLiteral="Coffee.ecore#//Probability/high"/>
+    </genEnums>
     <genClasses image="false" ecoreClass="Coffee.ecore#//Component">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Coffee.ecore#//Component/children"/>
       <genFeatures property="None" notify="false" createChild="false" ecoreFeature="ecore:EReference Coffee.ecore#//Component/parent"/>
@@ -67,6 +72,7 @@
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Coffee.ecore#//Display/height"/>
     </genClasses>
     <genClasses ecoreClass="Coffee.ecore#//Workflow">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Coffee.ecore#//Workflow/name"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Coffee.ecore#//Workflow/nodes"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Coffee.ecore#//Workflow/flows"/>
     </genClasses>

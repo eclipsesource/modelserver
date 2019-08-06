@@ -667,13 +667,22 @@ public interface CoffeePackage extends EPackage {
 	int WORKFLOW = 10;
 
 	/**
+	 * The feature id for the '<em><b>Name</b></em>' attribute. <!-- begin-user-doc
+	 * --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 * @ordered
+	 */
+	int WORKFLOW__NAME = 0;
+
+	/**
 	 * The feature id for the '<em><b>Nodes</b></em>' containment reference list.
 	 * <!-- begin-user-doc --> <!-- end-user-doc -->
 	 * 
 	 * @generated
 	 * @ordered
 	 */
-	int WORKFLOW__NODES = 0;
+	int WORKFLOW__NODES = 1;
 
 	/**
 	 * The feature id for the '<em><b>Flows</b></em>' containment reference list.
@@ -682,7 +691,7 @@ public interface CoffeePackage extends EPackage {
 	 * @generated
 	 * @ordered
 	 */
-	int WORKFLOW__FLOWS = 1;
+	int WORKFLOW__FLOWS = 2;
 
 	/**
 	 * The number of structural features of the '<em>Workflow</em>' class. <!--
@@ -691,7 +700,7 @@ public interface CoffeePackage extends EPackage {
 	 * @generated
 	 * @ordered
 	 */
-	int WORKFLOW_FEATURE_COUNT = 2;
+	int WORKFLOW_FEATURE_COUNT = 3;
 
 	/**
 	 * The number of operations of the '<em>Workflow</em>' class. <!--
@@ -1146,6 +1155,17 @@ public interface CoffeePackage extends EPackage {
 	int RAM_TYPE = 23;
 
 	/**
+	 * The meta object id for the
+	 * '{@link com.eclipsesource.modelserver.coffee.model.coffee.Probability
+	 * <em>Probability</em>}' enum. <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @see com.eclipsesource.modelserver.coffee.model.coffee.Probability
+	 * @see com.eclipsesource.modelserver.coffee.model.coffee.impl.CoffeePackageImpl#getProbability()
+	 * @generated
+	 */
+	int PROBABILITY = 24;
+
+	/**
 	 * Returns the meta object for class
 	 * '{@link com.eclipsesource.modelserver.coffee.model.coffee.Component
 	 * <em>Component</em>}'. <!-- begin-user-doc --> <!-- end-user-doc -->
@@ -1548,6 +1568,18 @@ public interface CoffeePackage extends EPackage {
 	EClass getWorkflow();
 
 	/**
+	 * Returns the meta object for the attribute
+	 * '{@link com.eclipsesource.modelserver.coffee.model.coffee.Workflow#getName
+	 * <em>Name</em>}'. <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @return the meta object for the attribute '<em>Name</em>'.
+	 * @see com.eclipsesource.modelserver.coffee.model.coffee.Workflow#getName()
+	 * @see #getWorkflow()
+	 * @generated
+	 */
+	EAttribute getWorkflow_Name();
+
+	/**
 	 * Returns the meta object for the containment reference list
 	 * '{@link com.eclipsesource.modelserver.coffee.model.coffee.Workflow#getNodes
 	 * <em>Nodes</em>}'. <!-- begin-user-doc --> <!-- end-user-doc -->
@@ -1799,6 +1831,17 @@ public interface CoffeePackage extends EPackage {
 	 * @generated
 	 */
 	EEnum getRamType();
+
+	/**
+	 * Returns the meta object for enum
+	 * '{@link com.eclipsesource.modelserver.coffee.model.coffee.Probability
+	 * <em>Probability</em>}'. <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @return the meta object for enum '<em>Probability</em>'.
+	 * @see com.eclipsesource.modelserver.coffee.model.coffee.Probability
+	 * @generated
+	 */
+	EEnum getProbability();
 
 	/**
 	 * Returns the factory that creates the instances of the model. <!--
@@ -2129,6 +2172,14 @@ public interface CoffeePackage extends EPackage {
 		EClass WORKFLOW = eINSTANCE.getWorkflow();
 
 		/**
+		 * The meta object literal for the '<em><b>Name</b></em>' attribute feature.
+		 * <!-- begin-user-doc --> <!-- end-user-doc -->
+		 * 
+		 * @generated
+		 */
+		EAttribute WORKFLOW__NAME = eINSTANCE.getWorkflow_Name();
+
+		/**
 		 * The meta object literal for the '<em><b>Nodes</b></em>' containment reference
 		 * list feature. <!-- begin-user-doc --> <!-- end-user-doc -->
 		 * 
@@ -2345,6 +2396,17 @@ public interface CoffeePackage extends EPackage {
 		 * @generated
 		 */
 		EEnum RAM_TYPE = eINSTANCE.getRamType();
+
+		/**
+		 * The meta object literal for the
+		 * '{@link com.eclipsesource.modelserver.coffee.model.coffee.Probability
+		 * <em>Probability</em>}' enum. <!-- begin-user-doc --> <!-- end-user-doc -->
+		 * 
+		 * @see com.eclipsesource.modelserver.coffee.model.coffee.Probability
+		 * @see com.eclipsesource.modelserver.coffee.model.coffee.impl.CoffeePackageImpl#getProbability()
+		 * @generated
+		 */
+		EEnum PROBABILITY = eINSTANCE.getProbability();
 
 	}
 

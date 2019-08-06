@@ -19,7 +19,7 @@
         width="10"
         height="20"/>
   </children>
-  <workflows>
+  <workflows name="Simple Workflow">
     <nodes xsi:type="com.eclipsesource.modelserver.coffee.model:AutomaticTask"
         name="PreHeat"
         component="//@children.0"/>

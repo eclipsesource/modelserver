@@ -34,6 +34,7 @@ import com.eclipsesource.modelserver.coffee.model.coffee.ManualTask;
 import com.eclipsesource.modelserver.coffee.model.coffee.ManufactoringProcess;
 import com.eclipsesource.modelserver.coffee.model.coffee.Merge;
 import com.eclipsesource.modelserver.coffee.model.coffee.Node;
+import com.eclipsesource.modelserver.coffee.model.coffee.Probability;
 import com.eclipsesource.modelserver.coffee.model.coffee.Processor;
 import com.eclipsesource.modelserver.coffee.model.coffee.RamType;
 import com.eclipsesource.modelserver.coffee.model.coffee.SocketConnectorType;
@@ -224,6 +225,13 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 	 * @generated
 	 */
 	private EEnum ramTypeEEnum = null;
+
+	/**
+	 * <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 */
+	private EEnum probabilityEEnum = null;
 
 	/**
 	 * Creates an instance of the model <b>Package</b>, registered with
@@ -638,8 +646,18 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 	 * @generated
 	 */
 	@Override
+	public EAttribute getWorkflow_Name() {
+		return (EAttribute) workflowEClass.getEStructuralFeatures().get(0);
+	}
+
+	/**
+	 * <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 */
+	@Override
 	public EReference getWorkflow_Nodes() {
-		return (EReference) workflowEClass.getEStructuralFeatures().get(0);
+		return (EReference) workflowEClass.getEStructuralFeatures().get(1);
 	}
 
 	/**
@@ -649,7 +667,7 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 	 */
 	@Override
 	public EReference getWorkflow_Flows() {
-		return (EReference) workflowEClass.getEStructuralFeatures().get(1);
+		return (EReference) workflowEClass.getEStructuralFeatures().get(2);
 	}
 
 	/**
@@ -858,6 +876,16 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 	 * @generated
 	 */
 	@Override
+	public EEnum getProbability() {
+		return probabilityEEnum;
+	}
+
+	/**
+	 * <!-- begin-user-doc --> <!-- end-user-doc -->
+	 * 
+	 * @generated
+	 */
+	@Override
 	public CoffeeFactory getCoffeeFactory() {
 		return (CoffeeFactory) getEFactoryInstance();
 	}
@@ -926,6 +954,7 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 		createEAttribute(displayEClass, DISPLAY__HEIGHT);
 
 		workflowEClass = createEClass(WORKFLOW);
+		createEAttribute(workflowEClass, WORKFLOW__NAME);
 		createEReference(workflowEClass, WORKFLOW__NODES);
 		createEReference(workflowEClass, WORKFLOW__FLOWS);
 
@@ -960,6 +989,7 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 		socketConnectorTypeEEnum = createEEnum(SOCKET_CONNECTOR_TYPE);
 		manufactoringProcessEEnum = createEEnum(MANUFACTORING_PROCESS);
 		ramTypeEEnum = createEEnum(RAM_TYPE);
+		probabilityEEnum = createEEnum(PROBABILITY);
 	}
 
 	/**
@@ -1096,6 +1126,8 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 
 		initEClass(workflowEClass, Workflow.class, "Workflow", !IS_ABSTRACT, !IS_INTERFACE, //$NON-NLS-1$
 				IS_GENERATED_INSTANCE_CLASS);
+		initEAttribute(getWorkflow_Name(), ecorePackage.getEString(), "name", null, 1, 1, Workflow.class, !IS_TRANSIENT, //$NON-NLS-1$
+				!IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 		initEReference(getWorkflow_Nodes(), this.getNode(), null, "nodes", null, 0, -1, Workflow.class, !IS_TRANSIENT, //$NON-NLS-1$
 				!IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED,
 				IS_ORDERED);
@@ -1141,7 +1173,7 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 
 		initEClass(weightedFlowEClass, WeightedFlow.class, "WeightedFlow", !IS_ABSTRACT, !IS_INTERFACE, //$NON-NLS-1$
 				IS_GENERATED_INSTANCE_CLASS);
-		initEAttribute(getWeightedFlow_Probability(), ecorePackage.getEDouble(), "probability", null, 0, 1, //$NON-NLS-1$
+		initEAttribute(getWeightedFlow_Probability(), this.getProbability(), "probability", null, 0, 1, //$NON-NLS-1$
 				WeightedFlow.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE,
 				!IS_DERIVED, IS_ORDERED);
 
@@ -1157,6 +1189,11 @@ public class CoffeePackageImpl extends EPackageImpl implements CoffeePackage {
 		initEEnum(ramTypeEEnum, RamType.class, "RamType"); //$NON-NLS-1$
 		addEEnumLiteral(ramTypeEEnum, RamType.SODIMM);
 		addEEnumLiteral(ramTypeEEnum, RamType.SIDIMM);
+
+		initEEnum(probabilityEEnum, Probability.class, "Probability"); //$NON-NLS-1$
+		addEEnumLiteral(probabilityEEnum, Probability.LOW);
+		addEEnumLiteral(probabilityEEnum, Probability.MEDIUM);
+		addEEnumLiteral(probabilityEEnum, Probability.HIGH);
 
 		// Create resource
 		createResource(eNS_URI);
