@@ -59,7 +59,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     @Override
     public CompletableFuture<Response<String>> get(String modelUri) {
         final Request request = new Request.Builder()
-            .url(makeUrl(MODEL_CRUD).replace(":modeluri", modelUri))
+            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri))
             .build();
 
         return makeCall(request)
@@ -90,7 +90,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     @Override
     public CompletableFuture<Response<Boolean>> delete(String modelUri) {
         final Request request = new Request.Builder()
-            .url(makeUrl(MODEL_CRUD).replace(":modeluri", modelUri))
+            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri))
             .delete()
             .build();
 
@@ -103,7 +103,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     @Override
     public CompletableFuture<Response<String>> update(String modelUri, String updatedModel) {
         final Request request = new Request.Builder()
-            .url(makeUrl(MODEL_CRUD).replace(":modeluri", modelUri))
+            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri))
             .patch(
                 RequestBody.create(
                     Json.object(Json.prop("data", Json.text(updatedModel))).toString(), MediaType.parse("application/json"))
@@ -129,7 +129,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
         }
 
         final Request request = new Request.Builder()
-            .url(makeUrl(MODEL_CRUD).replace(":modeluri", modelUri + "?format=" + format))
+            .url(makeUrl(MODEL_BASE_PATH) + queryParam("modeluri", modelUri) + addQueryParam("format", format))
             .patch(
                 RequestBody.create(
                     Json.object(
@@ -153,7 +153,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     @Override
     public CompletableFuture<Response<String>> getSchema(String modelUri) {
         final Request request = new Request.Builder()
-            .url(makeUrl(SCHEMA).replace(":modeluri", modelUri))
+            .url(makeUrl(SCHEMA) + queryParam("modeluri", modelUri))
             .build();
 
         return makeCall(request)
@@ -199,6 +199,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
                 .replace("http", "ws")
                 .replace(":modeluri", modelUri.substring(0, modelUri.indexOf("?")))
                 .concat(queryParams)
+                .concat(queryParam("modeluri", modelUri))
             )
             .build();
         final WebSocket socket = client.newWebSocket(request, new WebSocketListener() {
@@ -249,6 +250,14 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
 
     private String makeUrl(String path) {
         return baseUrl + path;
+    }
+
+    private String queryParam(String param, String paramValue) {
+        return "?" + param + "=" + paramValue;
+    }
+
+    private String addQueryParam(String param, String paramValue) {
+        return "&" + param + "=" + paramValue;
     }
 
     private CompletableFuture<Response<String>> makeCall(final Request request) {

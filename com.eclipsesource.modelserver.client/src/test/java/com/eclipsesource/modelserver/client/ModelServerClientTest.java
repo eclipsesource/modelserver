@@ -65,7 +65,7 @@ public class ModelServerClientTest {
         final JsonNode expected = jsonCodec.encode(display);
         interceptor.addRule()
             .get()
-            .url(BASE_URL + ModelServerClient.MODEL_CRUD.replace(":modeluri", "SuperBrewer3000.json"))
+            .url(BASE_URL + ModelServerClient.MODEL_BASE_PATH + "?modeluri=" + "SuperBrewer3000.json")
             .respond(createDataResponse(expected).toString());
         ModelServerClient client = createClient();
 
@@ -91,7 +91,7 @@ public class ModelServerClientTest {
     @Test
     public void delete() throws ExecutionException, InterruptedException, MalformedURLException {
         interceptor.addRule()
-            .url(BASE_URL + ModelServerClient.MODEL_CRUD.replace(":modeluri", "SuperBrewer3000.json"))
+            .url(BASE_URL + ModelServerClient.MODEL_BASE_PATH + "?modeluri=" + "SuperBrewer3000.json")
             .delete()
             .respond(Json.object(Json.prop("type", Json.text("confirm"))).toString());
         ModelServerClient client = createClient();
@@ -105,7 +105,7 @@ public class ModelServerClientTest {
     public void update() throws EncodingException, ExecutionException, InterruptedException, MalformedURLException {
         final JsonNode expected = jsonCodec.encode(display);
         interceptor.addRule()
-            .url(BASE_URL + ModelServerClient.MODEL_CRUD.replace(":modeluri", "SuperBrewer3000.json"))
+            .url(BASE_URL + ModelServerClient.MODEL_BASE_PATH + "?modeluri=" + "SuperBrewer3000.json")
             .patch()
             .respond(createDataResponse(expected).toString());
         ModelServerClient client = createClient();
@@ -122,7 +122,7 @@ public class ModelServerClientTest {
     public void updateWithFormat() throws EncodingException, ExecutionException, InterruptedException, MalformedURLException {
         final BrewingUnit expected = CoffeeFactory.eINSTANCE.createBrewingUnit();
         interceptor.addRule()
-            .url(BASE_URL + ModelServerClient.MODEL_CRUD.replace(":modeluri", "SuperBrewer3000.json?format=xmi"))
+            .url(BASE_URL + ModelServerClient.MODEL_BASE_PATH + "?modeluri=" + "SuperBrewer3000.json" + "&format=xmi")
             .patch()
             .respond(createDataResponse(new XmiCodec().encode(expected)).toString());
         ModelServerClient client = createClient();
@@ -152,7 +152,7 @@ public class ModelServerClientTest {
     public void getSchema() throws EncodingException, ExecutionException, InterruptedException, MalformedURLException {
         final JsonNode expected = JsonCodec.encode(Json.object(Json.prop("type", Json.text("object"))));
         interceptor.addRule()
-            .url(BASE_URL + ModelServerClient.SCHEMA.replace(":modeluri", "SuperBrewer3000.json"))
+            .url(BASE_URL + ModelServerClient.SCHEMA + "?modeluri=" + "SuperBrewer3000.json")
             .get()
             .respond(createDataResponse(expected).toString());
         ModelServerClient client = createClient();

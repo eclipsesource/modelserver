@@ -30,7 +30,7 @@ public class SchemaController implements Handler {
 
 	@Override
 	public void handle(@NotNull Context ctx) {
-		modelRepository.getModel(ctx.pathParam("modeluri")).ifPresentOrElse(
+		modelRepository.getModel(ctx.queryParam("modeluri")).ifPresentOrElse(
 				instance -> ctx.json(JsonResponse.data(JsonSchema.from(instance.eClass()))),
 				() -> ctx.status(404).json(JsonResponse.error("Schema not found!"))
 		);

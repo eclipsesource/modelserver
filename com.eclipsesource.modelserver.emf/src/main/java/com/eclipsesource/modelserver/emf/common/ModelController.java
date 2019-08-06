@@ -15,29 +15,29 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import com.eclipsesource.modelserver.common.codecs.DecodingException;
-import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
-import com.eclipsesource.modelserver.common.codecs.EncodingException;
-import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
-import com.eclipsesource.modelserver.emf.common.codecs.Codecs;
-import com.eclipsesource.modelserver.jsonschema.Json;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.Maps;
-import com.google.inject.Inject;
-import io.javalin.apibuilder.CrudHandler;
-import io.javalin.http.Context;
-import io.javalin.http.Handler;
-import io.javalin.plugin.json.JavalinJackson;
-import org.apache.log4j.Logger;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EStructuralFeature;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
-public class ModelController implements CrudHandler {
+import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
+
+import com.eclipsesource.modelserver.common.codecs.DecodingException;
+import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
+import com.eclipsesource.modelserver.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.emf.common.codecs.Codecs;
+import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
+import com.eclipsesource.modelserver.jsonschema.Json;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+
+import io.javalin.http.Context;
+import io.javalin.http.Handler;
+import io.javalin.plugin.json.JavalinJackson;
+
+public class ModelController {
 
 	private static final Logger LOG = Logger.getLogger(ModelController.class.getSimpleName());
 
@@ -52,17 +52,9 @@ public class ModelController implements CrudHandler {
 		this.sessionController = sessionController;
 	}
 
-	@Override
-	public void create(Context ctx) {
+	public void create(Context ctx, String modeluri) {
 		readEObject(ctx).ifPresentOrElse(
 				eObject -> {
-					EStructuralFeature name = eObject.eClass().getEStructuralFeature("name");
-					if (eObject.eGet(name) == null) {
-						handleError(ctx, 400, "Create new model failed: Model identifier (name) is missing");
-						return;
-					}
-		
-					String modeluri = eObject.eGet(name).toString().replaceAll(" ", "");
 					this.modelRepository.addModel(modeluri, eObject);
 					try {
 						final JsonNode encoded = codecs.encode(ctx, eObject);
@@ -76,7 +68,6 @@ public class ModelController implements CrudHandler {
 		);
 	}
 
-	@Override
 	public void delete(Context ctx, String modeluri) {
 		if (this.modelRepository.hasModel(modeluri)) {
 			this.modelRepository.removeModel(modeluri);
@@ -87,7 +78,6 @@ public class ModelController implements CrudHandler {
 		}
 	}
 
-	@Override
 	public void getAll(Context ctx) {
 		final Map<URI, EObject> allModels = this.modelRepository.getAllModels();
 		try {
@@ -102,7 +92,6 @@ public class ModelController implements CrudHandler {
 		}
 	}
 
-	@Override
 	public void getOne(Context ctx, String modeluri) {
 		this.modelRepository.getModel(modeluri).ifPresentOrElse(
 			model -> {
@@ -120,7 +109,6 @@ public class ModelController implements CrudHandler {
 		);
 	}
 
-	@Override
 	public void update(Context ctx, String modeluri) {
 		readEObject(ctx).ifPresentOrElse(
 			eObject -> {

@@ -35,17 +35,21 @@ If the modelserver is up and running, you can access the modelserver API via `ht
 
 The following table shows the current HTTP endpoints: 
 
-|Category|Description|HTTP method|Path|Input|Examples
-|-|-|:-:|-|-|-
-|__Models__|Get model|__GET__|`/models/:modeluri`|path parameter: `modeluri`| <ul><li>`/api/v1/models/Coffee.ecore`</li><li>`/api/v1/models/SuperBrewer3000.coffee`</li><li>`/api/v1/models/SuperBrewer3000.json`</li></ul>
-| |Get all loaded models|__GET__|`/models`| -
-| |Get all loaded model URIs|__GET__|`/modeluris`| -
-| |Create new model|__POST__|`/models`|application/json
-| |Update model|__PATCH__|`/models/:modeluri`|path parameter: `modeluri` <br> application/json
-| |Delete model|__DELETE__|`/models/:modeluri`|path parameter: `modeluri`
-|__JSON schema__ |Get JSON schema of a model|__GET__|`/schema/:modeluri`|path parameter: `modeluri`
+|Category|Description|HTTP method|Path|Input
+|-|-|:-:|-|-
+|__Models__|Get all available models in the workspace|__GET__|`/models`| -
+| |Get model|__GET__|`/models`|query parameter: `?modeluri=`
+| |Create new model|__POST__|`/models`|query parameter: `?modeluri=` <br> application/json
+| |Update model|__PATCH__|`/models`|query parameter: `?modeluri=` <br> application/json
+| |Delete model|__DELETE__|`/models`|query parameter: `?modeluri=`
+| |Get all available model URIs in the workspace|__GET__|`/modeluris`| -
+|__JSON schema__ |Get JSON schema of a model|__GET__|`/schema`|query parameter: `?modeluri=`
 |__Server actions__|Ping server|__GET__|`/api/v1/server/ping`| -
 | |Update server configuration|__PUT__|`/api/v1/server/configure`|application/json
+
+<br>
+
+The query parameter `?modeluri=` accepts files in the loaded workspace as well as absolute file paths.
 
 <br>
 
@@ -55,7 +59,7 @@ The following table shows the current WS endpoints:
 
 |Description|Path|Input|Returns
 |-|-|-|-
-|Subscribe to model changes|`/subscribe/:modeluri`|path parameter: `modeluri`|`sessionId`
+|Subscribe to model changes|`/subscribe`|query parameter: `?modeluri=`|`sessionId`
 
 ## Java client API
 

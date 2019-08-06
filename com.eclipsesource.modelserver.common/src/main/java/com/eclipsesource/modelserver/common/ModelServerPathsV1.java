@@ -17,13 +17,13 @@ package com.eclipsesource.modelserver.common;
 
 public interface ModelServerPathsV1 {
 
-	String INDEX = "index";
+	String MODEL_BASE_PATH = "models"; // accepts query parameter "modeluri"
+	
 	String MODEL_URIS = "modeluris";
-	String MODEL_CRUD = "models/:modeluri";
 
-	String SUBSCRIPTION = "subscribe/:modeluri";
+	String SUBSCRIPTION = "subscribe"; // accepts query parameter "modeluri"
 
-	String SCHEMA = "schema/:modeluri";
+	String SCHEMA = "schema"; // accepts query parameter "modeluri"
 
 	String SERVER_CONFIGURE = "server/configure";
 	String SERVER_PING = "server/ping";

@@ -19,10 +19,17 @@ import com.eclipsesource.modelserver.common.ModelServerPaths;
 import com.eclipsesource.modelserver.common.Routing;
 import com.google.inject.Inject;
 import io.javalin.Javalin;
+import io.javalin.http.Context;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
+import java.util.Optional;
+
+import org.apache.log4j.Logger;
+
 public class ModelServerRouting extends Routing {
+
+	private static final Logger LOG = Logger.getLogger(ModelServerRouting.class.getSimpleName());
 
 	private Javalin javalin;
 
@@ -35,19 +42,63 @@ public class ModelServerRouting extends Routing {
 	public void bindRoutes() {
 		javalin.routes(() -> {
 			path("api/v1", () -> {
-				crud(ModelServerPaths.MODEL_CRUD, getController(ModelController.class));
+				// CREATE
+				post(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
+					getQueryParam(ctx, "modeluri").ifPresentOrElse(
+							param -> getController(ModelController.class).create(ctx, param),
+							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
+					);
+				});
+				
+				// GET ONE/GET ALL
+				get(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
+					getQueryParam(ctx, "modeluri").ifPresentOrElse(
+						param -> getController(ModelController.class).getOne(ctx, param),
+						() -> getController(ModelController.class).getAll(ctx)
+					);
+				});
+				// UPDATE
+				patch(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
+					getQueryParam(ctx, "modeluri").ifPresentOrElse(
+							param -> getController(ModelController.class).update(ctx, param),
+							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
+					);
+				});
+				
+				// DELETE
+				delete(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
+					getQueryParam(ctx, "modeluri").ifPresentOrElse(
+							param -> getController(ModelController.class).delete(ctx, param),
+							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
+					);
+				});
+
+				// GET MODELURIS
 				get(ModelServerPaths.MODEL_URIS, getController(ModelController.class).modelUrisHandler);
+
 				get(ModelServerPaths.SCHEMA, getController(SchemaController.class));
 				put(ModelServerPaths.SERVER_CONFIGURE, getController(ServerController.class).configureHandler);
 				get(ModelServerPaths.SERVER_PING, getController(ServerController.class).pingHandler);
 
 				ws(ModelServerPaths.SUBSCRIPTION, wsHandler -> {
-					wsHandler.onConnect(ctx -> getController(SessionController.class).subscribe(ctx, ctx.pathParam("modeluri")));
+					wsHandler.onConnect(ctx -> getController(SessionController.class).subscribe(ctx, ctx.queryParam("modeluri", "")));
 					wsHandler.onClose(ctx -> getController(SessionController.class).unsubscribe(ctx));
 					wsHandler.onError(ctx -> {});
 					wsHandler.onMessage(ctx -> {});
 				});
 			});
 		});
+	}
+
+	private Optional<String> getQueryParam(Context ctx, String paramKey) {
+		if (ctx.queryParamMap().containsKey(paramKey))
+			return Optional.of(ctx.queryParamMap().get(paramKey).get(0));
+		
+		return Optional.empty();
+	}
+	
+	private void handleError(Context ctx, int statusCode, String errorMsg) {
+		LOG.error(errorMsg);
+		ctx.status(statusCode).json(JsonResponse.error(errorMsg));
 	}
 }

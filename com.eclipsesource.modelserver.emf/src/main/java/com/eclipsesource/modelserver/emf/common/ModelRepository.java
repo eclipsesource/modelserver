@@ -15,7 +15,15 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -48,7 +56,7 @@ public class ModelRepository {
 	}
 
 	boolean hasModel(String modeluri) {
-		final URI uri = getWorkspaceUri(modeluri);
+		final URI uri = createURI(modeluri);
 		return models.containsKey(uri);
 	}
 
@@ -62,15 +70,15 @@ public class ModelRepository {
 	}
 
 	public void addModel(String modeluri, EObject model) {
-		this.models.put(getWorkspaceUri(modeluri), model);
+		this.models.put(createURI(modeluri), model);
 	}
 
 	public void updateModel(String modeluri, EObject model) {
-		this.models.put(getWorkspaceUri(modeluri), model);
+		this.models.put(createURI(modeluri), model);
 	}
 
 	public void removeModel(String modeluri) {
-		this.models.remove(getWorkspaceUri(modeluri));
+		this.models.remove(createURI(modeluri));
 	}
 
 	public Set<String> getAllModelUris() {
@@ -84,7 +92,7 @@ public class ModelRepository {
 	}
 
 	private Optional<EObject> loadModel(String modeluri) {
-		final URI uri = getWorkspaceUri(modeluri);
+		final URI uri = createURI(modeluri);
 		if (!this.models.containsKey(uri)) {
 			Optional<EObject> model = resourceManager.loadModel(uri, resourceSet, EObject.class);
 			if (model.isPresent())
@@ -100,10 +108,15 @@ public class ModelRepository {
 		}
 	}
 
-	private URI getWorkspaceUri(String modeluri) {
-		String baseURL = serverConfiguration.getWorkspaceRoot();
-		if (!modeluri.startsWith(baseURL)) {
-			modeluri = baseURL + modeluri.replaceAll(" ", "");
+	private URI createURI(String modeluri) {
+		// If the given modeluri is a valid file path it is used to load the model
+		modeluri = modeluri.replace("file://", "");
+		Path filePath = Paths.get(modeluri);
+
+		// If it is no valid file path it probably is located in the workspace root
+		String workspaceBaseURL = serverConfiguration.getWorkspaceRoot();
+		if (!Files.exists(filePath) && !modeluri.startsWith(workspaceBaseURL)) {
+			modeluri = workspaceBaseURL + modeluri.replaceAll(" ", "");
 		}
 		return URI.createURI(modeluri);
 	}
