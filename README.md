@@ -163,6 +163,11 @@ client.unsubscribe(subscriptionId);
 ```
 
 
-## Unit Testing
+## Code Coverage
 
-tbd
+Latest Code Coverage report can be found here: `com.eclipsesource.modelserver.codecoverage/jacoco/index.html`
+
+The code coverage report is generated with [JaCoCo](https://www.eclemma.org/jacoco/) and is integrated in the Maven build. In the package `com.eclispesource.modelserver.codecoverage` all code coverages are aggregated into one report.
+
+For now, only the main overall result per module is uploaded to the repository here. When executing the Maven build executed locally, the detailled results are computed and can be investigated in more detail.
+

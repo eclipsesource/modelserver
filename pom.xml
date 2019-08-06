@@ -37,7 +37,8 @@
 		<module>examples/com.eclipsesource.modelserver.example</module>
 		<module>examples/com.eclipsesource.modelserver.coffee.model</module>
 		<module>com.eclipsesource.modelserver.client</module>
-    </modules>
+		<module>com.eclipsesource.modelserver.codecoverage</module>
+	</modules>
 
 	<build>
 		<resources>
@@ -58,6 +59,19 @@
 					<source>${java.version}</source>
 					<target>${java.version}</target>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.4</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
