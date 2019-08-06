@@ -17,6 +17,7 @@ package com.eclipsesource.modelserver.emf.common;
 
 import com.eclipsesource.modelserver.common.ModelServerPaths;
 import com.eclipsesource.modelserver.common.Routing;
+import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
 import com.google.inject.Inject;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -32,10 +33,12 @@ public class ModelServerRouting extends Routing {
 	private static final Logger LOG = Logger.getLogger(ModelServerRouting.class.getSimpleName());
 
 	private Javalin javalin;
+	private ServerConfiguration serverConfiguration;
 
 	@Inject
-	public ModelServerRouting(Javalin javalin) {
+	public ModelServerRouting(Javalin javalin, ServerConfiguration serverConfiguration) {
 		this.javalin = javalin;
+		this.serverConfiguration = serverConfiguration;
 	}
 
 	@Override
@@ -44,7 +47,8 @@ public class ModelServerRouting extends Routing {
 			path("api/v1", () -> {
 				// CREATE
 				post(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
-					getQueryParam(ctx, "modeluri").ifPresentOrElse(
+					getModelUriQueryParam(ctx)
+						.ifPresentOrElse(
 							param -> getController(ModelController.class).create(ctx, param),
 							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
 					);
@@ -52,14 +56,16 @@ public class ModelServerRouting extends Routing {
 				
 				// GET ONE/GET ALL
 				get(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
-					getQueryParam(ctx, "modeluri").ifPresentOrElse(
-						param -> getController(ModelController.class).getOne(ctx, param),
-						() -> getController(ModelController.class).getAll(ctx)
-					);
+					getModelUriQueryParam(ctx)
+						.ifPresentOrElse(
+							param -> getController(ModelController.class).getOne(ctx, param),
+							() -> getController(ModelController.class).getAll(ctx)
+						);
 				});
 				// UPDATE
 				patch(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
-					getQueryParam(ctx, "modeluri").ifPresentOrElse(
+					getModelUriQueryParam(ctx)
+						.ifPresentOrElse(
 							param -> getController(ModelController.class).update(ctx, param),
 							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
 					);
@@ -67,7 +73,8 @@ public class ModelServerRouting extends Routing {
 				
 				// DELETE
 				delete(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
-					getQueryParam(ctx, "modeluri").ifPresentOrElse(
+					getModelUriQueryParam(ctx)
+						.ifPresentOrElse(
 							param -> getController(ModelController.class).delete(ctx, param),
 							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
 					);
@@ -75,7 +82,8 @@ public class ModelServerRouting extends Routing {
 				
 				// Execute commands
 				patch(ModelServerPaths.EDIT,  ctx -> {
-					getQueryParam(ctx, "modeluri").ifPresentOrElse(
+					getQueryParam(ctx, "modeluri")
+						.ifPresentOrElse(
 							param -> getController(ModelController.class).executeCommand(ctx, param),
 							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
 							);
@@ -105,6 +113,16 @@ public class ModelServerRouting extends Routing {
 			return Optional.of(ctx.queryParamMap().get(paramKey).get(0))
 					.map(String::toLowerCase);
 		
+		return Optional.empty();
+	}
+
+	private Optional<String> getModelUriQueryParam(Context ctx) {
+		if (ctx.queryParamMap().containsKey("modeluri"))
+			return Optional.of(ctx.queryParamMap().get("modeluri").get(0))
+				.map(modelUri -> modelUri.replace("file://", ""))
+				.map(modelUri -> modelUri.replace(serverConfiguration.getWorkspaceRoot(), ""))
+				.map(String::toLowerCase);
+
 		return Optional.empty();
 	}
 	
