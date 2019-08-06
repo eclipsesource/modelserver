@@ -18,7 +18,7 @@ package com.eclipsesource.modelserver.client;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public interface ModelServerClientApiV1 {
+public interface ModelServerClientApiV1<A> {
 
     CompletableFuture<Response<String>> get(String modelUri);
 
@@ -27,6 +27,8 @@ public interface ModelServerClientApiV1 {
     CompletableFuture<Response<Boolean>> delete(String modelUri);
 
     CompletableFuture<Response<String>> update(String modelUri, String updatedModel);
+
+    CompletableFuture<Response<A>> update(String modelUri, A updatedModel, String format);
 
     CompletableFuture<Response<String>> getSchema(String modelUri);
 

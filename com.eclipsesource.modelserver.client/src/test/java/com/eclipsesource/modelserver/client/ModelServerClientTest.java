@@ -15,8 +15,10 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
+import com.eclipsesource.modelserver.coffee.model.coffee.BrewingUnit;
 import com.eclipsesource.modelserver.coffee.model.coffee.CoffeeFactory;
 import com.eclipsesource.modelserver.coffee.model.coffee.Display;
+import com.eclipsesource.modelserver.common.codecs.XmiCodec;
 import com.eclipsesource.modelserver.emf.common.JsonResponse;
 import com.eclipsesource.modelserver.common.codecs.EncodingException;
 import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
@@ -25,15 +27,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import okhttp3.OkHttpClient;
 import okhttp3.mock.MockInterceptor;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -110,6 +116,36 @@ public class ModelServerClientTest {
         );
 
         assertThat(f.get().body(), equalTo(expected.toString()));
+    }
+
+    @Test
+    public void updateWithFormat() throws EncodingException, ExecutionException, InterruptedException, MalformedURLException {
+        final BrewingUnit expected = CoffeeFactory.eINSTANCE.createBrewingUnit();
+        interceptor.addRule()
+            .url(BASE_URL + ModelServerClient.MODEL_CRUD.replace(":modeluri", "SuperBrewer3000.json?format=xmi"))
+            .patch()
+            .respond(createDataResponse(new XmiCodec().encode(expected)).toString());
+        ModelServerClient client = createClient();
+
+        final CompletableFuture<Response<EObject>> f = client.update(
+            "SuperBrewer3000.json",
+            CoffeeFactory.eINSTANCE.createBrewingUnit(),
+            "xmi"
+        );
+
+        assertTrue(EcoreUtil.equals(f.get().body(), expected));
+    }
+
+
+    @Test(expected = CancellationException.class)
+    public void updateWithUnsupportedFormat() throws MalformedURLException {
+        ModelServerClient client = createClient();
+
+        client.update(
+            "SuperBrewer3000.json",
+            CoffeeFactory.eINSTANCE.createBrewingUnit(),
+            "wut"
+        );
     }
 
     @Test

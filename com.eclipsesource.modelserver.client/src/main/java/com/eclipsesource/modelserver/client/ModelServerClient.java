@@ -33,10 +33,13 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-public class ModelServerClient implements ModelServerClientApi, ModelServerPaths {
+public class ModelServerClient implements ModelServerClientApi<EObject>, ModelServerPaths {
+
+    private static final List<String> SUPPORTED_FORMATS = Arrays.asList("json", "xmi");
 
     private static Logger LOG = Logger.getLogger(ModelServerClient.class.getSimpleName());
 
@@ -102,13 +105,49 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
         final Request request = new Request.Builder()
             .url(makeUrl(MODEL_CRUD).replace(":modeluri", modelUri))
             .patch(
-                RequestBody.create(Json.object(Json.prop("data", Json.text(updatedModel))).toString(), MediaType.parse("application/json"))
+                RequestBody.create(
+                    Json.object(Json.prop("data", Json.text(updatedModel))).toString(), MediaType.parse("application/json"))
             )
             .build();
 
         return makeCall(request)
             .thenApply(response -> parseField(response, "data"))
             .thenApply(this::getBodyOrThrow);
+    }
+
+    @Override
+    public CompletableFuture<Response<EObject>> update(String modelUri, EObject updatedModel, String format) {
+
+        String f = format;
+
+        if (f.isEmpty()) {
+            f = "json";
+        }
+
+        if (!isSupportedFormat(f)) {
+            throw new CancellationException("Unsupported format "  + format);
+        }
+
+        final Request request = new Request.Builder()
+            .url(makeUrl(MODEL_CRUD).replace(":modeluri", modelUri + "?format=" + format))
+            .patch(
+                RequestBody.create(
+                    Json.object(
+                        Json.prop("data", Json.text(encode(updatedModel, format)))
+                    ).toString(),
+                    MediaType.parse("application/json")
+                )
+            )
+            .build();
+
+        return makeCall(request)
+            .thenApply(response -> parseField(response, "data"))
+            .thenApply(resp -> resp.mapBody(body -> body.flatMap(b -> decode(b, format))))
+            .thenApply(this::getBodyOrThrow);
+    }
+
+    private boolean isSupportedFormat(String format) {
+        return SUPPORTED_FORMATS.contains(format);
     }
 
     @Override
@@ -249,7 +288,7 @@ public class ModelServerClient implements ModelServerClientApi, ModelServerPaths
         }
     }
 
-    private Response<String> getBodyOrThrow(Response<Optional<String>> response) {
+    private <A> Response<A> getBodyOrThrow(Response<Optional<A>> response) {
         return response
             .mapBody(maybeBody ->
                 maybeBody.orElseThrow(() -> new RuntimeException("Could not parse 'data' field"))

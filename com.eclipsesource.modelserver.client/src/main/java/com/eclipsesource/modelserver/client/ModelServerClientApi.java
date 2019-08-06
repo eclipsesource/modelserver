@@ -15,5 +15,5 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
-public interface ModelServerClientApi extends ModelServerClientApiV1 {
+public interface ModelServerClientApi<A> extends ModelServerClientApiV1<A> {
 }
