@@ -42,7 +42,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.BiFunction;
 
-public class ModelServerClient implements ModelServerClientApi<EObject>, ModelServerPaths, AutoCloseable {
+public class ModelServerClient implements ModelServerClientApi<EObject>, ModelServerPaths {
 
     private static final Set<String> SUPPORTED_FORMATS = ImmutableSet.of("json", "xmi");
 
@@ -62,7 +62,6 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
         this.baseUrl = new URL(baseUrl).toString();
     }
 
-    @Override
     public void close() {
         client.dispatcher().executorService().shutdown();
         client.connectionPool().evictAll();
