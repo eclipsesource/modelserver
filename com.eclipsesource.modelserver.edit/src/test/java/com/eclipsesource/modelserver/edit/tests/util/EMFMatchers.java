@@ -16,11 +16,14 @@
 
 package com.eclipsesource.modelserver.edit.tests.util;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Objects;
 
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.edit.command.AddCommand;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.hamcrest.CustomTypeSafeMatcher;
 import org.hamcrest.Matcher;
@@ -47,7 +50,21 @@ public class EMFMatchers {
 	}
 
 	static boolean eEquals(Object actual, Object expected) {
-		if (expected instanceof EObject && actual instanceof EObject) {
+		if (expected instanceof Collection<?> && actual instanceof Collection<?>) {
+			Collection<?> expectedCollection = (Collection<?>) expected; 
+			Collection<?> actualCollection = (Collection<?>) actual;
+			if (expectedCollection.size() != actualCollection.size()) {
+				return false;
+			}
+			Iterator<?> expecteds = expectedCollection.iterator();
+			Iterator<?> actuals = actualCollection.iterator();
+			while (expecteds.hasNext()) {
+				if (!eEquals(actuals.next(), expecteds.next())) {
+					return false;
+				}
+				return true;
+			}
+		} else if (expected instanceof EObject && actual instanceof EObject) {
 			return EcoreUtil.equals((EObject) actual, (EObject) expected);
 		}
 		return Objects.deepEquals(actual, expected);
@@ -70,6 +87,15 @@ public class EMFMatchers {
 							&& set.getOwner() == expectedSet.getOwner() //
 							&& set.getIndex() == expectedSet.getIndex() //
 							&& eEquals(set.getValue(), expectedSet.getValue());
+				} else if (item instanceof AddCommand) {
+					AddCommand add = (AddCommand) item;
+					AddCommand expectedAdd = (AddCommand) expected;
+
+					return add.getDomain() == expectedAdd.getDomain() //
+							&& add.getFeature() == expectedAdd.getFeature() //
+							&& add.getOwner() == expectedAdd.getOwner() //
+							&& add.getIndex() == expectedAdd.getIndex() //
+							&& eEquals(add.getCollection(), expectedAdd.getCollection());
 				}
 
 				return false;

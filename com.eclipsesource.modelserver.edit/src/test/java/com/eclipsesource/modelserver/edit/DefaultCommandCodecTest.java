@@ -26,6 +26,7 @@ import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EcorePackage;
@@ -34,6 +35,7 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EcoreAdapterFactory;
 import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
+import org.eclipse.emf.edit.command.AddCommand;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.domain.EditingDomain;
@@ -43,8 +45,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.eclipsesource.modelserver.coffee.model.coffee.CoffeePackage;
 import com.eclipsesource.modelserver.command.CCommand;
 import com.eclipsesource.modelserver.command.CCommandFactory;
+import com.eclipsesource.modelserver.command.CCommandPackage;
 import com.eclipsesource.modelserver.command.CommandKind;
 import com.eclipsesource.modelserver.common.codecs.DecodingException;
 import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
@@ -59,10 +63,12 @@ public class DefaultCommandCodecTest {
 
 	private static final String ATTRIBUTE = "attribute";
 	private static final String REFERENCE = "reference";
+	private static final String REFERENCE_MANY = "reference (many)";
 
 	private static ResourceSet resourceSet;
 	private static EditingDomain domain;
 	private static EPackage ePackage;
+	private static CCommand commandFixture;
 
 	private final Command editCommand;
 	private final CCommand commandModel;
@@ -100,10 +106,18 @@ public class DefaultCommandCodecTest {
 		return Arrays.asList(new Object[][] { //
 				new Object[] { CommandKind.SET, ATTRIBUTE, createAttributeSetCommand(), createAttributeSetModel() }, //
 				new Object[] { CommandKind.SET, REFERENCE, createReferenceSetCommand(), createReferenceSetModel() }, //
+				new Object[] { CommandKind.ADD, ATTRIBUTE, createAttributeAddCommand(), createAttributeAddModel() }, //
+				new Object[] { CommandKind.ADD, REFERENCE, createReferenceAddCommand(), createReferenceAddModel() }, //
+				new Object[] { CommandKind.ADD, REFERENCE_MANY, createReferenceAddMultipleCommand(),
+						createReferenceAddMultipleModel() }, //
 		});
 	}
 
 	private static void initializeResourceSet() {
+		// Registry the packages we need
+		CoffeePackage.eINSTANCE.eClass();
+		CCommandPackage.eINSTANCE.eClass();
+
 		domain = new AdapterFactoryEditingDomain(new EcoreAdapterFactory(), new BasicCommandStack());
 		resourceSet = domain.getResourceSet();
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("json",
@@ -113,6 +127,8 @@ public class DefaultCommandCodecTest {
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("*", new XMIResourceFactoryImpl());
 		Resource resource = resourceSet.getResource(URI.createFileURI("src/test/resources/Coffee.ecore"), true);
 		ePackage = (EPackage) resource.getContents().get(0);
+		resource = resourceSet.getResource(URI.createFileURI("src/test/resources/Command.xmi"), true);
+		commandFixture = (CCommand) resource.getContents().get(0);
 	}
 
 	static Command createAttributeSetCommand() {
@@ -147,6 +163,67 @@ public class DefaultCommandCodecTest {
 		result.getObjectValues().add(newClass);
 		result.getObjectsToAdd().add(newClass);
 		result.getIndices().add(1);
+		return result;
+	}
+
+	static Command createAttributeAddCommand() {
+		return AddCommand.create(domain, commandFixture, CCommandPackage.Literals.COMMAND__DATA_VALUES, "Foo", 0);
+	}
+
+	static CCommand createAttributeAddModel() {
+		CCommand result = CCommandFactory.eINSTANCE.createCommand();
+		result.setType(CommandKind.ADD);
+		result.setOwner(commandFixture);
+		result.setFeature("dataValues");
+		result.getDataValues().add("Foo");
+		result.getIndices().add(0);
+		return result;
+	}
+
+	static Command createReferenceAddCommand() {
+		EClass newClass = EcoreFactory.eINSTANCE.createEClass();
+		newClass.setName("Foo");
+
+		return AddCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, newClass, 2);
+	}
+
+	static CCommand createReferenceAddModel() {
+		EClass newClass = EcoreFactory.eINSTANCE.createEClass();
+		newClass.setName("Foo");
+
+		CCommand result = CCommandFactory.eINSTANCE.createCommand();
+		result.setType(CommandKind.ADD);
+		result.setOwner(ePackage);
+		result.setFeature("eClassifiers");
+		result.getObjectValues().add(newClass);
+		result.getObjectsToAdd().add(newClass);
+		result.getIndices().add(2);
+		return result;
+	}
+
+	static Command createReferenceAddMultipleCommand() {
+		EClass foo = EcoreFactory.eINSTANCE.createEClass();
+		foo.setName("Foo");
+		EDataType bar = EcoreFactory.eINSTANCE.createEDataType();
+		bar.setName("Bar");
+
+		return AddCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS,
+				Arrays.asList(foo, bar), 2);
+	}
+
+	static CCommand createReferenceAddMultipleModel() {
+		EClass foo = EcoreFactory.eINSTANCE.createEClass();
+		foo.setName("Foo");
+		EDataType bar = EcoreFactory.eINSTANCE.createEDataType();
+		bar.setName("Bar");
+
+		CCommand result = CCommandFactory.eINSTANCE.createCommand();
+		result.setType(CommandKind.ADD);
+		result.setOwner(ePackage);
+		result.setFeature("eClassifiers");
+		result.getObjectValues().addAll(Arrays.asList(foo, bar));
+		result.getObjectsToAdd().addAll(Arrays.asList(foo, bar));
+		result.getIndices().add(2);
 		return result;
 	}
 
