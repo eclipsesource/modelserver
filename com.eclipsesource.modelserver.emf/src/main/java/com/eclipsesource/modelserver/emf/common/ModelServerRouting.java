@@ -21,12 +21,13 @@ import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
 import com.google.inject.Inject;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import org.apache.log4j.Logger;
 
-import static io.javalin.apibuilder.ApiBuilder.*;
-
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
+import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class ModelServerRouting extends Routing {
 
@@ -47,7 +48,8 @@ public class ModelServerRouting extends Routing {
 			path("api/v1", () -> {
 				// CREATE
 				post(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
-					getModelUriQueryParam(ctx)
+					getQueryParam(ctx.queryParamMap(), "modeluri")
+						.map(this::adaptModelUri)
 						.ifPresentOrElse(
 							param -> getController(ModelController.class).create(ctx, param),
 							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
@@ -56,7 +58,8 @@ public class ModelServerRouting extends Routing {
 				
 				// GET ONE/GET ALL
 				get(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
-					getModelUriQueryParam(ctx)
+					getQueryParam(ctx.queryParamMap(), "modeluri")
+						.map(this::adaptModelUri)
 						.ifPresentOrElse(
 							param -> getController(ModelController.class).getOne(ctx, param),
 							() -> getController(ModelController.class).getAll(ctx)
@@ -64,7 +67,8 @@ public class ModelServerRouting extends Routing {
 				});
 				// UPDATE
 				patch(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
-					getModelUriQueryParam(ctx)
+					getQueryParam(ctx.queryParamMap(), "modeluri")
+						.map(this::adaptModelUri)
 						.ifPresentOrElse(
 							param -> getController(ModelController.class).update(ctx, param),
 							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
@@ -73,7 +77,8 @@ public class ModelServerRouting extends Routing {
 				
 				// DELETE
 				delete(ModelServerPaths.MODEL_BASE_PATH, ctx -> {
-					getModelUriQueryParam(ctx)
+					getQueryParam(ctx.queryParamMap(), "modeluri")
+						.map(this::adaptModelUri)
 						.ifPresentOrElse(
 							param -> getController(ModelController.class).delete(ctx, param),
 							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
@@ -82,7 +87,8 @@ public class ModelServerRouting extends Routing {
 				
 				// Execute commands
 				patch(ModelServerPaths.EDIT,  ctx -> {
-					getQueryParam(ctx, "modeluri")
+					getQueryParam(ctx.queryParamMap(), "modeluri")
+						.map(this::adaptModelUri)
 						.ifPresentOrElse(
 							param -> getController(ModelController.class).executeCommand(ctx, param),
 							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
@@ -97,7 +103,13 @@ public class ModelServerRouting extends Routing {
 				get(ModelServerPaths.SERVER_PING, getController(ServerController.class).pingHandler);
 				
 				ws(ModelServerPaths.SUBSCRIPTION, wsHandler -> {
-					wsHandler.onConnect(ctx -> getController(SessionController.class).subscribe(ctx, ctx.queryParam("modeluri", "")));
+					wsHandler.onConnect(ctx ->
+						getController(SessionController.class)
+							.subscribe(
+								ctx,
+								getQueryParam(ctx.queryParamMap(), "modeluri").map(this::adaptModelUri).orElse("")
+							)
+					);
 					wsHandler.onClose(ctx -> getController(SessionController.class).unsubscribe(ctx));
 					wsHandler.onError(ctx -> {});
 					wsHandler.onMessage(ctx -> {});
@@ -108,22 +120,20 @@ public class ModelServerRouting extends Routing {
 		});
 	}
 
-	private Optional<String> getQueryParam(Context ctx, String paramKey) {
-		if (ctx.queryParamMap().containsKey(paramKey))
-			return Optional.of(ctx.queryParamMap().get(paramKey).get(0))
+	private Optional<String> getQueryParam(Map<String, List<String>> queryParams, String paramKey) {
+		if (queryParams.containsKey(paramKey))
+			return Optional.of(queryParams.get(paramKey).get(0))
 					.map(String::toLowerCase);
 		
 		return Optional.empty();
 	}
 
-	private Optional<String> getModelUriQueryParam(Context ctx) {
-		if (ctx.queryParamMap().containsKey("modeluri"))
-			return Optional.of(ctx.queryParamMap().get("modeluri").get(0))
-				.map(modelUri -> modelUri.replace("file://", ""))
-				.map(modelUri -> modelUri.replace(serverConfiguration.getWorkspaceRoot(), ""))
-				.map(String::toLowerCase);
 
-		return Optional.empty();
+	private String adaptModelUri(String modelUri) {
+		// TODO make case insensitive
+		return modelUri
+			.replace("file://", "")
+			.replace(serverConfiguration.getWorkspaceRoot().toLowerCase(), "");
 	}
 	
 	private void handleError(Context ctx, int statusCode, String errorMsg) {
