@@ -9,7 +9,7 @@
 		<relativePath>../</relativePath>
 	</parent>
 	<artifactId>com.eclipsesource.modelserver.edit</artifactId>
-	<name>modelserver-emf</name>
+	<name>modelserver-edit</name>
 	
 	<properties>
 		<maven.deploy.skip>false</maven.deploy.skip>

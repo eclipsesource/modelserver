@@ -25,6 +25,11 @@
 			<artifactId>com.eclipsesource.modelserver.emf</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.eclipsesource.modelserver</groupId>
+			<artifactId>com.eclipsesource.modelserver.edit</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
