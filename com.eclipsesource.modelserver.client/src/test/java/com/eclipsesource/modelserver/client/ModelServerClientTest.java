@@ -15,23 +15,13 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
-import com.eclipsesource.modelserver.coffee.model.coffee.BrewingUnit;
-import com.eclipsesource.modelserver.coffee.model.coffee.CoffeeFactory;
-import com.eclipsesource.modelserver.coffee.model.coffee.Display;
-import com.eclipsesource.modelserver.common.codecs.XmiCodec;
-import com.eclipsesource.modelserver.emf.common.JsonResponse;
-import com.eclipsesource.modelserver.common.codecs.EncodingException;
-import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
-import com.eclipsesource.modelserver.jsonschema.Json;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import okhttp3.OkHttpClient;
-import okhttp3.mock.MockInterceptor;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.junit.Before;
-import org.junit.Test;
+import static junit.framework.TestCase.assertTrue;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.List;
@@ -39,9 +29,33 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.InternalEObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.eclipsesource.modelserver.coffee.model.coffee.AutomaticTask;
+import com.eclipsesource.modelserver.coffee.model.coffee.BrewingUnit;
+import com.eclipsesource.modelserver.coffee.model.coffee.CoffeeFactory;
+import com.eclipsesource.modelserver.coffee.model.coffee.Display;
+import com.eclipsesource.modelserver.command.CCommand;
+import com.eclipsesource.modelserver.command.CCommandFactory;
+import com.eclipsesource.modelserver.command.CommandKind;
+import com.eclipsesource.modelserver.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.common.codecs.XmiCodec;
+import com.eclipsesource.modelserver.emf.common.JsonResponse;
+import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
+import com.eclipsesource.modelserver.jsonschema.Json;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Charsets;
+
+import okhttp3.OkHttpClient;
+import okhttp3.mock.MockInterceptor;
+import okhttp3.mock.Rule;
+import okio.Buffer;
 
 public class ModelServerClientTest {
 
@@ -212,6 +226,45 @@ public class ModelServerClientTest {
         final CompletableFuture<Response<Boolean>> f = client.configure(() -> "/home/user/workspace");
 
         assertThat(f.get().body(), equalTo(true));
+    }
+
+    @Test
+    public void edit() throws EncodingException, ExecutionException, InterruptedException, MalformedURLException {
+    	AutomaticTask task = CoffeeFactory.eINSTANCE.createAutomaticTask();
+    	((InternalEObject)task).eSetProxyURI(URI.createURI("SuperBrewer3000.json#//workflows.0"));
+    	CCommand set = CCommandFactory.eINSTANCE.createCommand();
+    	set.setType(CommandKind.SET);
+    	set.setOwner(task);
+    	set.setFeature("name");
+    	set.getDataValues().add("Foo");
+    	
+        final JsonNode expected = jsonCodec.encode(set);
+		interceptor.addRule().url(BASE_URL + ModelServerClient.EDIT + "?modeluri=" + "SuperBrewer3000.json&format=json")
+				.patch().answer(request -> {
+					Buffer buffer = new Buffer();
+					try {
+						request.body().writeTo(buffer);
+					} catch (IOException e) {
+						e.printStackTrace();
+						fail("Failed to capture request body content: " + e.getMessage());
+					}
+					
+					// The resulting string is escaped as though for a Java string literal
+					String body = buffer.readString(Charsets.UTF_8).replace("\\\\", "\\")
+							.replace("\\\"", "\"");
+					
+					if (body.contains(expected.toString())) {
+						return new Rule.Builder().respond(JsonResponse.confirm("confirmed").toString());
+					} else {
+						return new Rule.Builder().respond(JsonResponse.error().toString());
+					}
+				});
+        ModelServerClient client = createClient();
+
+        final CompletableFuture<Response<Boolean>> f = client.edit(
+            "SuperBrewer3000.json", set, "json");
+
+        assertThat(f.get().body(), is(true));
     }
 
 
