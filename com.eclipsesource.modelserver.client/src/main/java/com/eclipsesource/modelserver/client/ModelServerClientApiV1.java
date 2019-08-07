@@ -18,6 +18,8 @@ package com.eclipsesource.modelserver.client;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import com.eclipsesource.modelserver.command.CCommand;
+
 public interface ModelServerClientApiV1<A> {
 
     CompletableFuture<Response<String>> get(String modelUri);
@@ -37,6 +39,8 @@ public interface ModelServerClientApiV1<A> {
     CompletableFuture<Response<Boolean>> configure(ServerConfiguration configuration);
 
     CompletableFuture<Response<Boolean>> ping();
+    
+    CompletableFuture<Response<Boolean>> edit(String modelUri, CCommand command, String format);
 
     void subscribe(String modelUri, SubscriptionListener subscriptionListener);
 

@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 
 import com.eclipsesource.modelserver.command.CCommand;
 import com.eclipsesource.modelserver.common.codecs.DecodingException;
@@ -59,7 +60,7 @@ public class ModelController {
 				eObject -> {
 					this.modelRepository.addModel(modeluri, eObject);
 					try {
-						final JsonNode encoded = codecs.encode(ctx, eObject);
+						final JsonNode encoded = codecs.encode(ctx, EcoreUtil.copy(eObject));
 						ctx.json(JsonResponse.data(encoded));
 						this.sessionController.modelChanged(modeluri);
 					} catch (EncodingException ex) {
@@ -101,7 +102,7 @@ public class ModelController {
 					ctx.json(JsonResponse.data(Json.text("")));
 				} else {
 					try {
-						ctx.json(JsonResponse.data(codecs.encode(ctx, model)));
+						ctx.json(JsonResponse.data(codecs.encode(ctx, EcoreUtil.copy(model))));
 					} catch (EncodingException ex) {
 						handleEncodingError(ctx, ex);
 					}
@@ -117,7 +118,7 @@ public class ModelController {
 			eObject -> {
 				modelRepository.updateModel(modeluri, eObject);
 				try {
-					ctx.json(JsonResponse.data(codecs.encode(ctx, eObject)));
+					ctx.json(JsonResponse.data(codecs.encode(ctx, EcoreUtil.copy(eObject))));
 				} catch (EncodingException e) {
 					handleEncodingError(ctx, e);
 				} finally {
@@ -169,7 +170,6 @@ public class ModelController {
 					if (model == null) {
 						handleError(ctx, 404, String.format("Model '%s' not found!", modelURI));
 					} else {
-						try {
 							String commandURI = "command$1.command";
 							Optional<Resource> resource = readResource(ctx, commandURI);
 							getContents(resource).filter(CCommand.class::isInstance)//
@@ -186,10 +186,8 @@ public class ModelController {
 											resource.get().getResourceSet().getResources().remove(resource.get());
 										}
 									});
-							ctx.json(JsonResponse.data(codecs.encode(ctx, model)));
-						} catch (EncodingException ex) {
-							handleEncodingError(ctx, ex);
-						}
+							ctx.json(JsonResponse.confirm("Model '" + modelURI + "' successfully updated"));
+
 					}
 				},
 				() -> handleError(ctx, 404, String.format("Model '%s' not found!", modelURI))
