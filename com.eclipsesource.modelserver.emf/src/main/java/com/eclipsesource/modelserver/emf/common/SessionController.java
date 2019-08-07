@@ -126,10 +126,9 @@ public class SessionController extends WsHandler {
 	boolean isClientSubscribed(WsContext ctx) {
 		return ! modelUrisToClients.entrySet().stream().filter(entry -> entry.getValue().contains(ctx)).collect(toSet()).isEmpty();
 	}
-	
+
 	@TestOnly
 	void setIsOnlyPredicate(Predicate<? super WsContext> isOpen) {
 		this.isOpenPredicate = isOpen == null ? ctx -> ctx.session.isOpen() : isOpen;
 	}
-	
 }

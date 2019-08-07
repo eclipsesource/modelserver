@@ -17,8 +17,7 @@
 package com.eclipsesource.modelserver.emf.common;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.AdapterFactory;
@@ -36,6 +35,9 @@ import com.eclipsesource.modelserver.emf.ResourceManager;
 import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import org.mockito.stubbing.Answer;
+
+import java.io.File;
 
 /**
  * Unit tests for the {@link ModelRepository} class.
@@ -75,7 +77,7 @@ public class ModelRepositoryTest {
 	public void createRepository() throws DecodingException {
 		when(command.canExecute()).thenReturn(true);
 		when(commandCodec.decode(any(), any())).thenReturn(command);
-
+		when(serverConfig.getWorkspaceRoot()).thenReturn(".");
 		repository = Guice.createInjector(new AbstractModule() {
 
 			@Override

@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.URI;
 
 import java.util.List;
 import java.util.Map;
@@ -129,10 +130,16 @@ public class ModelServerRouting extends Routing {
 
 
 	private String adaptModelUri(String modelUri) {
-		// TODO make case insensitive
-		return modelUri
-			.replace("file://", "")
-			.replace(serverConfiguration.getWorkspaceRoot(), "");
+		URI uri = URI.createURI(modelUri);
+		if (uri.isRelative()) {
+			if (modelUri.startsWith(serverConfiguration.getWorkspaceRoot())) {
+				return URI.createFileURI(modelUri).toString();
+			} else {
+				return URI.createFileURI(serverConfiguration.getWorkspaceRoot() + modelUri).toString();
+			}
+		}
+
+		return uri.toString();
 	}
 	
 	private void handleError(Context ctx, int statusCode, String errorMsg) {

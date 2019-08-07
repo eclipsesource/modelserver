@@ -15,44 +15,37 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import org.eclipse.emf.common.command.BasicCommandStack;
-import org.eclipse.emf.common.command.Command;
-import org.eclipse.emf.common.notify.AdapterFactory;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.edit.command.SetCommand;
-import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
-import org.eclipse.emf.edit.domain.EditingDomain;
-
 import com.eclipsesource.modelserver.command.CCommand;
 import com.eclipsesource.modelserver.common.codecs.DecodingException;
 import com.eclipsesource.modelserver.edit.CommandCodec;
 import com.eclipsesource.modelserver.emf.ResourceManager;
-import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
 import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import org.eclipse.emf.common.command.BasicCommandStack;
+import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.notify.AdapterFactory;
+import org.eclipse.emf.common.util.ECollections;
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
+import org.eclipse.emf.edit.domain.EditingDomain;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * Injectable singleton class represents a repository of all loaded models and provides a CRUD API.
  *
  */
 public class ModelRepository {
-
-	private Map<URI, EObject> models;
-	private boolean ensureModelsAreLoaded;
 
 	@Inject
 	private ServerConfiguration serverConfiguration;
@@ -65,48 +58,79 @@ public class ModelRepository {
 	private EditingDomain domain;
 
 	@Inject
-	public ModelRepository(AdapterFactory adapterFactory) {
-		this.models = new HashMap<>();
+	public ModelRepository(AdapterFactory adapterFactory, ServerConfiguration serverConfiguration, ResourceManager resourceManager) {
 		this.domain = new AdapterFactoryEditingDomain(adapterFactory, new BasicCommandStack(), resourceSet);
+		this.serverConfiguration = serverConfiguration;
+		this.resourceManager = resourceManager;
+		initialize();
+	}
+
+	public void initialize() {
+		File workspace = new File(serverConfiguration.getWorkspaceRoot());
+		for (File file : workspace.listFiles()) {
+			resourceManager.loadResource(createURI(file.getAbsolutePath()), resourceSet);
+		}
 	}
 
 	boolean hasModel(String modeluri) {
 		final URI uri = createURI(modeluri);
-		return models.containsKey(uri);
+		return resourceSet.getResource(uri, false) != null;
 	}
 
 	public Optional<EObject> getModel(String modeluri) {
-		return loadModel(modeluri);
+		return loadResource(modeluri)
+			.flatMap(res -> {
+				List<EObject> contents = res.getContents();
+				if (contents.isEmpty()) {
+					return Optional.empty();
+				}
+				return Optional.of(contents.get(0));
+			});
 	}
 
-	public Map<URI, EObject> getAllModels() {
-		this.ensureModelsAreLoaded();
-		return new LinkedHashMap<>(this.models);
+	public Optional<Resource> loadResource(String modeluri) {
+		URI uri = createURI(modeluri);
+		if (resourceSet.getResource(uri, false) == null) {
+			return Optional.empty();
+		}
+		return Optional.of(resourceSet.getResource(uri, true));
 	}
 
-	public void addModel(String modeluri, EObject model) {
-		this.models.put(createURI(modeluri), model);
+	public Map<URI, EObject> getAllModels() throws IOException {
+		EList<Resource> resources = resourceSet.getResources();
+		for (Resource resource : resources) {
+			resource.load(null);
+		}
+		LinkedHashMap<URI, EObject> models = new LinkedHashMap<>();
+		resources.forEach(resource -> {
+			models.put(resource.getURI(), resource.getContents().get(0));
+		});
+		return models;
 	}
 
-	public void updateModel(String modeluri, EObject model) {
-		this.models.put(createURI(modeluri), model);
+	public void addModel(String modeluri, EObject model) throws IOException {
+		Resource resource = resourceSet.getResource(createURI(modeluri), true);
+		resource.getContents().add(model);
 	}
-	
+
+	public Optional<EObject> updateModel(String modeluri, EObject model) {
+		return loadResource(modeluri)
+			.map(res -> res.getContents().set(0, model));
+	}
+
 	public void updateModel(String modelURI, CCommand command) throws DecodingException {
 		Command decoded = commandCodec.decode(domain, command);
 		domain.getCommandStack().execute(decoded);
 	}
 
-	public void removeModel(String modeluri) {
-		this.models.remove(createURI(modeluri));
+	public void removeModel(String modeluri) throws IOException {
+		resourceSet.getResource(createURI(modeluri), false).delete(null);
 	}
 
 	public Set<String> getAllModelUris() {
-		this.ensureModelsAreLoaded();
-		
 		Set<String> modeluris = new HashSet<>();
-		for(URI uri: this.models.keySet()){
-			modeluris.add(uri.toString());
+		for(Resource resource : resourceSet.getResources()){
+			modeluris.add(resource.getURI().toString());
 		}
 		return modeluris;
 	}
@@ -115,33 +139,11 @@ public class ModelRepository {
 		return resourceSet;
 	}
 
-	private Optional<EObject> loadModel(String modeluri) {
-		final URI uri = createURI(modeluri);
-		if (!this.models.containsKey(uri)) {
-			Optional<EObject> model = resourceManager.loadModel(uri, resourceSet, EObject.class);
-			if (model.isPresent())
-				this.models.put(uri, model.get());
-		}
-		return Optional.ofNullable(this.models.get(uri));
-	}
-
-	private void ensureModelsAreLoaded() {
-		if (!this.ensureModelsAreLoaded) {
-			serverConfiguration.getWorkspaceEntries().forEach(this::loadModel);
-			this.ensureModelsAreLoaded = true;
-		}
-	}
-
 	private URI createURI(String modeluri) {
-		// If the given modeluri is a valid file path it is used to load the model
-		modeluri = modeluri.replace("file://", "");
-		Path filePath = Paths.get(modeluri);
-
-		// If it is no valid file path it probably is located in the workspace root
-		String workspaceBaseURL = serverConfiguration.getWorkspaceRoot();
-		if (!Files.exists(filePath) && !modeluri.startsWith(workspaceBaseURL)) {
-			modeluri = workspaceBaseURL + modeluri.replaceAll(" ", "");
+		if (modeluri.startsWith("file:")) {
+			return URI.createFileURI(modeluri.replaceFirst("file:", ""));
 		}
-		return URI.createURI(modeluri);
+
+		return URI.createFileURI(modeluri);
 	}
 }

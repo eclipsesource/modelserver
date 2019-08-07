@@ -15,16 +15,6 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
-
-import org.apache.log4j.Logger;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.util.EcoreUtil;
-
 import com.eclipsesource.modelserver.command.CCommand;
 import com.eclipsesource.modelserver.common.codecs.DecodingException;
 import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
@@ -35,10 +25,18 @@ import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.plugin.json.JavalinJackson;
+import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
 
 public class ModelController {
 
@@ -57,33 +55,39 @@ public class ModelController {
 
 	public void create(Context ctx, String modeluri) {
 		getContents(readResource(ctx, modeluri)).ifPresentOrElse(
-				eObject -> {
+			eObject -> {
+				try {
 					this.modelRepository.addModel(modeluri, eObject);
-					try {
-						final JsonNode encoded = codecs.encode(ctx, EcoreUtil.copy(eObject));
-						ctx.json(JsonResponse.data(encoded));
-						this.sessionController.modelChanged(modeluri);
-					} catch (EncodingException ex) {
-						handleEncodingError(ctx, ex);
-					}
-				},
-				() -> handleError(ctx, 400, "Create new model failed")
+					final JsonNode encoded = codecs.encode(ctx, EcoreUtil.copy(eObject));
+					ctx.json(JsonResponse.data(encoded));
+					this.sessionController.modelChanged(modeluri);
+				} catch (EncodingException ex) {
+					handleEncodingError(ctx, ex);
+				} catch (IOException e) {
+					handleError(ctx, 400, "Create new model failed");
+				}
+			},
+			() -> handleError(ctx, 400, "Create new model failed")
 		);
 	}
 
 	public void delete(Context ctx, String modeluri) {
 		if (this.modelRepository.hasModel(modeluri)) {
-			this.modelRepository.removeModel(modeluri);
-			ctx.json(JsonResponse.confirm("Model '" + modeluri + "' successfully deleted"));
-			this.sessionController.modelDeleted(modeluri);
+			try {
+				this.modelRepository.removeModel(modeluri);
+				ctx.json(JsonResponse.confirm("Model '" + modeluri + "' successfully deleted"));
+				this.sessionController.modelDeleted(modeluri);
+			} catch (IOException e) {
+				handleError(ctx, 404, "Model '" + modeluri + "' not found, cannot be deleted!");
+			}
 		} else {
 			handleError(ctx, 404, "Model '" + modeluri + "' not found, cannot be deleted!");
 		}
 	}
 
 	public void getAll(Context ctx) {
-		final Map<URI, EObject> allModels = this.modelRepository.getAllModels();
 		try {
+			final Map<URI, EObject> allModels = this.modelRepository.getAllModels();
 			Map<URI, JsonNode> encodedEntries = Maps.newLinkedHashMap();
 			for (Map.Entry<URI, EObject> entry : allModels.entrySet()) {
 				final JsonNode encoded = codecs.encode(ctx, entry.getValue());
@@ -92,6 +96,8 @@ public class ModelController {
 			ctx.json(JsonResponse.data(JsonCodec.encode(encodedEntries)));
 		} catch (EncodingException ex) {
 			handleEncodingError(ctx, ex);
+		} catch (IOException e) {
+			handleError(ctx, 404, "Could not load all models");
 		}
 	}
 
@@ -115,18 +121,20 @@ public class ModelController {
 	public void update(Context ctx, String modeluri) {
 		Optional<Resource> resource = readResource(ctx, "temp$update.json");
 		getContents(resource).ifPresentOrElse(
-			eObject -> {
-				modelRepository.updateModel(modeluri, eObject);
-				try {
-					ctx.json(JsonResponse.data(codecs.encode(ctx, EcoreUtil.copy(eObject))));
-				} catch (EncodingException e) {
-					handleEncodingError(ctx, e);
-				} finally {
-					// Ditch the temporary resource
-					resource.get().getResourceSet().getResources().remove(resource.get());
-				}
-				sessionController.modelChanged(modeluri);
-			},
+			eObject -> modelRepository.updateModel(modeluri, eObject)
+				.ifPresentOrElse(model -> {
+						try {
+							ctx.json(JsonResponse.data(codecs.encode(ctx, EcoreUtil.copy(eObject))));
+						} catch (EncodingException e) {
+							handleEncodingError(ctx, e);
+						} finally {
+							// Ditch the temporary resource
+							resource.get().getResourceSet().getResources().remove(resource.get());
+						}
+						sessionController.modelChanged(modeluri);
+					},
+					() -> handleError(ctx, 400, "Update model failed")
+				),
 			() -> handleError(ctx, 400, "Update model failed")
 		);
 	}
