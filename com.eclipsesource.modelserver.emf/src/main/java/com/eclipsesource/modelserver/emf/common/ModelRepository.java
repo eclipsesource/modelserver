@@ -130,7 +130,7 @@ public class ModelRepository {
 	public Set<String> getAllModelUris() {
 		Set<String> modeluris = new HashSet<>();
 		for(Resource resource : resourceSet.getResources()){
-			modeluris.add(resource.getURI().toString());
+			modeluris.add(resource.getURI().deresolve(URI.createFileURI(serverConfiguration.getWorkspaceRoot())).toString());
 		}
 		return modeluris;
 	}
