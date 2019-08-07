@@ -15,18 +15,12 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
-import org.jetbrains.annotations.NotNull;
+import org.eclipse.emf.ecore.EObject;
 
-public interface SubscriptionListener {
-	void onOpen(Response<String> response);
+import com.eclipsesource.modelserver.common.codecs.DefaultJsonCodec;
 
-	void onNotification(ModelServerNotification notification);
-
-	void onClosing(int code, @NotNull String reason);
-
-	void onClosed(int code, @NotNull String reason);
-
-	void onFailure(Throwable t, Response<String> response);
-
-	void onFailure(Throwable t);
+public class JsonToEObjectSubscriptionListener extends TypedSubscriptionListener<EObject> {
+	public JsonToEObjectSubscriptionListener() {
+		super(new DefaultJsonCodec()::decode);
+	}
 }

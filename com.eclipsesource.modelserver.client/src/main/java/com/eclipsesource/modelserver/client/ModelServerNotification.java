@@ -15,18 +15,28 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
-import org.jetbrains.annotations.NotNull;
+import java.util.Optional;
 
-public interface SubscriptionListener {
-	void onOpen(Response<String> response);
+public class ModelServerNotification {
+	private String type;
+	private Optional<String> data;
 
-	void onNotification(ModelServerNotification notification);
+	public ModelServerNotification(String type, Optional<String> data) {
+		super();
+		this.type = type;
+		this.data = data;
+	}
 
-	void onClosing(int code, @NotNull String reason);
+	public String getType() {
+		return type;
+	}
 
-	void onClosed(int code, @NotNull String reason);
+	public Optional<String> getData() {
+		return data;
+	}
 
-	void onFailure(Throwable t, Response<String> response);
-
-	void onFailure(Throwable t);
+	@Override
+	public String toString() {
+		return super.toString() + "{ type = " + getType() + ", data = " + getData() + "}";
+	}
 }

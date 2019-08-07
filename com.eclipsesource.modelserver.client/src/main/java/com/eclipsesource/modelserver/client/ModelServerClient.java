@@ -15,6 +15,26 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+
+import org.apache.log4j.Logger;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.eclipsesource.modelserver.command.CCommand;
 import com.eclipsesource.modelserver.common.ModelServerPaths;
 import com.eclipsesource.modelserver.common.codecs.DecodingException;
@@ -28,21 +48,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 
-import okhttp3.*;
-import org.apache.log4j.Logger;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.function.BiFunction;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 
 public class ModelServerClient implements ModelServerClientApi<EObject>, ModelServerPaths {
 
@@ -278,19 +292,8 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     
 
     @Override
-    public void subscribe(String modelUri, SubscriptionListener subscriptionListener) {
-    	subscribe(modelUri, subscriptionListener, "json", (body, __) -> Optional.ofNullable(body));
-    }
-
-    @Override
-    public void subscribe(String modelUri, TypedSubscriptionListener<EObject> subscriptionListener, String _format) {
-    	subscribe(modelUri, subscriptionListener, _format, this::decode);
-   }
-
-    private <A> void subscribe(String modelUri, TypedSubscriptionListener<A> subscriptionListener,
-    		String _format, BiFunction<String, String, Optional<A>> bodyFunction) {
-    	
-    	final String format = checkedFormat(_format);
+    public void subscribe(String modelUri, SubscriptionListener subscriptionListener, String _format) {
+    	String format = checkedFormat(_format);
         Request request = new Request.Builder()
             .url(
                 makeWsUrl(
@@ -307,14 +310,14 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
             @Override
             public void onOpen(@NotNull WebSocket webSocket, @NotNull okhttp3.Response response) {
                 subscriptionListener.onOpen(new Response<>(response,
-                    body -> require(bodyFunction.apply(body, format))));
+                    body -> require(Optional.ofNullable(body))));
             }
 
             @Override
             public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-                ModelServerClient.this.parseJsonField(text, "data")
-                	.flatMap(body -> bodyFunction.apply(body, format))
-                    .ifPresent(subscriptionListener::onMessage);
+                Optional<String> type = ModelServerClient.this.parseJsonField(text, "type");
+                Optional<String> data = ModelServerClient.this.parseJsonField(text, "data");
+                subscriptionListener.onNotification(new ModelServerNotification(type.orElse("unknown"), data));
             }
 
             @Override

@@ -42,9 +42,7 @@ public interface ModelServerClientApiV1<A> {
     
     CompletableFuture<Response<Boolean>> edit(String modelUri, CCommand command, String format);
 
-    void subscribe(String modelUri, SubscriptionListener subscriptionListener);
-
-    void subscribe(String modelUri, TypedSubscriptionListener<A> subscriptionListener, String format);
+    void subscribe(String modelUri, SubscriptionListener subscriptionListener, String format);
 
     boolean unsubscribe(String modelUri);
     

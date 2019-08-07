@@ -15,18 +15,10 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
-import org.jetbrains.annotations.NotNull;
+import java.util.Optional;
 
-public interface SubscriptionListener {
-	void onOpen(Response<String> response);
-
-	void onNotification(ModelServerNotification notification);
-
-	void onClosing(int code, @NotNull String reason);
-
-	void onClosed(int code, @NotNull String reason);
-
-	void onFailure(Throwable t, Response<String> response);
-
-	void onFailure(Throwable t);
+public class JsonToStringSubscriptionListener extends TypedSubscriptionListener<String> {
+	public JsonToStringSubscriptionListener() {
+		super(data -> Optional.ofNullable(data));
+	}
 }

@@ -15,18 +15,18 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
-import org.jetbrains.annotations.NotNull;
+import java.util.Optional;
 
-public interface SubscriptionListener {
-	void onOpen(Response<String> response);
+public interface NotificationSubscriptionListener<T> extends SubscriptionListener {
+	void onSuccess(Optional<String> message);
 
-	void onNotification(ModelServerNotification notification);
+	void onError(Optional<String> message);
 
-	void onClosing(int code, @NotNull String reason);
+	void onDirtyChange(boolean isDirty);
 
-	void onClosed(int code, @NotNull String reason);
+	void onFullUpdate(T root);
 
-	void onFailure(Throwable t, Response<String> response);
+	void onIncrementalUpdate(T command);
 
-	void onFailure(Throwable t);
+	void onUnknown(ModelServerNotification notification);
 }

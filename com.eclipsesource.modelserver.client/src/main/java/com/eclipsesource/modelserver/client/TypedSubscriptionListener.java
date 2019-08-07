@@ -15,19 +15,86 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
-import org.jetbrains.annotations.NotNull;
+import java.util.Optional;
+import java.util.function.Function;
 
-public interface TypedSubscriptionListener<A> {
-    void onOpen(Response<A> response);
+public class TypedSubscriptionListener<T> implements NotificationSubscriptionListener<T> {
+	private Function<? super String, Optional<T>> updateFunction;
 
-    void onMessage(A response);
+	public TypedSubscriptionListener(Function<String, Optional<T>> updateFunction) {
+		this.updateFunction = updateFunction;
+	}
 
-    void onClosing(int code, @NotNull String reason);
+	@Override
+	public void onNotification(ModelServerNotification notification) {
+		switch (notification.getType()) {
+		case "success":
+			onSuccess(notification.getData());
+			break;
+		case "error":
+			onError(notification.getData());
+			break;
+		case "dirtyState":
+			Boolean isDirty = notification.getData().map(Boolean::parseBoolean)
+					.orElseThrow(() -> new RuntimeException("Could not parse 'data' field"));
+			onDirtyChange(isDirty);
+			break;
+		case "fullUpdate":
+			T fullUpdateData = notification.getData().flatMap(updateFunction)
+					.orElseThrow(() -> new RuntimeException("Could not parse 'data' field"));
+			onFullUpdate(fullUpdateData);
+			break;
+		case "incrementalUpdate":
+			T incrementalUpdateData = notification.getData().flatMap(updateFunction)
+					.orElseThrow(() -> new RuntimeException("Could not parse 'data' field"));
+			onIncrementalUpdate(incrementalUpdateData);
+			break;
+		default:
+			onUnknown(notification);
+		}
+	}
 
-    void onClosed(int code, @NotNull String reason);
+	@Override
+	public void onSuccess(Optional<String> message) {
+	}
 
-    void onFailure(Throwable t, Response<String> response);
+	@Override
+	public void onError(Optional<String> message) {
+	}
 
-    void onFailure(Throwable t);
+	@Override
+	public void onDirtyChange(boolean isDirty) {
+	}
+
+	@Override
+	public void onFullUpdate(T root) {
+	}
+
+	@Override
+	public void onIncrementalUpdate(T command) {
+	}
+
+	@Override
+	public void onUnknown(ModelServerNotification notification) {
+	}
+
+	@Override
+	public void onOpen(Response<String> response) {
+	}
+
+	@Override
+	public void onClosing(int code, String reason) {
+	}
+
+	@Override
+	public void onClosed(int code, String reason) {
+	}
+
+	@Override
+	public void onFailure(Throwable t, Response<String> response) {
+	}
+
+	@Override
+	public void onFailure(Throwable t) {
+	}
 }
-
