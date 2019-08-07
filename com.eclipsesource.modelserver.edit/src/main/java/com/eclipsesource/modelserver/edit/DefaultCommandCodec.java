@@ -114,7 +114,7 @@ public class DefaultCommandCodec implements CommandCodec {
 				EDataType dataType = ((EAttribute) set.getFeature()).getEAttributeType();
 				collectCommandValues(singleton(set.getValue()), dataType, result);
 			} else {
-				collectCommandEObjects(singleton(set.getValue()), result, false);
+				collectCommandEObjects(singleton(set.getValue()), result, true);
 			}
 		} else if (command instanceof ReplaceCommand) {
 			throw new EncodingException("todo"); // TODO
@@ -191,7 +191,8 @@ public class DefaultCommandCodec implements CommandCodec {
 			} else {
 				values = command.getObjectValues();
 			}
-			result = AddCommand.create(domain, owner, feature, values, getFirst(command.getIndices(), NO_INDEX));
+			int index = command.getIndices().isEmpty() ? NO_INDEX : command.getIndices().get(0);
+			result = AddCommand.create(domain, owner, feature, values, getFirst(command.getIndices(), index));
 			break;
 		}
 		case REMOVE: {
@@ -211,7 +212,8 @@ public class DefaultCommandCodec implements CommandCodec {
 			} else {
 				value = getFirst(command.getObjectValues(), null);
 			}
-			result = SetCommand.create(domain, owner, feature, value);
+			int index = command.getIndices().isEmpty() ? NO_INDEX : command.getIndices().get(0);
+			result = SetCommand.create(domain, owner, feature, value, index);
 			break;
 		}
 		case MOVE: {
