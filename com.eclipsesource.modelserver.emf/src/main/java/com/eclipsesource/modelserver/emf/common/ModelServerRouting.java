@@ -122,9 +122,8 @@ public class ModelServerRouting extends Routing {
 
 	private Optional<String> getQueryParam(Map<String, List<String>> queryParams, String paramKey) {
 		if (queryParams.containsKey(paramKey))
-			return Optional.of(queryParams.get(paramKey).get(0))
-					.map(String::toLowerCase);
-		
+			return Optional.of(queryParams.get(paramKey).get(0));
+
 		return Optional.empty();
 	}
 
@@ -133,7 +132,7 @@ public class ModelServerRouting extends Routing {
 		// TODO make case insensitive
 		return modelUri
 			.replace("file://", "")
-			.replace(serverConfiguration.getWorkspaceRoot().toLowerCase(), "");
+			.replace(serverConfiguration.getWorkspaceRoot(), "");
 	}
 	
 	private void handleError(Context ctx, int statusCode, String errorMsg) {
