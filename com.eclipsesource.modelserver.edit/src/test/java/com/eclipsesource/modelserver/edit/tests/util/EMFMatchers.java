@@ -24,6 +24,7 @@ import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.command.AddCommand;
+import org.eclipse.emf.edit.command.RemoveCommand;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.hamcrest.CustomTypeSafeMatcher;
 import org.hamcrest.Matcher;
@@ -96,6 +97,15 @@ public class EMFMatchers {
 							&& add.getOwner() == expectedAdd.getOwner() //
 							&& add.getIndex() == expectedAdd.getIndex() //
 							&& eEquals(add.getCollection(), expectedAdd.getCollection());
+				} else if (item instanceof RemoveCommand) {
+					RemoveCommand remove = (RemoveCommand) item;
+					RemoveCommand expectedRemove = (RemoveCommand) expected;
+
+					return remove.getDomain() == expectedRemove.getDomain() //
+							&& remove.getFeature() == expectedRemove.getFeature() //
+							&& remove.getOwner() == expectedRemove.getOwner() //
+							&& Objects.deepEquals(remove.getIndices(), expectedRemove.getIndices()) //
+							&& eEquals(remove.getCollection(), expectedRemove.getCollection());
 				}
 
 				return false;

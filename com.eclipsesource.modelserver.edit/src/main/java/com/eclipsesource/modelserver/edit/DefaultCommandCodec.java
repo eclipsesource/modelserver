@@ -93,7 +93,10 @@ public class DefaultCommandCodec implements CommandCodec {
 			result.setType(CommandKind.REMOVE);
 			result.setOwner(remove.getOwner());
 			result.setFeature(remove.getFeature().getName());
-			result.getIndices().addAll(Ints.asList(remove.getIndices()));
+			int[] indices = remove.getIndices();
+			if (indices != null) {
+				result.getIndices().addAll(Ints.asList(indices));
+			}
 
 			if (remove.getFeature() instanceof EAttribute) {
 				EDataType dataType = ((EAttribute) remove.getFeature()).getEAttributeType();
@@ -198,7 +201,15 @@ public class DefaultCommandCodec implements CommandCodec {
 		case REMOVE: {
 			EObject owner = command.getOwner();
 			EStructuralFeature feature = owner.eClass().getEStructuralFeature(command.getFeature());
-			result = RemoveCommand.create(domain, owner, feature, Ints.toArray(command.getIndices()));
+			if (!command.getObjectValues().isEmpty()) {
+				result = RemoveCommand.create(domain, owner, feature, command.getObjectValues());
+			} else if (!command.getDataValues().isEmpty()) {
+				result = RemoveCommand.create(domain, owner, feature, command.getDataValues());
+			} else if (!command.getIndices().isEmpty()) {
+				result = RemoveCommand.create(domain, owner, feature, Ints.toArray(command.getIndices()));
+			} else {
+				throw new DecodingException("incomplete remove command specification");
+			}
 			break;
 		}
 		case SET: {

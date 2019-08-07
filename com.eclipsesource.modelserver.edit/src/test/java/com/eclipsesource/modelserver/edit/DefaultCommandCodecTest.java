@@ -26,6 +26,7 @@ import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EcoreFactory;
@@ -36,6 +37,7 @@ import org.eclipse.emf.ecore.util.EcoreAdapterFactory;
 import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.emf.edit.command.AddCommand;
+import org.eclipse.emf.edit.command.RemoveCommand;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.domain.EditingDomain;
@@ -110,6 +112,12 @@ public class DefaultCommandCodecTest {
 				new Object[] { CommandKind.ADD, REFERENCE, createReferenceAddCommand(), createReferenceAddModel() }, //
 				new Object[] { CommandKind.ADD, REFERENCE_MANY, createReferenceAddMultipleCommand(),
 						createReferenceAddMultipleModel() }, //
+				new Object[] { CommandKind.REMOVE, ATTRIBUTE, createAttributeRemoveCommand(),
+						createAttributeRemoveModel() }, //
+				new Object[] { CommandKind.REMOVE, REFERENCE, createReferenceRemoveCommand(),
+						createReferenceRemoveModel() }, //
+				new Object[] { CommandKind.REMOVE, REFERENCE_MANY, createReferenceRemoveMultipleCommand(),
+						createReferenceRemoveMultipleModel() }, //
 		});
 	}
 
@@ -224,6 +232,77 @@ public class DefaultCommandCodecTest {
 		result.getObjectValues().addAll(Arrays.asList(foo, bar));
 		result.getObjectsToAdd().addAll(Arrays.asList(foo, bar));
 		result.getIndices().add(2);
+		return result;
+	}
+
+	static Command createAttributeRemoveCommand() {
+		return RemoveCommand.create(domain, commandFixture, CCommandPackage.Literals.COMMAND__DATA_VALUES, "Foo");
+	}
+
+	static CCommand createAttributeRemoveModel() {
+		CCommand result = CCommandFactory.eINSTANCE.createCommand();
+		result.setType(CommandKind.REMOVE);
+		result.setOwner(commandFixture);
+		result.setFeature("dataValues");
+		result.getDataValues().add("Foo");
+		return result;
+	}
+
+	static Command createReferenceRemoveCommand() {
+		EClassifier removeMe = EcorePackage.Literals.ESTRING;
+
+		return RemoveCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, removeMe);
+	}
+
+	static CCommand createReferenceRemoveModel() {
+		EClassifier removeMe = EcorePackage.Literals.ESTRING;
+
+		CCommand result = CCommandFactory.eINSTANCE.createCommand();
+		result.setType(CommandKind.REMOVE);
+		result.setOwner(ePackage);
+		result.setFeature("eClassifiers");
+		result.getObjectValues().add(removeMe);
+		return result;
+	}
+
+	static Command createReferenceRemoveMultipleCommand() {
+		EClassifier remove1 = EcorePackage.Literals.EFACTORY;
+		EClassifier remove2 = EcorePackage.Literals.ESTRING;
+
+		return RemoveCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS,
+				Arrays.asList(remove1, remove2));
+	}
+
+	static CCommand createReferenceRemoveMultipleModel() {
+		EClassifier remove1 = EcorePackage.Literals.EFACTORY;
+		EClassifier remove2 = EcorePackage.Literals.ESTRING;
+
+		CCommand result = CCommandFactory.eINSTANCE.createCommand();
+		result.setType(CommandKind.REMOVE);
+		result.setOwner(ePackage);
+		result.setFeature("eClassifiers");
+		result.getObjectValues().addAll(Arrays.asList(remove1, remove2));
+		return result;
+	}
+
+	static Command createReferenceRemoveByIndexCommand() {
+		EClassifier remove1 = EcorePackage.Literals.EFACTORY;
+		EClassifier remove2 = EcorePackage.Literals.ESTRING;
+
+		return RemoveCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS,
+				remove1.getClassifierID(), remove2.getClassifierID());
+	}
+
+	static CCommand createReferenceRemoveByIndexModel() {
+		EClassifier remove1 = EcorePackage.Literals.EFACTORY;
+		EClassifier remove2 = EcorePackage.Literals.ESTRING;
+
+		CCommand result = CCommandFactory.eINSTANCE.createCommand();
+		result.setType(CommandKind.REMOVE);
+		result.setOwner(ePackage);
+		result.setFeature("eClassifiers");
+		result.getIndices().add(remove1.getClassifierID());
+		result.getIndices().add(remove2.getClassifierID());
 		return result;
 	}
 
