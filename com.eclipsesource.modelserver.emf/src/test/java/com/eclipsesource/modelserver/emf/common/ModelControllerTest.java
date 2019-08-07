@@ -64,12 +64,13 @@ public class ModelControllerTest {
     private ModelRepository modelRepository;
     private Context context;
     private ModelController modelController;
+    private SessionController sessionController;
 
     @Before
     public void before() {
         modelRepository = mock(ModelRepository.class);
         context = mock(Context.class);
-        SessionController sessionController = mock(SessionController.class);
+        sessionController = mock(SessionController.class);
         modelController = new ModelController(modelRepository, sessionController);
     }
 
@@ -172,6 +173,7 @@ public class ModelControllerTest {
 		// the expected command as well as the actual
 		res.unload();
 		verify(modelRepository).updateModel(eq("SuperBrewer3000.json"), argThat(eEqualTo(setCommand)));
+		verify(sessionController).modelChanged(eq("SuperBrewer3000.json"), argThat(eEqualTo(setCommand)));
 	}
    
 }

@@ -32,9 +32,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
+
+import java.util.Collections;
 
 public class SessionController extends WsHandler {
 
@@ -44,8 +47,11 @@ public class SessionController extends WsHandler {
 
 	@Inject
 	private ModelRepository modelRepository;
-
+	
 	private Codecs encoder;
+	
+	// Primarily for testability because the final session field cannot be mocked 
+	private Predicate<? super WsContext> isOpenPredicate = ctx -> ctx.session.isOpen();
 
 	public SessionController() {
 		this.encoder = new Codecs();
@@ -89,7 +95,8 @@ public class SessionController extends WsHandler {
 	}
 	
 	private Stream<WsContext> getOpenSessions(String modeluri) {
-		return modelUrisToClients.get(modeluri).stream().filter(ctx -> ctx.session.isOpen());
+		return modelUrisToClients.getOrDefault(modeluri, Collections.emptySet()).stream()
+				.filter(isOpenPredicate);
 	}
 
 	private void broadcastModelUpdate(String modeluri, @Nullable EObject updatedModel) {
@@ -119,4 +126,10 @@ public class SessionController extends WsHandler {
 	boolean isClientSubscribed(WsContext ctx) {
 		return ! modelUrisToClients.entrySet().stream().filter(entry -> entry.getValue().contains(ctx)).collect(toSet()).isEmpty();
 	}
+	
+	@TestOnly
+	void setIsOnlyPredicate(Predicate<? super WsContext> isOpen) {
+		this.isOpenPredicate = isOpen == null ? ctx -> ctx.session.isOpen() : isOpen;
+	}
+	
 }
