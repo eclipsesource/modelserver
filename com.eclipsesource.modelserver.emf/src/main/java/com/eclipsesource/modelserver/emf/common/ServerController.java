@@ -27,6 +27,8 @@ public class ServerController {
 	Logger LOG = Logger.getLogger(ServerController.class);
 	@Inject
 	private ServerConfiguration serverConfiguration;
+	@Inject
+	private ModelRepository modelRepository;
 
 	public Handler pingHandler = ctx -> {
 		ctx.json(JsonResponse.success());
@@ -38,6 +40,7 @@ public class ServerController {
 		if (workspaceRoot != null) {
 			if (ServerConfiguration.isValidWorkspaceRoot(workspaceRoot)) {
 				serverConfiguration.setWorkspaceRoot(workspaceRoot);
+				modelRepository.initialize(workspaceRoot);
 				ctx.json(JsonResponse.success());
 			} else {
 				handleError(ctx, 400, "The given workspaceRoot is not a valid path: " + workspaceRoot);

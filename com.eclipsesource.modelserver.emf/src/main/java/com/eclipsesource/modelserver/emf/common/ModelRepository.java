@@ -59,11 +59,13 @@ public class ModelRepository {
 		this.domain = new AdapterFactoryEditingDomain(adapterFactory, new BasicCommandStack(), resourceSet);
 		this.serverConfiguration = serverConfiguration;
 		this.resourceManager = resourceManager;
-		initialize();
+		initialize(serverConfiguration.getWorkspaceRoot());
 	}
 
-	public void initialize() {
-		File workspace = new File(serverConfiguration.getWorkspaceRoot());
+	public void initialize(String workspaceRoot) {
+		resourceSet.getResources().forEach(Resource::unload);
+		resourceSet.getResources().clear();
+		File workspace = new File(workspaceRoot);
 		for (File file : workspace.listFiles()) {
 			resourceManager.loadResource(createURI(file.getAbsolutePath()), resourceSet);
 		}
