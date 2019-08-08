@@ -26,6 +26,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 
@@ -38,7 +39,7 @@ public class XmiCodec implements Codec {
 
 	public JsonNode encode(EObject eObject) throws EncodingException {
 		final Resource resource = createResource();
-		resource.getContents().add(eObject);
+		resource.getContents().add(EcoreUtil.copy(eObject));
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try {
 			resource.save(outputStream, null);

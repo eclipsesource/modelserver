@@ -167,9 +167,6 @@ public class ModelControllerTest {
         when(modelRepository.getModel("SuperBrewer3000.json")).thenReturn(Optional.of(task));
         modelController.executeCommand(context, "SuperBrewer3000.json");
 
-        // Unload the resource so that the "owner" is a proxy in
-        // the expected command as well as the actual
-        res.unload();
         verify(modelRepository).updateModel(eq("SuperBrewer3000.json"), argThat(eEqualTo(setCommand)));
         verify(sessionController).modelChanged(eq("SuperBrewer3000.json"), argThat(eEqualTo(setCommand)));
     }
@@ -202,9 +199,6 @@ public class ModelControllerTest {
         when(modelRepository.getModel("SuperBrewer3000.json")).thenReturn(Optional.of(task));
         modelController.executeCommand(context, "SuperBrewer3000.json");
 
-        // Unload the resource so that the "owner" is a proxy in
-        // the expected command as well as the actual
-        res.unload();
         verify(modelRepository).updateModel(eq("SuperBrewer3000.json"), argThat(eEqualTo(addCommand)));
         verify(sessionController).modelChanged(eq("SuperBrewer3000.json"), argThat(eEqualTo(addCommand)));
     }

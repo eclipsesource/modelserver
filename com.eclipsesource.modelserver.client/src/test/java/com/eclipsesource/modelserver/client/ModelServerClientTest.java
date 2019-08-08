@@ -232,24 +232,24 @@ public class ModelServerClientTest {
 
     @Test
     public void edit() throws EncodingException, ExecutionException, InterruptedException, MalformedURLException {
-    	Workflow flow = CoffeeFactory.eINSTANCE.createWorkflow();
-    	((InternalEObject)flow).eSetProxyURI(URI.createURI("SuperBrewer3000.json#//workflows.0"));
-    	CCommand add = CCommandFactory.eINSTANCE.createCommand();
-    	add.setType(CommandKind.ADD);
-    	add.setOwner(flow);
-    	add.setFeature("nodes");
-    	add.getObjectsToAdd().add(CoffeeFactory.eINSTANCE.createAutomaticTask());
-    	add.getObjectValues().addAll(add.getObjectsToAdd());
-        JsonResource cmdRes = new JsonResource(URI.createURI("$command.json"));
-        cmdRes.getContents().add(add);
-    	
-        final JsonNode expected = jsonCodec.encode(add);
-        cmdRes.getContents().clear(); // Don't unload because that creates proxies
-        
-        // Issue #115: Ensure correct JSON encoding
-        assertThat(expected.toString(), containsString("\"type\":\"add\""));
-        assertThat(expected.toString(), containsString("\"objectValues\":[{\"eClass\":"));
-    	
+		Workflow flow = CoffeeFactory.eINSTANCE.createWorkflow();
+		((InternalEObject) flow).eSetProxyURI(URI.createURI("SuperBrewer3000.json#//workflows.0"));
+		CCommand add = CCommandFactory.eINSTANCE.createCommand();
+		add.setType(CommandKind.ADD);
+		add.setOwner(flow);
+		add.setFeature("nodes");
+		add.getObjectsToAdd().add(CoffeeFactory.eINSTANCE.createAutomaticTask());
+		add.getObjectValues().addAll(add.getObjectsToAdd());
+		JsonResource cmdRes = new JsonResource(URI.createURI("$command.json"));
+		cmdRes.getContents().add(add);
+
+		final JsonNode expected = jsonCodec.encode(add);
+		cmdRes.getContents().clear(); // Don't unload because that creates proxies
+
+		// Issue #115: Ensure correct JSON encoding
+		assertThat(expected.toString(), containsString("\"type\":\"add\""));
+		assertThat(expected.toString(), containsString("\"objectValues\":[{\"eClass\":"));
+
 		interceptor.addRule().url(BASE_URL + ModelServerClient.EDIT + "?modeluri=" + "SuperBrewer3000.json&format=json")
 				.patch().answer(request -> {
 					Buffer buffer = new Buffer();
@@ -259,11 +259,10 @@ public class ModelServerClientTest {
 						e.printStackTrace();
 						fail("Failed to capture request body content: " + e.getMessage());
 					}
-					
+
 					// The resulting string is escaped as though for a Java string literal
-					String body = buffer.readString(Charsets.UTF_8).replace("\\\\", "\\")
-							.replace("\\\"", "\"");
-					
+					String body = buffer.readString(Charsets.UTF_8).replace("\\\\", "\\").replace("\\\"", "\"");
+
 					if (body.contains(expected.toString())) {
 						return new Rule.Builder().respond(JsonResponse.success("confirmed").toString());
 					} else {
@@ -272,8 +271,7 @@ public class ModelServerClientTest {
 				});
 		ModelServerClient client = createClient();
 
-		final CompletableFuture<Response<Boolean>> f = client.edit(
-            "SuperBrewer3000.json", add, "json");
+		final CompletableFuture<Response<Boolean>> f = client.edit("SuperBrewer3000.json", add, "json");
 
 		assertThat(f.get().body(), is(true));
 	}
