@@ -16,6 +16,7 @@
 package com.eclipsesource.modelserver.client;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -33,16 +34,18 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.emfjson.jackson.resource.JsonResource;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.eclipsesource.modelserver.coffee.model.coffee.AutomaticTask;
 import com.eclipsesource.modelserver.coffee.model.coffee.BrewingUnit;
 import com.eclipsesource.modelserver.coffee.model.coffee.CoffeeFactory;
 import com.eclipsesource.modelserver.coffee.model.coffee.Display;
+import com.eclipsesource.modelserver.coffee.model.coffee.Workflow;
 import com.eclipsesource.modelserver.command.CCommand;
 import com.eclipsesource.modelserver.command.CCommandFactory;
 import com.eclipsesource.modelserver.command.CommandKind;
+import com.eclipsesource.modelserver.common.codecs.DefaultJsonCodec;
 import com.eclipsesource.modelserver.common.codecs.EncodingException;
 import com.eclipsesource.modelserver.common.codecs.XmiCodec;
 import com.eclipsesource.modelserver.emf.common.JsonResponse;
@@ -62,12 +65,12 @@ public class ModelServerClientTest {
 
     private MockInterceptor interceptor;
     private Display display;
-    private JsonCodec jsonCodec;
+    private DefaultJsonCodec jsonCodec;
 
     @Before
     public void before() {
         interceptor = new MockInterceptor();
-        jsonCodec = new JsonCodec();
+        jsonCodec = new DefaultJsonCodec();
         display = CoffeeFactory.eINSTANCE.createDisplay();
         display.setWidth(200);
         display.setHeight(200);
@@ -229,15 +232,24 @@ public class ModelServerClientTest {
 
     @Test
     public void edit() throws EncodingException, ExecutionException, InterruptedException, MalformedURLException {
-    	AutomaticTask task = CoffeeFactory.eINSTANCE.createAutomaticTask();
-    	((InternalEObject)task).eSetProxyURI(URI.createURI("SuperBrewer3000.json#//workflows.0"));
-    	CCommand set = CCommandFactory.eINSTANCE.createCommand();
-    	set.setType(CommandKind.SET);
-    	set.setOwner(task);
-    	set.setFeature("name");
-    	set.getDataValues().add("Foo");
+    	Workflow flow = CoffeeFactory.eINSTANCE.createWorkflow();
+    	((InternalEObject)flow).eSetProxyURI(URI.createURI("SuperBrewer3000.json#//workflows.0"));
+    	CCommand add = CCommandFactory.eINSTANCE.createCommand();
+    	add.setType(CommandKind.ADD);
+    	add.setOwner(flow);
+    	add.setFeature("nodes");
+    	add.getObjectsToAdd().add(CoffeeFactory.eINSTANCE.createAutomaticTask());
+    	add.getObjectValues().addAll(add.getObjectsToAdd());
+        JsonResource cmdRes = new JsonResource(URI.createURI("$command.json"));
+        cmdRes.getContents().add(add);
     	
-    	final JsonNode expected = jsonCodec.encode(set);
+        final JsonNode expected = jsonCodec.encode(add);
+        cmdRes.getContents().clear(); // Don't unload because that creates proxies
+        
+        // Issue #115: Ensure correct JSON encoding
+        assertThat(expected.toString(), containsString("\"type\":\"add\""));
+        assertThat(expected.toString(), containsString("\"objectValues\":[{\"eClass\":"));
+    	
 		interceptor.addRule().url(BASE_URL + ModelServerClient.EDIT + "?modeluri=" + "SuperBrewer3000.json&format=json")
 				.patch().answer(request -> {
 					Buffer buffer = new Buffer();
@@ -261,7 +273,7 @@ public class ModelServerClientTest {
 		ModelServerClient client = createClient();
 
 		final CompletableFuture<Response<Boolean>> f = client.edit(
-				"SuperBrewer3000.json", set, "json");
+            "SuperBrewer3000.json", add, "json");
 
 		assertThat(f.get().body(), is(true));
 	}

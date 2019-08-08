@@ -65,7 +65,7 @@ public class DefaultJsonCodec implements Codec {
 	}
 
 	protected ObjectMapper getObjectMapper() {
-		return new ObjectMapper();
+		return emfJsonConverter.getMapper();
 	}
 
 	@Override

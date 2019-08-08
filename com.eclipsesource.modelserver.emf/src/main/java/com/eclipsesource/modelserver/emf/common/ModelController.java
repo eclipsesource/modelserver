@@ -191,9 +191,14 @@ public class ModelController {
 							getContents(resource).filter(CCommand.class::isInstance)//
 									.map(CCommand.class::cast) //
 									.ifPresent(cmd -> {
+										
 										try {
-											modelRepository.updateModel(modelURI, cmd);
-											sessionController.modelChanged(modelURI, cmd);
+											EcoreUtil.resolveAll(cmd);
+											
+											// Use an unique copy of the command for each operation
+											// here to ensure isolation in case of side-effects
+											modelRepository.updateModel(modelURI, EcoreUtil.copy(cmd));
+											sessionController.modelChanged(modelURI, EcoreUtil.copy(cmd));
 											ctx.json(JsonResponse.success());
 										} catch (DecodingException e) {
 											handleDecodingError(ctx, e);

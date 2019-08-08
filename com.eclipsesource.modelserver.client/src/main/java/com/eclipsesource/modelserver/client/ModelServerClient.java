@@ -30,7 +30,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -283,6 +286,13 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     
 	@Override
 	public CompletableFuture<Response<Boolean>> edit(String modelUri, CCommand command, String _format) {
+		// Encapsulate the command in a resource before marshalling it so that internal
+		// cross-references are serialized as IDREFs (e.g., "//@objectsToAdd.0") instead of
+		// HREFs (e.g., "#//@objectsToAdd.0") which will not resolve in the Model Server
+		// on account of the resource with URI "" not existing
+        Resource cmdRes = new ResourceImpl(URI.createURI("$command.json"));
+        cmdRes.getContents().add(EcoreUtil.copy(command));
+        
     	String format = checkedFormat(_format);
         final Request request = new Request.Builder()
             .url(
@@ -294,7 +304,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
             .patch(
                 RequestBody.create(
                     Json.object(
-                            Json.prop("data", Json.text(encode(EcoreUtil.copy(command), format)))
+                            Json.prop("data", Json.text(encode(cmdRes.getContents().get(0), format)))
                     ).toString(),
                     MediaType.parse("application/json")
                 )

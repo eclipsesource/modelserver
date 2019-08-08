@@ -18,6 +18,7 @@ package com.eclipsesource.modelserver.emf.common;
 import com.eclipsesource.modelserver.coffee.model.coffee.AutomaticTask;
 import com.eclipsesource.modelserver.coffee.model.coffee.BrewingUnit;
 import com.eclipsesource.modelserver.coffee.model.coffee.CoffeeFactory;
+import com.eclipsesource.modelserver.coffee.model.coffee.Workflow;
 import com.eclipsesource.modelserver.command.CCommand;
 import com.eclipsesource.modelserver.command.CCommandFactory;
 import com.eclipsesource.modelserver.command.CommandKind;
@@ -145,7 +146,9 @@ public class ModelControllerTest {
     @Test
     public void executeCommand() throws EncodingException, DecodingException {
         ResourceSet rset = new ResourceSetImpl();
+        when(modelRepository.getResourceSet()).thenReturn(rset);
         JsonResource res = new JsonResource(URI.createURI("SuperBrewer3000.json"));
+        rset.getResources().add(res);
         final AutomaticTask task = CoffeeFactory.eINSTANCE.createAutomaticTask();
         res.getContents().add(task);
         CCommand setCommand = CCommandFactory.eINSTANCE.createCommand();
@@ -153,6 +156,8 @@ public class ModelControllerTest {
         setCommand.setOwner(task);
         setCommand.setFeature("name");
         setCommand.getDataValues().add("Foo");
+        JsonResource cmdRes = new JsonResource(URI.createURI("$command.json"));
+        cmdRes.getContents().add(setCommand);
 
         final LinkedHashMap<String, List<String>> queryParams = new LinkedHashMap<>();
         queryParams.put("modeluri", Collections.singletonList("SuperBrewer3000.json"));
@@ -167,6 +172,41 @@ public class ModelControllerTest {
         res.unload();
         verify(modelRepository).updateModel(eq("SuperBrewer3000.json"), argThat(eEqualTo(setCommand)));
         verify(sessionController).modelChanged(eq("SuperBrewer3000.json"), argThat(eEqualTo(setCommand)));
+    }
+
+    @Test
+    public void addCommandNotification() throws EncodingException, DecodingException {
+        ResourceSet rset = new ResourceSetImpl();
+        when(modelRepository.getResourceSet()).thenReturn(rset);
+        JsonResource res = new JsonResource(URI.createURI("SuperBrewer3000.json"));
+        rset.getResources().add(res);
+        final Workflow workflow = CoffeeFactory.eINSTANCE.createWorkflow();
+        res.getContents().add(workflow);
+        
+        final AutomaticTask task = CoffeeFactory.eINSTANCE.createAutomaticTask();
+        CCommand addCommand = CCommandFactory.eINSTANCE.createCommand();
+        addCommand.setType(CommandKind.ADD);
+        addCommand.setOwner(workflow);
+        addCommand.setFeature("nodes");
+        addCommand.getObjectsToAdd().add(task);
+        addCommand.getObjectValues().add(task);
+        JsonResource cmdRes = new JsonResource(URI.createURI("$command.json"));
+        cmdRes.getContents().add(addCommand);
+        String commandAsString = Json.object(Json.prop("data", Json.text(new JsonCodec().encode(addCommand).toString()))).toString();
+
+        final LinkedHashMap<String, List<String>> queryParams = new LinkedHashMap<>();
+        queryParams.put("modeluri", Collections.singletonList("SuperBrewer3000.json"));
+        when(context.queryParamMap()).thenReturn(queryParams);
+        when(context.body()).thenReturn(commandAsString);
+        when(modelRepository.getResourceSet()).thenReturn(rset);
+        when(modelRepository.getModel("SuperBrewer3000.json")).thenReturn(Optional.of(task));
+        modelController.executeCommand(context, "SuperBrewer3000.json");
+
+        // Unload the resource so that the "owner" is a proxy in
+        // the expected command as well as the actual
+        res.unload();
+        verify(modelRepository).updateModel(eq("SuperBrewer3000.json"), argThat(eEqualTo(addCommand)));
+        verify(sessionController).modelChanged(eq("SuperBrewer3000.json"), argThat(eEqualTo(addCommand)));
     }
 
 }
