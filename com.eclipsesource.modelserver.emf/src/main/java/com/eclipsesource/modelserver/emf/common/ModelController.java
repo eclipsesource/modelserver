@@ -59,7 +59,7 @@ public class ModelController {
 			eObject -> {
 				try {
 					this.modelRepository.addModel(modeluri, eObject);
-					final JsonNode encoded = codecs.encode(ctx, EcoreUtil.copy(eObject));
+					final JsonNode encoded = codecs.encode(ctx, eObject);
 						ctx.json(JsonResponse.success(encoded));
 					this.sessionController.modelChanged(modeluri);
 				} catch (EncodingException ex) {
@@ -107,7 +107,7 @@ public class ModelController {
 					ctx.json(JsonResponse.error(""));
 				} else {
 					try {
-						ctx.json(JsonResponse.success(codecs.encode(ctx, EcoreUtil.copy(model))));
+						ctx.json(JsonResponse.success(codecs.encode(ctx, model)));
 					} catch (EncodingException ex) {
 						handleEncodingError(ctx, ex);
 					}
@@ -123,7 +123,7 @@ public class ModelController {
 			eObject -> modelRepository.updateModel(modeluri, eObject)
 				.ifPresentOrElse(model -> {
 						try {
-					ctx.json(JsonResponse.fullUpdate(codecs.encode(ctx, EcoreUtil.copy(eObject))));
+					ctx.json(JsonResponse.fullUpdate(codecs.encode(ctx, eObject)));
 						} catch (EncodingException e) {
 							handleEncodingError(ctx, e);
 						} finally {
