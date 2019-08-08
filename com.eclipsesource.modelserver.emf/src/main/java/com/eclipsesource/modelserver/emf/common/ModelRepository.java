@@ -24,7 +24,6 @@ import com.google.inject.Inject;
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.AdapterFactory;
-import org.eclipse.emf.common.util.ECollections;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -36,10 +35,8 @@ import org.eclipse.emf.edit.domain.EditingDomain;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Injectable singleton class represents a repository of all loaded models and provides a CRUD API.
@@ -69,6 +66,13 @@ public class ModelRepository {
 		File workspace = new File(serverConfiguration.getWorkspaceRoot());
 		for (File file : workspace.listFiles()) {
 			resourceManager.loadResource(createURI(file.getAbsolutePath()), resourceSet);
+		}
+		// any resources loaded with errors are probably not resources in the first place
+		final List<Resource> resourcesWithErrors = resourceSet.getResources().stream()
+			.filter(resource -> !resource.getErrors().isEmpty())
+			.collect(Collectors.toList());
+		for (Resource resource : resourcesWithErrors) {
+			resourceSet.getResources().remove(resource);
 		}
 	}
 
