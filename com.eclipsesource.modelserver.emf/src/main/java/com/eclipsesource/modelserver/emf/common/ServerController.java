@@ -40,7 +40,7 @@ public class ServerController {
 		if (workspaceRoot != null) {
 			if (ServerConfiguration.isValidWorkspaceRoot(workspaceRoot)) {
 				serverConfiguration.setWorkspaceRoot(workspaceRoot);
-				modelRepository.initialize(workspaceRoot);
+				modelRepository.initialize(workspaceRoot, true);
 				ctx.json(JsonResponse.success());
 			} else {
 				handleError(ctx, 400, "The given workspaceRoot is not a valid path: " + workspaceRoot);

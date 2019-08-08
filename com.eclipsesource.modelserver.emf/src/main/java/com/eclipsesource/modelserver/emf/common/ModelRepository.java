@@ -59,15 +59,21 @@ public class ModelRepository {
 		this.domain = new AdapterFactoryEditingDomain(adapterFactory, new BasicCommandStack(), resourceSet);
 		this.serverConfiguration = serverConfiguration;
 		this.resourceManager = resourceManager;
-		initialize(serverConfiguration.getWorkspaceRoot());
+		initialize(serverConfiguration.getWorkspaceRoot(), true);
 	}
 
-	public void initialize(String workspaceRoot) {
-		resourceSet.getResources().forEach(Resource::unload);
-		resourceSet.getResources().clear();
+	public void initialize(String workspaceRoot, boolean clearResources) {
+		if (clearResources) {
+			resourceSet.getResources().forEach(Resource::unload);
+			resourceSet.getResources().clear();
+		}
 		File workspace = new File(workspaceRoot);
 		for (File file : workspace.listFiles()) {
-			resourceManager.loadResource(createURI(file.getAbsolutePath()), resourceSet);
+			if (file.isDirectory()) {
+				initialize(file.getAbsolutePath(), false);
+			} else {
+				resourceManager.loadResource(createURI(file.getAbsolutePath()), resourceSet);
+			}
 		}
 		// any resources loaded with errors are probably not resources in the first place
 		final List<Resource> resourcesWithErrors = resourceSet.getResources().stream()
@@ -114,7 +120,7 @@ public class ModelRepository {
 		return models;
 	}
 
-	public void addModel(String modeluri, EObject model) throws IOException {
+	public void addModel(String modeluri, EObject model) {
 		Resource resource = resourceSet.getResource(createURI(modeluri), true);
 		resource.getContents().add(model);
 	}

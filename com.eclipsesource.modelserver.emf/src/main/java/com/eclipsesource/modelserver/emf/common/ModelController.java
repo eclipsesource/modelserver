@@ -64,8 +64,6 @@ public class ModelController {
 					this.sessionController.modelChanged(modeluri);
 				} catch (EncodingException ex) {
 					handleEncodingError(ctx, ex);
-				} catch (IOException e) {
-					handleError(ctx, 400, "Create new model failed");
 				}
 			},
 			() -> handleError(ctx, 400, "Create new model failed")
