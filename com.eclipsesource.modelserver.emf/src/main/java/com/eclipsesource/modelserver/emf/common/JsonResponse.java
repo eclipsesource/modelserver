@@ -32,9 +32,26 @@ import org.jetbrains.annotations.Nullable;
 
 public class JsonResponse {
 	
-	private static ObjectNode type(String type) {
-		// Allowed types: success, error, fullUpdate, incrementalUpdate
-		return Json.object(Json.prop("type", Json.text(type)));
+	private static ObjectNode type(JsonResponseType type) {
+		String typeString = "";
+		switch (type) {
+			case SUCCESS:
+				typeString = "success";
+				break;
+			case ERROR:
+				typeString = "error";
+				break;
+			case FULLUPDATE:
+				typeString = "fullUpdate";
+				break;
+			case INCREMENTALUPDATE:
+				typeString = "incrementalUpdate";
+				break;
+			case DIRTYSTATE:
+				typeString = "dirtyState";
+				break;
+		}
+		return Json.object(Json.prop("type", Json.text(typeString)));
 	}
 	
 	private static JsonNode data(@Nullable JsonNode jsonNode) {
@@ -56,7 +73,7 @@ public class JsonResponse {
 	}
 
 	public static ObjectNode success() {
-		return type("success");
+		return type(JsonResponseType.SUCCESS);
 	}
 
 	public static JsonNode success(@Nullable JsonNode jsonNode) {
@@ -68,7 +85,7 @@ public class JsonResponse {
 	}
 
 	public static ObjectNode error() {
-		return type("error");
+		return type(JsonResponseType.ERROR);
 	}
 
 	public static JsonNode error(String message) {
@@ -76,14 +93,14 @@ public class JsonResponse {
 	}
 
 	public static JsonNode fullUpdate(@Nullable JsonNode jsonNode) {
-		return Json.merge(type("fullUpdate"), data(jsonNode));
+		return Json.merge(type(JsonResponseType.FULLUPDATE), data(jsonNode));
 	}
 
 	public static JsonNode incrementalUpdate(@Nullable JsonNode jsonNode) {
-		return Json.merge(type("incrementalUpdate"), data(jsonNode));
+		return Json.merge(type(JsonResponseType.INCREMENTALUPDATE), data(jsonNode));
 	}
 	
 	public static JsonNode dirtyState(Boolean isDirty) {
-		return Json.merge(type("dirtyState"), data(isDirty));
+		return Json.merge(type(JsonResponseType.DIRTYSTATE), data(isDirty));
 	}
 }
