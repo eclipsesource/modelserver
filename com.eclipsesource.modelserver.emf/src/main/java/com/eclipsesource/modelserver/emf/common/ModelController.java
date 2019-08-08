@@ -15,28 +15,29 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import com.eclipsesource.modelserver.command.CCommand;
-import com.eclipsesource.modelserver.common.codecs.DecodingException;
-import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
-import com.eclipsesource.modelserver.common.codecs.EncodingException;
-import com.eclipsesource.modelserver.emf.common.codecs.Codecs;
-import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
-import com.eclipsesource.modelserver.jsonschema.Json;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.Maps;
-import com.google.inject.Inject;
-import io.javalin.http.Context;
-import io.javalin.http.Handler;
-import io.javalin.plugin.json.JavalinJackson;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
+
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
+import com.eclipsesource.modelserver.command.CCommand;
+import com.eclipsesource.modelserver.common.codecs.DecodingException;
+import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
+import com.eclipsesource.modelserver.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.emf.common.codecs.Codecs;
+import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+
+import io.javalin.http.Context;
+import io.javalin.http.Handler;
+import io.javalin.plugin.json.JavalinJackson;
 
 public class ModelController {
 
@@ -59,7 +60,7 @@ public class ModelController {
 				try {
 					this.modelRepository.addModel(modeluri, eObject);
 					final JsonNode encoded = codecs.encode(ctx, EcoreUtil.copy(eObject));
-					ctx.json(JsonResponse.data(encoded));
+						ctx.json(JsonResponse.success(encoded));
 					this.sessionController.modelChanged(modeluri);
 				} catch (EncodingException ex) {
 					handleEncodingError(ctx, ex);
@@ -75,7 +76,7 @@ public class ModelController {
 		if (this.modelRepository.hasModel(modeluri)) {
 			try {
 				this.modelRepository.removeModel(modeluri);
-				ctx.json(JsonResponse.confirm("Model '" + modeluri + "' successfully deleted"));
+			ctx.json(JsonResponse.success("Model '" + modeluri + "' successfully deleted"));
 				this.sessionController.modelDeleted(modeluri);
 			} catch (IOException e) {
 				handleError(ctx, 404, "Model '" + modeluri + "' not found, cannot be deleted!");
@@ -93,7 +94,7 @@ public class ModelController {
 				final JsonNode encoded = codecs.encode(ctx, entry.getValue());
 				encodedEntries.put(entry.getKey(), encoded);
 			}
-			ctx.json(JsonResponse.data(JsonCodec.encode(encodedEntries)));
+			ctx.json(JsonResponse.success(JsonCodec.encode(encodedEntries)));
 		} catch (EncodingException ex) {
 			handleEncodingError(ctx, ex);
 		} catch (IOException e) {
@@ -105,10 +106,10 @@ public class ModelController {
 		this.modelRepository.getModel(modeluri).ifPresentOrElse(
 			model -> {
 				if (model == null) {
-					ctx.json(JsonResponse.data(Json.text("")));
+					ctx.json(JsonResponse.error(""));
 				} else {
 					try {
-						ctx.json(JsonResponse.data(codecs.encode(ctx, EcoreUtil.copy(model))));
+						ctx.json(JsonResponse.success(codecs.encode(ctx, EcoreUtil.copy(model))));
 					} catch (EncodingException ex) {
 						handleEncodingError(ctx, ex);
 					}
@@ -124,7 +125,7 @@ public class ModelController {
 			eObject -> modelRepository.updateModel(modeluri, eObject)
 				.ifPresentOrElse(model -> {
 						try {
-							ctx.json(JsonResponse.data(codecs.encode(ctx, EcoreUtil.copy(eObject))));
+					ctx.json(JsonResponse.fullUpdate(codecs.encode(ctx, EcoreUtil.copy(eObject))));
 						} catch (EncodingException e) {
 							handleEncodingError(ctx, e);
 						} finally {
@@ -139,7 +140,16 @@ public class ModelController {
 		);
 	}
 
-	public Handler modelUrisHandler = ctx -> ctx.json(JsonResponse.data(JsonCodec.encode(this.modelRepository.getAllModelUris())));
+	public void save(Context ctx, String modeluri) {
+		if (this.modelRepository.saveModel(modeluri)) {
+			ctx.json(JsonResponse.success("Model '" + modeluri + "' successfully saved"));
+			sessionController.modelSaved(modeluri);
+		} else {
+			handleError(ctx, 500, "Saving model '" + modeluri + "' failed!");
+		}
+	}
+
+	public Handler modelUrisHandler = ctx -> ctx.json(JsonResponse.success(JsonCodec.encode(this.modelRepository.getAllModelUris())));
 
 	private Optional<Resource> readResource(Context ctx, String modelURI) {
 		try {
@@ -194,7 +204,7 @@ public class ModelController {
 											resource.get().getResourceSet().getResources().remove(resource.get());
 										}
 									});
-							ctx.json(JsonResponse.confirm("Model '" + modelURI + "' successfully updated"));
+							ctx.json(JsonResponse.success("Model '" + modelURI + "' successfully updated"));
 
 					}
 				},

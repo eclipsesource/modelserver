@@ -49,7 +49,6 @@ import com.eclipsesource.modelserver.emf.common.JsonResponse;
 import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 
 import okhttp3.OkHttpClient;
@@ -80,7 +79,7 @@ public class ModelServerClientTest {
         interceptor.addRule()
             .get()
             .url(BASE_URL + ModelServerClient.MODEL_BASE_PATH + "?modeluri=" + "SuperBrewer3000.json")
-            .respond(createDataResponse(expected).toString());
+            .respond(JsonResponse.success(expected).toString());
         ModelServerClient client = createClient();
 
         final CompletableFuture<Response<String>> f = client.get("SuperBrewer3000.json");
@@ -94,7 +93,7 @@ public class ModelServerClientTest {
         interceptor.addRule()
             .get()
             .url(BASE_URL + ModelServerClient.MODEL_BASE_PATH + "?modeluri=SuperBrewer3000.json&format=xmi")
-            .respond(createDataResponse(new XmiCodec().encode(brewingUnit)).toString());
+            .respond(JsonResponse.success(new XmiCodec().encode(brewingUnit)).toString());
         ModelServerClient client = createClient();
 
         final CompletableFuture<Response<EObject>> f = client.get("SuperBrewer3000.json", "xmi");
@@ -108,7 +107,7 @@ public class ModelServerClientTest {
             .get()
             .url(BASE_URL + ModelServerClient.MODEL_URIS)
             .respond(
-                createDataResponse(JsonCodec.encode(Collections.singletonList("http://fake-model.com"))).toString()
+            		JsonResponse.success(JsonCodec.encode(Collections.singletonList("http://fake-model.com"))).toString()
             );
         ModelServerClient client = createClient();
 
@@ -121,7 +120,7 @@ public class ModelServerClientTest {
         interceptor.addRule()
             .url(BASE_URL + ModelServerClient.MODEL_BASE_PATH + "?modeluri=" + "SuperBrewer3000.json")
             .delete()
-            .respond(Json.object(Json.prop("type", Json.text("confirm"))).toString());
+            .respond(Json.object(Json.prop("type", Json.text("success"))).toString());
         ModelServerClient client = createClient();
 
         final CompletableFuture<Response<Boolean>> f = client.delete("SuperBrewer3000.json");
@@ -135,7 +134,7 @@ public class ModelServerClientTest {
         interceptor.addRule()
             .url(BASE_URL + ModelServerClient.MODEL_BASE_PATH + "?modeluri=" + "SuperBrewer3000.json")
             .patch()
-            .respond(createDataResponse(expected).toString());
+            .respond(JsonResponse.success(expected).toString());
         ModelServerClient client = createClient();
 
         final CompletableFuture<Response<String>> f = client.update(
@@ -152,7 +151,7 @@ public class ModelServerClientTest {
         interceptor.addRule()
             .url(BASE_URL + ModelServerClient.MODEL_BASE_PATH + "?modeluri=" + "SuperBrewer3000.json" + "&format=xmi")
             .patch()
-            .respond(createDataResponse(new XmiCodec().encode(expected)).toString());
+            .respond(JsonResponse.success(new XmiCodec().encode(expected)).toString());
         ModelServerClient client = createClient();
 
         final CompletableFuture<Response<EObject>> f = client.update(
@@ -182,7 +181,7 @@ public class ModelServerClientTest {
         interceptor.addRule()
             .url(BASE_URL + ModelServerClient.SCHEMA + "?modeluri=" + "SuperBrewer3000.json")
             .get()
-            .respond(createDataResponse(expected).toString());
+            .respond(JsonResponse.success(expected).toString());
         ModelServerClient client = createClient();
 
         final CompletableFuture<Response<String>> f = client.getSchema("SuperBrewer3000.json");
@@ -238,7 +237,7 @@ public class ModelServerClientTest {
     	set.setFeature("name");
     	set.getDataValues().add("Foo");
     	
-        final JsonNode expected = jsonCodec.encode(set);
+    	final JsonNode expected = jsonCodec.encode(set);
 		interceptor.addRule().url(BASE_URL + ModelServerClient.EDIT + "?modeluri=" + "SuperBrewer3000.json&format=json")
 				.patch().answer(request -> {
 					Buffer buffer = new Buffer();
@@ -254,18 +253,18 @@ public class ModelServerClientTest {
 							.replace("\\\"", "\"");
 					
 					if (body.contains(expected.toString())) {
-						return new Rule.Builder().respond(JsonResponse.confirm("confirmed").toString());
+						return new Rule.Builder().respond(JsonResponse.success("confirmed").toString());
 					} else {
 						return new Rule.Builder().respond(JsonResponse.error().toString());
 					}
 				});
-        ModelServerClient client = createClient();
+		ModelServerClient client = createClient();
 
-        final CompletableFuture<Response<Boolean>> f = client.edit(
-            "SuperBrewer3000.json", set, "json");
+		final CompletableFuture<Response<Boolean>> f = client.edit(
+				"SuperBrewer3000.json", set, "json");
 
-        assertThat(f.get().body(), is(true));
-    }
+		assertThat(f.get().body(), is(true));
+	}
 
 
     private ModelServerClient createClient() throws MalformedURLException {
@@ -273,9 +272,5 @@ public class ModelServerClientTest {
             new OkHttpClient.Builder().addInterceptor(interceptor).build(),
             BASE_URL
         );
-    }
-
-    private ObjectNode createDataResponse(JsonNode payload) {
-        return Json.object(Json.prop("data", payload));
     }
 }

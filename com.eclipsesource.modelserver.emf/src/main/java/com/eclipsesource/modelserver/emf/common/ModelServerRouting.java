@@ -93,7 +93,17 @@ public class ModelServerRouting extends Routing {
 						.ifPresentOrElse(
 							param -> getController(ModelController.class).executeCommand(ctx, param),
 							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
-							);
+					);
+				});
+
+				// SAVE
+				get(ModelServerPaths.SAVE,  ctx -> {
+					getQueryParam(ctx.queryParamMap(), "modeluri")
+						.map(this::adaptModelUri)
+						.ifPresentOrElse(
+							param -> getController(ModelController.class).save(ctx, param),
+							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
+					);
 				});
 
 				// GET MODELURIS

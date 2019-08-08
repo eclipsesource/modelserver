@@ -154,7 +154,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
         return makeCall(request)
             .thenApply(response -> parseField(response, "type"))
             .thenApply(this::getBodyOrThrow)
-            .thenApply(response -> response.mapBody(body -> body.equals("confirm")));
+            .thenApply(response -> response.mapBody(body -> body.equals("success")));
     }
 
     @Override
@@ -287,7 +287,7 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
         return makeCall(request)
                 .thenApply(response -> parseField(response, "type"))
                 .thenApply(this::getBodyOrThrow)
-                .thenApply(response -> response.mapBody(body -> body.equals("confirm")));
+                .thenApply(response -> response.mapBody(body -> body.equals("success")));
 	}
     
 

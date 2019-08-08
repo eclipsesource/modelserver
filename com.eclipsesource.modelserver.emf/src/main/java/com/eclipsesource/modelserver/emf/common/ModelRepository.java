@@ -133,6 +133,10 @@ public class ModelRepository {
 		resourceSet.getResource(createURI(modeluri), false).delete(null);
 	}
 
+	public boolean saveModel(String modeluri) {
+		return this.resourceManager.save(resourceSet);
+	}
+
 	public Set<String> getAllModelUris() {
 		Set<String> modeluris = new HashSet<>();
 		for(Resource resource : resourceSet.getResources()){

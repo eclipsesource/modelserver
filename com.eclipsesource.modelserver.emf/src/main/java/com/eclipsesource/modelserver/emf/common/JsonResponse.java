@@ -21,41 +21,69 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Structure of JsonResponse
+ * 
+ * {
+ *   "type": "success" | "error" | "fullUpdate" | "incrementalUpdate" | "dirtyState"
+ *   "data": String | Boolean | EObject
+ * }
+ */
+
 public class JsonResponse {
-
-	public static ObjectNode success() {
-		return Json.object(
-			Json.prop("type", Json.text("success"))
-		);
+	
+	private static ObjectNode type(String type) {
+		// Allowed types: success, error, fullUpdate, incrementalUpdate
+		return Json.object(Json.prop("type", Json.text(type)));
 	}
-
-	public static JsonNode success(ObjectNode response) {
-		return Json.merge(success(), response);
-	}
-
-	public static ObjectNode error() {
-		return Json.object(
-			Json.prop("type", Json.text("error"))
-		);
-	}
-
-	public static ObjectNode error(String message) {
-		return (ObjectNode) Json.merge(
-			error(),
-			Json.object(Json.prop("message", Json.text(message)))
-		);
-	}
-
-	public static JsonNode data(@Nullable JsonNode jsonNode) {
+	
+	private static JsonNode data(@Nullable JsonNode jsonNode) {
 		return Json.object(
 			Json.prop("data", jsonNode == null ? NullNode.getInstance() : jsonNode)
 		);
 	}
 
-	public static JsonNode confirm(String message) {
+	private static JsonNode data(String message) {
 		return Json.object(
-			Json.prop("type", Json.text("confirm")),
-			Json.prop("message", Json.text(message))
+			Json.prop("data", Json.text(message))
 		);
+	}
+
+	private static JsonNode data(Boolean b) {
+		return Json.object(
+			Json.prop("data", Json.bool(b))
+		);
+	}
+
+	public static ObjectNode success() {
+		return type("success");
+	}
+
+	public static JsonNode success(@Nullable JsonNode jsonNode) {
+		return Json.merge(success(), data(jsonNode));
+	}
+	
+	public static JsonNode success(String message) {
+		return Json.merge(success(), data(message));
+	}
+
+	public static ObjectNode error() {
+		return type("error");
+	}
+
+	public static JsonNode error(String message) {
+		return Json.merge(error(), data(message));
+	}
+
+	public static JsonNode fullUpdate(@Nullable JsonNode jsonNode) {
+		return Json.merge(type("fullUpdate"), data(jsonNode));
+	}
+
+	public static JsonNode incrementalUpdate(@Nullable JsonNode jsonNode) {
+		return Json.merge(type("incrementalUpdate"), data(jsonNode));
+	}
+	
+	public static JsonNode dirtyState(Boolean isDirty) {
+		return Json.merge(type("dirtyState"), data(isDirty));
 	}
 }

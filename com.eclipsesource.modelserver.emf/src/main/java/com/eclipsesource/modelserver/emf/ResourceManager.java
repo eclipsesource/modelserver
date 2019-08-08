@@ -16,22 +16,20 @@
 package com.eclipsesource.modelserver.emf;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.emfjson.jackson.resource.JsonResourceFactory;
 
+import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
 import com.eclipsesource.modelserver.emf.configuration.EPackageConfiguration;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -107,7 +105,11 @@ public class ResourceManager {
 		return loadModel(URI.createURI(resourceURI), rs, clazz);
 	}
 
-	public boolean save(Resource resource) {
+	public boolean save(ResourceSet rs) {
+		return rs.getResources().stream().allMatch(this::save);
+	}
+
+	private boolean save(Resource resource) {
 		if (resource.getURI() != null) {
 
 			try {
@@ -118,23 +120,5 @@ public class ResourceManager {
 			}
 		}
 		return false;
-	}
-
-	public boolean save(EObject eobject) {
-		if (eobject.eResource() != null) {
-			return save(eobject.eResource());
-		}
-		return false;
-	}
-
-	public boolean saveAs(Collection<EObject> contents, URI resourceURI) {
-		ResourceSet rs = new ResourceSetImpl();
-		Resource resource = rs.createResource(resourceURI);
-		resource.getContents().addAll(contents);
-		return save(resource);
-	}
-
-	public boolean saveAs(Collection<EObject> contents, String resourceURI) {
-		return saveAs(contents, URI.createURI(resourceURI));
 	}
 }

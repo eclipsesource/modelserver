@@ -15,19 +15,9 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import com.eclipsesource.modelserver.command.CCommand;
-import com.eclipsesource.modelserver.common.codecs.EncodingException;
-import com.eclipsesource.modelserver.emf.common.codecs.Codecs;
-import com.eclipsesource.modelserver.jsonschema.Json;
-import com.google.common.collect.Maps;
-import com.google.inject.Inject;
-import io.javalin.websocket.WsContext;
-import io.javalin.websocket.WsHandler;
-import org.apache.log4j.Logger;
-import org.eclipse.emf.ecore.EObject;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.TestOnly;
+import static java.util.stream.Collectors.toSet;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -35,9 +25,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toSet;
+import org.apache.log4j.Logger;
+import org.eclipse.emf.ecore.EObject;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
-import java.util.Collections;
+import com.eclipsesource.modelserver.command.CCommand;
+import com.eclipsesource.modelserver.common.codecs.EncodingException;
+import com.eclipsesource.modelserver.emf.common.codecs.Codecs;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+
+import io.javalin.websocket.WsContext;
+import io.javalin.websocket.WsHandler;
 
 public class SessionController extends WsHandler {
 
@@ -59,7 +60,7 @@ public class SessionController extends WsHandler {
 
 	public void subscribe(WsContext ctx, String modeluri) {
 		modelUrisToClients.computeIfAbsent(modeluri, clients -> ConcurrentHashMap.newKeySet()).add(ctx);
-		ctx.send(JsonResponse.success(Json.object(Json.prop("sessionId", Json.text(ctx.getSessionId())))));
+		ctx.send(JsonResponse.success(ctx.getSessionId()));
 	}
 
 	public void unsubscribe(WsContext ctx) {
@@ -77,7 +78,10 @@ public class SessionController extends WsHandler {
 
 	public void modelChanged(String modeluri) {
 		modelRepository.getModel(modeluri).ifPresentOrElse(
-				eObject -> broadcastModelUpdate(modeluri, eObject),
+				eObject -> {
+					broadcastModelUpdate(modeluri, eObject);
+					broadcastDirtyState(modeluri, true);
+				},
 				() -> broadcastError(modeluri, "Could not load changed object")
 		);
 	}
@@ -85,7 +89,10 @@ public class SessionController extends WsHandler {
 	public void modelChanged(String modeluri, CCommand command) {
 		// TODO: Distinguish from wholesale update?
 		modelRepository.getModel(modeluri).ifPresentOrElse(
-				eObject -> broadcastModelUpdate(modeluri, command),
+				eObject -> {
+					broadcastModelUpdate(modeluri, command);
+					broadcastDirtyState(modeluri, true);
+				},
 				() -> broadcastError(modeluri, "Could not load changed object")
 		);
 	}
@@ -93,7 +100,11 @@ public class SessionController extends WsHandler {
 	public void modelDeleted(String modeluri) {
 		broadcastModelUpdate(modeluri, null);
 	}
-	
+
+	public void modelSaved(String modeluri) {
+		broadcastDirtyState(modeluri, false);
+	}
+
 	private Stream<WsContext> getOpenSessions(String modeluri) {
 		return modelUrisToClients.getOrDefault(modeluri, Collections.emptySet()).stream()
 				.filter(isOpenPredicate);
@@ -106,15 +117,20 @@ public class SessionController extends WsHandler {
 					try {
 						if (updatedModel == null) {
 							// model has been deleted
-							session.send(JsonResponse.data(null));
+							session.send(JsonResponse.success(NullNode.getInstance()));
 						} else {
-							session.send(JsonResponse.data(encoder.encode(session, updatedModel)));
+							session.send(JsonResponse.success(encoder.encode(session, updatedModel)));
 						}
 					} catch (EncodingException e) {
 						LOG.error("Broadcast model update of " + modeluri + " failed", e);
 					}
 				});
 		}
+	}
+
+	private void broadcastDirtyState(String modeluri, Boolean isDirty) {
+		getOpenSessions(modeluri)
+			.forEach(session -> session.send(JsonResponse.dirtyState(isDirty)));
 	}
 
 	private void broadcastError(String modeluri, String errorMessage) {
