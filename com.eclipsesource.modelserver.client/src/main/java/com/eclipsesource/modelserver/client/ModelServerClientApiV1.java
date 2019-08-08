@@ -34,6 +34,8 @@ public interface ModelServerClientApiV1<A> {
 
     CompletableFuture<Response<A>> update(String modelUri, A updatedModel, String format);
 
+    CompletableFuture<Response<Boolean>> save(String modelUri);
+
     CompletableFuture<Response<String>> getSchema(String modelUri);
 
     CompletableFuture<Response<Boolean>> configure(ServerConfiguration configuration);

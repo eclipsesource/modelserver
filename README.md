@@ -38,12 +38,14 @@ The following table shows the current HTTP endpoints:
 |Category|Description|HTTP method|Path|Input
 |-|-|:-:|-|-
 |__Models__|Get all available models in the workspace|__GET__|`/models`| -
-| |Get model|__GET__|`/models`|query parameter: `?modeluri=`
-| |Create new model|__POST__|`/models`|query parameter: `?modeluri=` <br> application/json
-| |Update model|__PATCH__|`/models`|query parameter: `?modeluri=` <br> application/json
-| |Delete model|__DELETE__|`/models`|query parameter: `?modeluri=`
+| |Get model|__GET__|`/models`|query parameter: `[?modeluri=...[&format=...]]`
+| |Create new model|__POST__|`/models`|query parameter: `?modeluri=...[&format=...]` <br> application/json
+| |Update model|__PATCH__|`/models`|query parameter: `?modeluri=...[&format=...]` <br> application/json
+| |Delete model|__DELETE__|`/models`|query parameter: `?modeluri=...`
+| |Save|__GET__|`/save`|query parameter: `?modeluri=...`
+| |Execute commands|__GET__|`/edit`|query parameter: `?modeluri=...`
 | |Get all available model URIs in the workspace|__GET__|`/modeluris`| -
-|__JSON schema__ |Get JSON schema of a model|__GET__|`/schema`|query parameter: `?modeluri=`
+|__JSON schema__ |Get JSON schema of a model|__GET__|`/schema`|query parameter: `?modeluri=...`
 |__Server actions__|Ping server|__GET__|`/api/v1/server/ping`| -
 | |Update server configuration|__PUT__|`/api/v1/server/configure`|application/json
 
@@ -59,7 +61,7 @@ The following table shows the current WS endpoints:
 
 |Description|Path|Input|Returns
 |-|-|-|-
-|Subscribe to model changes|`/subscribe`|query parameter: `?modeluri=`|`sessionId`
+|Subscribe to model changes|`/subscribe`|query parameter: `?modeluri=...[&format=...]`|`sessionId`
 
 ## Java client API
 
@@ -71,21 +73,33 @@ public interface ModelServerClientApiV1 {
 
     CompletableFuture<Response<String>> get(String modelUri);
 
+    CompletableFuture<Response<A>> get(String modelUri, String format);
+
     CompletableFuture<Response<List<String>>> getAll();
 
     CompletableFuture<Response<Boolean>> delete(String modelUri);
 
-    CompletableFuture<Response<String>> update(String modelUri, String updatedModel, String mediaType);
+    CompletableFuture<Response<String>> update(String modelUri, String updatedModel);
+
+    CompletableFuture<Response<A>> update(String modelUri, A updatedModel, String format);
+
+    CompletableFuture<Response<Boolean>> save(String modelUri);
 
     CompletableFuture<Response<String>> getSchema(String modelUri);
 
     CompletableFuture<Response<Boolean>> configure(ServerConfiguration configuration);
 
     CompletableFuture<Response<Boolean>> ping();
+    
+    CompletableFuture<Response<Boolean>> edit(String modelUri, CCommand command, String format);
 
-    void subscribe(String modelUri);
+    void subscribe(String modelUri, SubscriptionListener subscriptionListener, String format);
 
     boolean unsubscribe(String modelUri);
+    
+    EditingContext edit();
+    
+    boolean close(EditingContext editingContext);
 }
 
 ```
@@ -102,7 +116,7 @@ client.get("SuperBrewer3000.json")
       .thenAccept(response -> System.out.println(response.body()));
 
 // perform same GET, but expect XMI format      
-client.get("SuperBrewer3000.json?format=xmi")
+client.get("SuperBrewer3000.json&format=xmi")
       .thenAccept(response -> System.out.println(response.body()));
       
 // perform POST
@@ -110,9 +124,9 @@ client.update("SuperBrewer3000.json", "{ \"data\": <payload> }")
       .thenAccept(response -> System.out.println(response.body()));
 
 // perform POST with XMI format
-client.update("SuperBrewer3000.json?format=xmi", client.encode(brewingUnit, "xmi"))
+client.update("SuperBrewer3000.json&format=xmi", client.encode(brewingUnit, "xmi"))
   .thenAccept(response -> {
-    client.get("SuperBrewer3000.json?format=xmi").thenAccept(resp -> {
+    client.get("SuperBrewer3000.json&format=xmi").thenAccept(resp -> {
       System.out.println(client.decode(resp.body(), "xmi"));
     });
   });
@@ -126,7 +140,7 @@ you can subscribe with a `SubscriptionListener`.
 
 ```Java
 ModelServerClient client = new ModelServerClient("http://localhost:8081/api/v1/");
-String subscriptionId = "SuperBrewer3000.json?format=xmi";
+String subscriptionId = "SuperBrewer3000.json&format=xmi";
 client.subscribe(subscriptionId, new SubscriptionListener() {
   @Override
   public void onOpen(Response<String> response) {

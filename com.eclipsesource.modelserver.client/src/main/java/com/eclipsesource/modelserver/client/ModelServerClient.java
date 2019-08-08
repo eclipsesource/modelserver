@@ -221,6 +221,22 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
     }
 
     @Override
+    public CompletableFuture<Response<Boolean>> save(String modelUri) {
+        final Request request = new Request.Builder()
+            .url(
+                createHttpUrlBuilder(makeUrl(SAVE))
+                    .addQueryParameter("modeluri", modelUri)
+                    .build()
+            )
+            .build();
+
+        return makeCall(request)
+                .thenApply(response -> parseField(response, "type"))
+                .thenApply(this::getBodyOrThrow)
+                .thenApply(response -> response.mapBody(body -> body.equals("success")));
+    }
+
+    @Override
     public CompletableFuture<Response<String>> getSchema(String modelUri) {
         final Request request = new Request.Builder()
             .url(
