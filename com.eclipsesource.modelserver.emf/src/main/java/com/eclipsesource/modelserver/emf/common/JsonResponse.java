@@ -33,25 +33,7 @@ import org.jetbrains.annotations.Nullable;
 public class JsonResponse {
 	
 	private static ObjectNode type(JsonResponseType type) {
-		String typeString = "";
-		switch (type) {
-			case SUCCESS:
-				typeString = "success";
-				break;
-			case ERROR:
-				typeString = "error";
-				break;
-			case FULLUPDATE:
-				typeString = "fullUpdate";
-				break;
-			case INCREMENTALUPDATE:
-				typeString = "incrementalUpdate";
-				break;
-			case DIRTYSTATE:
-				typeString = "dirtyState";
-				break;
-		}
-		return Json.object(Json.prop("type", Json.text(typeString)));
+		return Json.object(Json.prop("type", Json.text(type.toString())));
 	}
 	
 	private static JsonNode data(@Nullable JsonNode jsonNode) {
