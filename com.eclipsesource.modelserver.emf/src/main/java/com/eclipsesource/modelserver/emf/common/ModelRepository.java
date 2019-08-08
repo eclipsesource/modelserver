@@ -15,15 +15,20 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
-import com.eclipsesource.modelserver.command.CCommand;
-import com.eclipsesource.modelserver.common.codecs.DecodingException;
-import com.eclipsesource.modelserver.edit.CommandCodec;
-import com.eclipsesource.modelserver.emf.ResourceManager;
-import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
-import com.google.inject.Inject;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.AdapterFactory;
+import org.eclipse.emf.common.util.ECollections;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -33,10 +38,12 @@ import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.domain.EditingDomain;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.eclipsesource.modelserver.command.CCommand;
+import com.eclipsesource.modelserver.common.codecs.DecodingException;
+import com.eclipsesource.modelserver.edit.CommandCodec;
+import com.eclipsesource.modelserver.emf.ResourceManager;
+import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
+import com.google.inject.Inject;
 
 /**
  * Injectable singleton class represents a repository of all loaded models and provides a CRUD API.
@@ -125,9 +132,19 @@ public class ModelRepository {
 		resource.getContents().add(model);
 	}
 
-	public Optional<EObject> updateModel(String modeluri, EObject model) {
-		return loadResource(modeluri)
-			.map(res -> res.getContents().set(0, model));
+	/**
+	 * Replace a model with an update.
+	 * 
+	 * @param modeluri the URI of the model to replace
+	 * @param model    the replacement
+	 * @return the {@code resource} that was replaced, or an empty optional if it
+	 *         does not exist
+	 */
+	public Optional<Resource> updateModel(String modeluri, EObject model) {
+		return loadResource(modeluri).map(res -> {
+			ECollections.setEList(res.getContents(), ECollections.singletonEList(model));
+			return res;
+		});
 	}
 
 	public void updateModel(String modelURI, CCommand command) throws DecodingException {

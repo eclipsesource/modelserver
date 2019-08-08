@@ -121,7 +121,7 @@ public class ModelController {
 		Optional<Resource> resource = readResource(ctx, "temp$update.json");
 		getContents(resource).ifPresentOrElse(
 			eObject -> modelRepository.updateModel(modeluri, eObject)
-				.ifPresentOrElse(model -> {
+				.ifPresentOrElse(__ -> {
 						try {
 					ctx.json(JsonResponse.fullUpdate(codecs.encode(ctx, eObject)));
 						} catch (EncodingException e) {
@@ -132,9 +132,9 @@ public class ModelController {
 						}
 						sessionController.modelChanged(modeluri);
 					},
-					() -> handleError(ctx, 400, "Update model failed")
+					() -> handleError(ctx, 404, "No such model resource to update")
 				),
-			() -> handleError(ctx, 400, "Update model failed")
+			() -> handleError(ctx, 400, "Update has no content")
 		);
 	}
 
