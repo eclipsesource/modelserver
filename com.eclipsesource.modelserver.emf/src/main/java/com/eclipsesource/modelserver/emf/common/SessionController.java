@@ -79,7 +79,7 @@ public class SessionController extends WsHandler {
 	public void modelChanged(String modeluri) {
 		modelRepository.getModel(modeluri).ifPresentOrElse(
 				eObject -> {
-					broadcastModelUpdate(modeluri, eObject);
+					broadcastFullUpdate(modeluri, eObject);
 					broadcastDirtyState(modeluri, true);
 				},
 				() -> broadcastError(modeluri, "Could not load changed object")
@@ -90,7 +90,7 @@ public class SessionController extends WsHandler {
 		// TODO: Distinguish from wholesale update?
 		modelRepository.getModel(modeluri).ifPresentOrElse(
 				eObject -> {
-					broadcastModelUpdate(modeluri, command);
+					broadcastIncrementalUpdate(modeluri, command);
 					broadcastDirtyState(modeluri, true);
 				},
 				() -> broadcastError(modeluri, "Could not load changed object")
@@ -98,7 +98,7 @@ public class SessionController extends WsHandler {
 	}
 
 	public void modelDeleted(String modeluri) {
-		broadcastModelUpdate(modeluri, null);
+		broadcastFullUpdate(modeluri, null);
 	}
 
 	public void modelSaved(String modeluri) {
@@ -110,19 +110,32 @@ public class SessionController extends WsHandler {
 				.filter(isOpenPredicate);
 	}
 
-	private void broadcastModelUpdate(String modeluri, @Nullable EObject updatedModel) {
+	private void broadcastFullUpdate(String modeluri, @Nullable EObject updatedModel) {
 		if (modelUrisToClients.containsKey(modeluri)) {
 			getOpenSessions(modeluri)
 				.forEach(session -> {
 					try {
 						if (updatedModel == null) {
 							// model has been deleted
-							session.send(JsonResponse.success(NullNode.getInstance()));
+							session.send(JsonResponse.fullUpdate(NullNode.getInstance()));
 						} else {
-							session.send(JsonResponse.success(encoder.encode(session, updatedModel)));
+							session.send(JsonResponse.fullUpdate(encoder.encode(session, updatedModel)));
 						}
 					} catch (EncodingException e) {
-						LOG.error("Broadcast model update of " + modeluri + " failed", e);
+						LOG.error("Broadcast full update of " + modeluri + " failed", e);
+					}
+				});
+		}
+	}
+
+	private void broadcastIncrementalUpdate(String modeluri, CCommand updatedModel) {
+		if (modelUrisToClients.containsKey(modeluri)) {
+			getOpenSessions(modeluri)
+				.forEach(session -> {
+					try {
+						session.send(JsonResponse.incrementalUpdate(encoder.encode(session, updatedModel)));
+					} catch (EncodingException e) {
+						LOG.error("Broadcast incremental update of " + modeluri + " failed", e);
 					}
 				});
 		}
