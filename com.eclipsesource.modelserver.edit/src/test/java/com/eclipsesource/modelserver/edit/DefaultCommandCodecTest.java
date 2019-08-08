@@ -51,6 +51,7 @@ import com.eclipsesource.modelserver.coffee.model.coffee.CoffeePackage;
 import com.eclipsesource.modelserver.command.CCommand;
 import com.eclipsesource.modelserver.command.CCommandFactory;
 import com.eclipsesource.modelserver.command.CCommandPackage;
+import com.eclipsesource.modelserver.command.CCompoundCommand;
 import com.eclipsesource.modelserver.command.CommandKind;
 import com.eclipsesource.modelserver.common.codecs.DecodingException;
 import com.eclipsesource.modelserver.common.codecs.EMFJsonConverter;
@@ -63,6 +64,7 @@ import com.eclipsesource.modelserver.edit.tests.util.EMFMatchers;
 @RunWith(Parameterized.class)
 public class DefaultCommandCodecTest {
 
+	private static final String N_A = "n/a";
 	private static final String ATTRIBUTE = "attribute";
 	private static final String REFERENCE = "reference";
 	private static final String REFERENCE_MANY = "reference (many)";
@@ -118,6 +120,7 @@ public class DefaultCommandCodecTest {
 						createReferenceRemoveModel() }, //
 				new Object[] { CommandKind.REMOVE, REFERENCE_MANY, createReferenceRemoveMultipleCommand(),
 						createReferenceRemoveMultipleModel() }, //
+				new Object[] { CommandKind.COMPOUND, N_A, createCompoundCommand(), createCompoundModel() }, //
 		});
 	}
 
@@ -303,6 +306,18 @@ public class DefaultCommandCodecTest {
 		result.setFeature("eClassifiers");
 		result.getIndices().add(remove1.getClassifierID());
 		result.getIndices().add(remove2.getClassifierID());
+		return result;
+	}
+
+	static Command createCompoundCommand() {
+		return createAttributeSetCommand().chain(createReferenceAddCommand());
+	}
+
+	static CCommand createCompoundModel() {
+		CCompoundCommand result = CCommandFactory.eINSTANCE.createCompoundCommand();
+		result.setType(CommandKind.COMPOUND);
+		result.getCommands().add(createAttributeSetModel());
+		result.getCommands().add(createReferenceAddModel());
 		return result;
 	}
 

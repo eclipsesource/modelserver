@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.Objects;
 
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.command.AddCommand;
@@ -52,7 +53,7 @@ public class EMFMatchers {
 
 	static boolean eEquals(Object actual, Object expected) {
 		if (expected instanceof Collection<?> && actual instanceof Collection<?>) {
-			Collection<?> expectedCollection = (Collection<?>) expected; 
+			Collection<?> expectedCollection = (Collection<?>) expected;
 			Collection<?> actualCollection = (Collection<?>) actual;
 			if (expectedCollection.size() != actualCollection.size()) {
 				return false;
@@ -75,7 +76,11 @@ public class EMFMatchers {
 		return new CustomTypeSafeMatcher<Command>("equivalent to " + expected.getClass().getSimpleName()) {
 			@Override
 			protected boolean matchesSafely(Command item) {
-				if (item.getClass() != expected.getClass()) {
+				if (expected instanceof CompoundCommand) {
+					if (!(item instanceof CompoundCommand)) {
+						return false;
+					}
+				} else if (item.getClass() != expected.getClass()) {
 					return false;
 				}
 
@@ -106,6 +111,23 @@ public class EMFMatchers {
 							&& remove.getOwner() == expectedRemove.getOwner() //
 							&& Objects.deepEquals(remove.getIndices(), expectedRemove.getIndices()) //
 							&& eEquals(remove.getCollection(), expectedRemove.getCollection());
+				} else if (item instanceof CompoundCommand) {
+					CompoundCommand compound = (CompoundCommand) item;
+					CompoundCommand expectedCompound = (CompoundCommand) expected;
+
+					if (compound.getCommandList().size() != expectedCompound.getCommandList().size()) {
+						return false;
+					}
+
+					Iterator<Command> commands = compound.getCommandList().iterator();
+					Iterator<Command> expecteds = expectedCompound.getCommandList().iterator();
+					while (commands.hasNext()) {
+						if (!commandEqualTo(expecteds.next()).matches(commands.next())) {
+							return false;
+						}
+					}
+
+					return true;
 				}
 
 				return false;

@@ -323,10 +323,10 @@ public class CCommandPackageImpl extends EPackageImpl implements CCommandPackage
 		initEClass(commandEClass, CCommand.class, "Command", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
 		initEAttribute(getCommand_Type(), this.getCommandKind(), "type", null, 1, 1, CCommand.class, !IS_TRANSIENT,
 				!IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-		initEReference(getCommand_Owner(), theEcorePackage.getEObject(), null, "owner", null, 1, 1, CCommand.class,
+		initEReference(getCommand_Owner(), theEcorePackage.getEObject(), null, "owner", null, 0, 1, CCommand.class,
 				!IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE,
 				IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-		initEAttribute(getCommand_Feature(), ecorePackage.getEString(), "feature", null, 1, 1, CCommand.class,
+		initEAttribute(getCommand_Feature(), ecorePackage.getEString(), "feature", null, 0, 1, CCommand.class,
 				!IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 		initEAttribute(getCommand_Indices(), ecorePackage.getEInt(), "indices", null, 0, -1, CCommand.class,
 				!IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
