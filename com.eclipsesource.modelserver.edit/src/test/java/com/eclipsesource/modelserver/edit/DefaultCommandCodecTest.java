@@ -68,6 +68,7 @@ public class DefaultCommandCodecTest {
 	private static final String ATTRIBUTE = "attribute";
 	private static final String REFERENCE = "reference";
 	private static final String REFERENCE_MANY = "reference (many)";
+	private static final String REFERENCE_BY_INDEX = "reference (by index)";
 
 	private static ResourceSet resourceSet;
 	private static EditingDomain domain;
@@ -120,6 +121,8 @@ public class DefaultCommandCodecTest {
 						createReferenceRemoveModel() }, //
 				new Object[] { CommandKind.REMOVE, REFERENCE_MANY, createReferenceRemoveMultipleCommand(),
 						createReferenceRemoveMultipleModel() }, //
+				new Object[] { CommandKind.REMOVE, REFERENCE_BY_INDEX, createReferenceRemoveByIndexCommand(),
+						createReferenceRemoveByIndexModel() }, //
 				new Object[] { CommandKind.COMPOUND, N_A, createCompoundCommand(), createCompoundModel() }, //
 		});
 	}

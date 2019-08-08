@@ -22,6 +22,7 @@ import static java.util.stream.Collectors.toList;
 import static org.eclipse.emf.common.notify.Notification.NO_INDEX;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.stream.Stream;
 
 import org.eclipse.emf.common.command.Command;
@@ -33,6 +34,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.command.AddCommand;
+import org.eclipse.emf.edit.command.CommandParameter;
 import org.eclipse.emf.edit.command.MoveCommand;
 import org.eclipse.emf.edit.command.RemoveCommand;
 import org.eclipse.emf.edit.command.ReplaceCommand;
@@ -45,6 +47,7 @@ import com.eclipsesource.modelserver.command.CCompoundCommand;
 import com.eclipsesource.modelserver.command.CommandKind;
 import com.eclipsesource.modelserver.common.codecs.DecodingException;
 import com.eclipsesource.modelserver.common.codecs.EncodingException;
+import com.google.common.collect.Iterables;
 import com.google.common.primitives.Ints;
 
 /**
@@ -93,7 +96,7 @@ public class DefaultCommandCodec implements CommandCodec {
 			result.setType(CommandKind.REMOVE);
 			result.setOwner(remove.getOwner());
 			result.setFeature(remove.getFeature().getName());
-			int[] indices = remove.getIndices();
+			int[] indices = getIndices(remove);
 			if (indices != null) {
 				result.getIndices().addAll(Ints.asList(indices));
 			}
@@ -125,6 +128,31 @@ public class DefaultCommandCodec implements CommandCodec {
 			throw new EncodingException("todo"); // TODO
 		} else {
 		throw new EncodingException("unsupported command type: " + command.getClass().getName());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Get the indices specified for {@code RemoveCommand} or {@code MoveCommand}
+	 * specified by index and not by value.
+	 * 
+	 * @param command a remove command or a move command
+	 * @return the indices, or {@code null} if none
+	 */
+	private int[] getIndices(Command command) {
+		int[] result = null;
+		
+		Collection<?> collection = (command instanceof RemoveCommand) //
+				? ((RemoveCommand)command).getCollection() //
+						: (command instanceof MoveCommand) //
+						? Collections.singleton(((MoveCommand)command).getValue())
+								: Collections.emptySet();
+		if (collection.size() == 1) {
+			Object element = Iterables.getOnlyElement(collection);
+			if (element instanceof CommandParameter.Indices) {
+				result = ((CommandParameter.Indices)element).getIndices();
+			}
 		}
 		
 		return result;
@@ -201,12 +229,12 @@ public class DefaultCommandCodec implements CommandCodec {
 		case REMOVE: {
 			EObject owner = command.getOwner();
 			EStructuralFeature feature = owner.eClass().getEStructuralFeature(command.getFeature());
-			if (!command.getObjectValues().isEmpty()) {
+			if (!command.getIndices().isEmpty()) {
+				result = RemoveCommand.create(domain, owner, feature, Ints.toArray(command.getIndices()));
+			} else if (!command.getObjectValues().isEmpty()) {
 				result = RemoveCommand.create(domain, owner, feature, command.getObjectValues());
 			} else if (!command.getDataValues().isEmpty()) {
 				result = RemoveCommand.create(domain, owner, feature, command.getDataValues());
-			} else if (!command.getIndices().isEmpty()) {
-				result = RemoveCommand.create(domain, owner, feature, Ints.toArray(command.getIndices()));
 			} else {
 				throw new DecodingException("incomplete remove command specification");
 			}
