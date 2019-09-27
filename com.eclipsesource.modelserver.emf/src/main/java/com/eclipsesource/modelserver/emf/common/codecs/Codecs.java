@@ -15,9 +15,8 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.emf.common.codecs;
 
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
 
 import com.eclipsesource.modelserver.common.codecs.Codec;
 import com.eclipsesource.modelserver.common.codecs.DecodingException;
@@ -53,10 +52,10 @@ public class Codecs {
         return findFormat(context.queryParamMap()).decode(payload);
     }
 
-    public Optional<Resource> decode(Context context, ResourceSet resourceSet, String modelURI, String payload) throws DecodingException {
-        return findFormat(context.queryParamMap()).decode(resourceSet, modelURI, payload);
+    public Optional<EObject> decode(Context context, String payload, URI workspaceURI) throws DecodingException {
+    	return findFormat(context.queryParamMap()).decode(payload, workspaceURI);
     }
-
+    
     private Codec findFormat(Map<String, List<String>> queryParams) {
         return Optional
             .ofNullable(queryParams.get("format"))

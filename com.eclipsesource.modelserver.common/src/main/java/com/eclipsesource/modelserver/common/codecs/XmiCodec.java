@@ -52,8 +52,13 @@ public class XmiCodec implements Codec {
 
 	@Override
 	public Optional<EObject> decode(String payload) throws DecodingException {
+		return decode(payload, null);
+	}
+	
+	@Override
+	public Optional<EObject> decode(String payload, URI workspaceURI) throws DecodingException {
 		ResourceSet resourceSet = new ResourceSetImpl();
-		Optional<Resource> resource = decode(resourceSet, "virtual.xmi", payload);
+		Optional<Resource> resource = decode(resourceSet, "virtual.xmi", workspaceURI, payload);
 		return resource.map(r -> r.getContents().isEmpty() ? null : r.getContents().get(0));
 	}
 
@@ -63,11 +68,14 @@ public class XmiCodec implements Codec {
 		return resourceSet.createResource(URI.createURI("virtual.xmi"));
 	}
 
-	@Override
-	public Optional<Resource> decode(ResourceSet resourceSet, String modelURI, String payload)
+	public Optional<Resource> decode(ResourceSet resourceSet, String modelURI, URI workspaceURI, String payload)
 			throws DecodingException {
 
 		URI uri = URI.createURI(modelURI);
+		if (workspaceURI != null) {
+			uri = uri.resolve(workspaceURI);
+		}
+		
 		Resource result = resourceSet.getResource(uri, false);
 		if (result != null && !(result instanceof XMIResource)) {
 			// Replace it

@@ -449,10 +449,11 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
             if (format.equals("xmi")) {
                 return new XmiCodec().decode(payload);
             }
+            return new DefaultJsonCodec().decode(payload);
         } catch (DecodingException e) {
             LOG.error("Decoding of " + payload + " with " + format + " format failed");
         }
-        return new DefaultJsonCodec().decode(payload);
+        return Optional.empty();
     }
     
     @Override

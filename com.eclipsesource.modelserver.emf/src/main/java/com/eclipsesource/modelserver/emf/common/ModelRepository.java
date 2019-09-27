@@ -66,7 +66,7 @@ public class ModelRepository {
 		this.domain = new AdapterFactoryEditingDomain(adapterFactory, new BasicCommandStack(), resourceSet);
 		this.serverConfiguration = serverConfiguration;
 		this.resourceManager = resourceManager;
-		initialize(serverConfiguration.getWorkspaceRoot(), true);
+		initialize(serverConfiguration.getWorkspaceRootURI().toFileString(), true);
 	}
 
 	public void initialize(String workspaceRoot, boolean clearResources) {
@@ -127,9 +127,11 @@ public class ModelRepository {
 		return models;
 	}
 
-	public void addModel(String modeluri, EObject model) {
-		Resource resource = resourceSet.getResource(createURI(modeluri), true);
+	public void addModel(String modeluri, EObject model) throws IOException {
+		final Resource resource = resourceSet.createResource(createURI(modeluri));
+		resourceSet.getResources().add(resource);
 		resource.getContents().add(model);
+		resource.save(null);
 	}
 
 	/**
@@ -163,7 +165,7 @@ public class ModelRepository {
 	public Set<String> getAllModelUris() {
 		Set<String> modeluris = new HashSet<>();
 		for(Resource resource : resourceSet.getResources()){
-			modeluris.add(resource.getURI().deresolve(URI.createFileURI(serverConfiguration.getWorkspaceRoot())).toString());
+			modeluris.add(resource.getURI().deresolve(serverConfiguration.getWorkspaceRootURI()).toString());
 		}
 		return modeluris;
 	}
@@ -174,7 +176,7 @@ public class ModelRepository {
 
 	private URI createURI(String modeluri) {
 		if (modeluri.startsWith("file:")) {
-			return URI.createFileURI(modeluri.replaceFirst("file:", ""));
+			return URI.createURI(modeluri, true);
 		}
 
 		return URI.createFileURI(modeluri);

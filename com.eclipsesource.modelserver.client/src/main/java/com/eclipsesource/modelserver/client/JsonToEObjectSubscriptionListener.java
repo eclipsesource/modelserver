@@ -15,12 +15,27 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.client;
 
+import java.util.Optional;
+
+import org.apache.log4j.Logger;
 import org.eclipse.emf.ecore.EObject;
 
+import com.eclipsesource.modelserver.common.codecs.DecodingException;
 import com.eclipsesource.modelserver.common.codecs.DefaultJsonCodec;
 
 public class JsonToEObjectSubscriptionListener extends TypedSubscriptionListener<EObject> {
+	private static Logger LOG = Logger.getLogger(JsonToEObjectSubscriptionListener.class.getSimpleName());
+
 	public JsonToEObjectSubscriptionListener() {
-		super(new DefaultJsonCodec()::decode);
+		super(JsonToEObjectSubscriptionListener::decode);
+	}
+
+	private static Optional<EObject> decode(String payload) {
+		try {
+			return new DefaultJsonCodec().decode(payload);
+		} catch (DecodingException e) {
+			LOG.error("Failed to deecode notification", e);
+			return Optional.empty();
+		}
 	}
 }

@@ -15,27 +15,22 @@
  *******************************************************************************/
 package com.eclipsesource.modelserver.common.codecs;
 
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.apache.log4j.Logger;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.emfjson.jackson.errors.JSONException;
-import org.emfjson.jackson.resource.JsonResource;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
-public class DefaultJsonCodec implements Codec {
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.emfjson.jackson.errors.JSONException;
+import org.emfjson.jackson.resource.JsonResource;
 
-	private static Logger LOG = Logger.getLogger(DefaultJsonCodec.class.getSimpleName());
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class DefaultJsonCodec implements Codec {
 
 	final EMFJsonConverter emfJsonConverter = new EMFJsonConverter();
 
@@ -52,8 +47,26 @@ public class DefaultJsonCodec implements Codec {
 	}
 
 	@Override
-	public Optional<EObject> decode(String payload) {
-		return emfJsonConverter.fromJson(payload);
+	public Optional<EObject> decode(String payload) throws DecodingException {
+		return decode(payload, null);
+	}
+	
+	@Override
+	public Optional<EObject> decode(String payload, URI workspaceURI) throws DecodingException {
+		URI uri = URI.createURI("virtual.json");
+		if (workspaceURI != null) {
+			uri = uri.resolve(workspaceURI);
+		}
+		
+		final JsonResource jsonResource = new JsonResource(uri, getObjectMapper());
+
+		try (InputStream input = new ByteArrayInputStream(payload.getBytes())) {
+			jsonResource.load(input, null);
+		} catch (IOException e) {
+			throw new DecodingException(new JSONException(e, JsonLocation.NA));
+		}
+
+		return Optional.of(jsonResource.getContents().remove(0));
 	}
 
 	public static JsonNode encode(Object obj) throws EncodingException {
@@ -76,33 +89,4 @@ public class DefaultJsonCodec implements Codec {
 	protected ObjectMapper getObjectMapper() {
 		return emfJsonConverter.getMapper();
 	}
-
-	@Override
-	public Optional<Resource> decode(ResourceSet resourceSet, String modelURI, String payload)
-			throws DecodingException {
-
-		URI uri = URI.createURI(modelURI);
-		Resource result = resourceSet.getResource(uri, false);
-		if (result != null && !(result instanceof JsonResource)) {
-			// Replace it
-			LOG.warn(String.format("Replacing resource '%s' with a JsonResource", modelURI));
-			result.unload();
-			resourceSet.getResources().remove(result);
-			result = null;
-		}
-
-		if (result == null) {
-			result = new JsonResource(uri, getObjectMapper());
-			resourceSet.getResources().add(result);
-		}
-
-		try (InputStream input = new ByteArrayInputStream(payload.getBytes())) {
-			result.load(input, resourceSet.getLoadOptions());
-		} catch (IOException e) {
-			result.getErrors().add(new JSONException(e, JsonLocation.NA));
-		}
-
-		return Optional.of(result);
-	}
-
 }

@@ -26,6 +26,7 @@ import com.eclipsesource.modelserver.common.codecs.DecodingException;
 import com.eclipsesource.modelserver.common.codecs.EncodingException;
 import com.eclipsesource.modelserver.common.codecs.XmiCodec;
 import com.eclipsesource.modelserver.emf.common.codecs.JsonCodec;
+import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.javalin.http.Context;
@@ -58,13 +59,16 @@ public class ModelControllerTest {
     private Context context;
     private ModelController modelController;
     private SessionController sessionController;
+    private ServerConfiguration serverConfiguration;
 
     @Before
     public void before() {
         modelRepository = mock(ModelRepository.class);
         context = mock(Context.class);
         sessionController = mock(SessionController.class);
-        modelController = new ModelController(modelRepository, sessionController);
+        serverConfiguration = mock(ServerConfiguration.class);
+        when(serverConfiguration.getWorkspaceRootURI()).thenReturn(URI.createFileURI("/home/modelserver/workspace/"));
+        modelController = new ModelController(modelRepository, sessionController, serverConfiguration);
     }
 
     @Test
@@ -147,7 +151,7 @@ public class ModelControllerTest {
     public void executeCommand() throws EncodingException, DecodingException {
         ResourceSet rset = new ResourceSetImpl();
         when(modelRepository.getResourceSet()).thenReturn(rset);
-        JsonResource res = new JsonResource(URI.createURI("SuperBrewer3000.json"));
+        JsonResource res = new JsonResource(URI.createURI("SuperBrewer3000.json").resolve(serverConfiguration.getWorkspaceRootURI()));
         rset.getResources().add(res);
         final AutomaticTask task = CoffeeFactory.eINSTANCE.createAutomaticTask();
         res.getContents().add(task);
@@ -167,6 +171,8 @@ public class ModelControllerTest {
         when(modelRepository.getModel("SuperBrewer3000.json")).thenReturn(Optional.of(task));
         modelController.executeCommand(context, "SuperBrewer3000.json");
 
+        // unload to proxify
+        res.unload();
         verify(modelRepository).updateModel(eq("SuperBrewer3000.json"), argThat(eEqualTo(setCommand)));
         verify(sessionController).modelChanged(eq("SuperBrewer3000.json"), argThat(eEqualTo(setCommand)));
     }
@@ -175,7 +181,7 @@ public class ModelControllerTest {
     public void addCommandNotification() throws EncodingException, DecodingException {
         ResourceSet rset = new ResourceSetImpl();
         when(modelRepository.getResourceSet()).thenReturn(rset);
-        JsonResource res = new JsonResource(URI.createURI("SuperBrewer3000.json"));
+        JsonResource res = new JsonResource(URI.createURI("SuperBrewer3000.json").resolve(serverConfiguration.getWorkspaceRootURI()));
         rset.getResources().add(res);
         final Workflow workflow = CoffeeFactory.eINSTANCE.createWorkflow();
         res.getContents().add(workflow);
@@ -199,6 +205,8 @@ public class ModelControllerTest {
         when(modelRepository.getModel("SuperBrewer3000.json")).thenReturn(Optional.of(task));
         modelController.executeCommand(context, "SuperBrewer3000.json");
 
+        // unload to proxify
+        res.unload();
         verify(modelRepository).updateModel(eq("SuperBrewer3000.json"), argThat(eEqualTo(addCommand)));
         verify(sessionController).modelChanged(eq("SuperBrewer3000.json"), argThat(eEqualTo(addCommand)));
     }

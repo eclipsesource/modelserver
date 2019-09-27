@@ -150,17 +150,20 @@ public class ModelServerRouting extends Routing {
 	}
 
 
+	/**
+	 * Adapt the model URI specified by the client to an absolute <tt>file</tt>
+	 * scheme URI.
+	 * 
+	 * @param modelUri the client-supplied model URI
+	 * @return the absolute file URI
+	 */
 	private String adaptModelUri(String modelUri) {
-		URI uri = URI.createURI(modelUri);
+		URI uri = URI.createURI(modelUri, true);
 		if (uri.isRelative()) {
-			if (modelUri.startsWith(serverConfiguration.getWorkspaceRoot())) {
-				return URI.createFileURI(modelUri).toString();
+			if (serverConfiguration.getWorkspaceRootURI().isFile()) {
+				return uri.resolve(serverConfiguration.getWorkspaceRootURI()).toString();
 			} else {
-				// as getWorkspaceRoot() returns a normalized path, we remove the leading slash
-				if (modelUri.startsWith("/")) {
-					modelUri =  modelUri.replaceFirst("/", "");
-				}
-				return URI.createFileURI(serverConfiguration.getWorkspaceRoot() + modelUri).toString();
+				return URI.createFileURI(modelUri).toString();
 			}
 		}
 
