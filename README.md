@@ -43,7 +43,7 @@ The following table shows the current HTTP endpoints:
 | |Update model|__PATCH__|`/models`|query parameter: `?modeluri=...[&format=...]` <br> application/json
 | |Delete model|__DELETE__|`/models`|query parameter: `?modeluri=...`
 | |Save|__GET__|`/save`|query parameter: `?modeluri=...`
-| |Execute commands|__GET__|`/edit`|query parameter: `?modeluri=...`
+| |Execute commands|__PATCH__|`/edit`|query parameter: `?modeluri=...`
 | |Get all available model URIs in the workspace|__GET__|`/modeluris`| -
 |__JSON schema__ |Get JSON schema of a model|__GET__|`/schema`|query parameter: `?modeluri=...`
 |__Server actions__|Ping server|__GET__|`/api/v1/server/ping`| -
@@ -91,7 +91,7 @@ public interface ModelServerClientApiV1 {
 
     CompletableFuture<Response<Boolean>> ping();
     
-    CompletableFuture<Response<Boolean>> edit(String modelUri, CCommand command, String format);
+    CompletableFuture<Response<Boolean>> edit(String modelUri, Command command, String format);
 
     void subscribe(String modelUri, SubscriptionListener subscriptionListener, String format);
 
@@ -131,6 +131,79 @@ client.update("SuperBrewer3000.json&format=xmi", client.encode(brewingUnit, "xmi
     });
   });
 }
+```
+
+#### Executing Commands
+
+To perform changes on the model, clients may issue `PATCH` requests to update
+the model state incrementally in the server.  These updates are broadcast to
+subscribers as incremental updates (see below).
+
+Consider the following JSON payload for a `PATCH` request to add change the name
+of the workflow in the example *Super Brewer 3000* model and to add another task
+to it:
+
+```json
+{
+    "eClass": "http://www.eclipsesource.com/schema/2019/modelserver/command#//CompoundCommand",
+    "type": "compound",
+    "commands": [
+        {
+            "eClass": "http://www.eclipsesource.com/schema/2019/modelserver/command#//Command",
+            "type": "set",
+            "owner": {
+                "eClass":"http://www.eclipsesource.com/modelserver/example/coffeemodel#//AutomaticTask",
+                "$ref":"SuperBrewer3000.json#//@workflows.0"
+          },
+          "feature": "name",
+          "dataValues": [ "Auto Brew" ]
+        },
+        {
+            "eClass": "http://www.eclipsesource.com/schema/2019/modelserver/command#//Command",
+            "type": "add",
+            "owner": {
+                "eClass":"http://www.eclipsesource.com/modelserver/example/coffeemodel#//AutomaticTask",
+                "$ref":"SuperBrewer3000.json#//@workflows.0"
+            },
+            "feature": "nodes",
+            "objectValues": [
+                {
+                    "eClass":"http://www.eclipsesource.com/modelserver/example/coffeemodel#//AutomaticTask",
+                    "$ref":"//@commands.1/@objectsToAdd.0"
+                }
+            ],
+            "objectsToAdd": [
+                {
+                    "eClass":"http://www.eclipsesource.com/modelserver/example/coffeemodel#//AutomaticTask",
+                    "name":"Brew"
+                }
+            ],
+            "indices": [ 1 ]
+        }
+    ]
+}
+```
+
+This is a JSON representation of an EMF `CompoundCommand` containing two commands, a
+`SetCommand` that changes the name of the first workflow in the model, and an
+`AddCommand` that adds a new `AutomaticTask` to that workflow.  The `SetCommand` does
+not require any index because the `name` feature is single-valued.  The `AddCommand`
+here explicitly adds an position `1`, but this can also be omitted to simply append
+to the end of the list.  Notice how each command indicates the `owner` object in the
+model to which the change is applied using a cross-document reference.  And in the case
+of the `AddCommand`, the object to be added does not yet exist in the model, so it must
+be included in the payload of the command, itself.  Thus it is contained in the
+`objectsToAdd` property and indicate via an in-document reference in the `objectValues`
+property.  Other commands, such as the `RemoveCommand`, would indicate objects in the
+`objectValues` property that already exist in thee model (to be removed in that case),
+and so those would be cross-document references and the `objectsToAdd` is unused.
+
+To execute this command, issue a `PATCH` request to the `edit` endpoint like:
+
+```
+    PATCH http://localhost:8081/api/v1/edit?modeluri=SuperBrewer3000.json
+    Content-type: application/json
+    { "data" : <payload> }
 ```
 
 ### Subscriptions Example
@@ -176,6 +249,36 @@ client.subscribe(subscriptionId, new SubscriptionListener() {
 client.unsubscribe(subscriptionId);
 ```
 
+The kind of message received depends on the operation.  For an `update` call
+(`PUT` request on the model), the message is the new content of the model.  For
+an incremental update applied by a `PATCH` request with an edit command (see above),
+the message is the command that was executed.  This command can then be executed in
+the client application to effect the same change as occurred in the server:
+
+```java
+ModelServerClient client = new ModelServerClient("http://localhost:8081/api/v1/");
+String subscriptionId = "SuperBrewer3000.json&format=json";
+client.subscribe(subscriptionId, new JsonToEObjectSubscriptionListener() {
+    private final CommandCodec codec = new DefaultCommandCodec();
+    
+    public void onIncrementalUpdate(EObject message) {
+        CCommand payload = (CCommand) message;
+        
+        try {
+            Command command = codec.decode(editingDomain, payload);
+            CommandStack stack = editingDomain.getCommandStack();
+            if (command.canExecute()) {
+                stack.execute(command);
+            } else {
+                System.err.println("Cannot execute command: " + command);
+            }
+        } catch (DecodingException e) {
+            System.err.println("Cannot decode incremental update: " + e.getMessage());
+        }
+    }
+});
+
+```
 
 ## Code Coverage
 
