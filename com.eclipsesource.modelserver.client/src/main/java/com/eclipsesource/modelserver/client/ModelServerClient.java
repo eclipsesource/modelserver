@@ -30,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import org.apache.log4j.Logger;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.ecore.EObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,6 +41,7 @@ import com.eclipsesource.modelserver.common.codecs.DecodingException;
 import com.eclipsesource.modelserver.common.codecs.DefaultJsonCodec;
 import com.eclipsesource.modelserver.common.codecs.EncodingException;
 import com.eclipsesource.modelserver.common.codecs.XmiCodec;
+import com.eclipsesource.modelserver.edit.DefaultCommandCodec;
 import com.eclipsesource.modelserver.internal.client.EditingContextImpl;
 import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -280,6 +282,23 @@ public class ModelServerClient implements ModelServerClientApi<EObject>, ModelSe
             .thenApply(response -> response.mapBody(body -> body.equals("success")));
     }
     
+	@Override
+	public CompletableFuture<Response<Boolean>> edit(String modelUri, Command command) {
+		return edit(modelUri, command, "json");
+	}
+    
+	@Override
+	public CompletableFuture<Response<Boolean>> edit(String modelUri, Command command, String format) {
+		CCommand encoded;
+		try {
+			encoded = new DefaultCommandCodec().encode(command);
+		} catch (EncodingException e) {
+			LOG.error("Encoding of " + command + " failed: " + e.getMessage());
+			throw new IllegalArgumentException(e);
+		}
+		return edit(modelUri, encoded, format);
+	}
+   
 	@Override
 	public CompletableFuture<Response<Boolean>> edit(String modelUri, CCommand command, String _format) {
     	String format = checkedFormat(_format);

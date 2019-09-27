@@ -30,16 +30,22 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import org.eclipse.emf.common.command.BasicCommandStack;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.edit.command.AddCommand;
+import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
+import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
 import org.emfjson.jackson.resource.JsonResource;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.eclipsesource.modelserver.coffee.model.coffee.BrewingUnit;
 import com.eclipsesource.modelserver.coffee.model.coffee.CoffeeFactory;
+import com.eclipsesource.modelserver.coffee.model.coffee.CoffeePackage;
 import com.eclipsesource.modelserver.coffee.model.coffee.Display;
 import com.eclipsesource.modelserver.coffee.model.coffee.Workflow;
 import com.eclipsesource.modelserver.command.CCommand;
@@ -263,7 +269,42 @@ public class ModelServerClientTest {
 					// The resulting string is escaped as though for a Java string literal
 					String body = buffer.readString(Charsets.UTF_8).replace("\\\\", "\\").replace("\\\"", "\"");
 
+					// This is the test's assertion
 					if (body.contains(expected.toString())) {
+						return new Rule.Builder().respond(JsonResponse.success("confirmed").toString());
+					} else {
+						return new Rule.Builder().respond(JsonResponse.error().toString());
+					}
+				});
+		ModelServerClient client = createClient();
+
+		final CompletableFuture<Response<Boolean>> f = client.edit("SuperBrewer3000.json", add, "json");
+
+		assertThat(f.get().body(), is(true));
+	}
+
+    @Test
+    public void edit_nativeCommand() throws EncodingException, ExecutionException, InterruptedException, MalformedURLException {
+    	AdapterFactoryEditingDomain domain = new AdapterFactoryEditingDomain(new ComposedAdapterFactory(), new BasicCommandStack());
+		Workflow flow = CoffeeFactory.eINSTANCE.createWorkflow();
+		((InternalEObject) flow).eSetProxyURI(URI.createURI("SuperBrewer3000.json#//workflows.0"));
+		Command add = AddCommand.create(domain, flow, CoffeePackage.Literals.WORKFLOW__NODES, CoffeeFactory.eINSTANCE.createAutomaticTask());
+
+		interceptor.addRule().url(BASE_URL + ModelServerClient.EDIT + "?modeluri=" + "SuperBrewer3000.json&format=json")
+				.patch().answer(request -> {
+					Buffer buffer = new Buffer();
+					try {
+						request.body().writeTo(buffer);
+					} catch (IOException e) {
+						e.printStackTrace();
+						fail("Failed to capture request body content: " + e.getMessage());
+					}
+
+					// The resulting string is escaped as though for a Java string literal
+					String body = buffer.readString(Charsets.UTF_8).replace("\\\\", "\\").replace("\\\"", "\"");
+
+					// This is the test's assertion
+					if (body.contains("\"type\":\"add\"") && body.contains("\"objectValues\":[{\"eClass\":")) {
 						return new Rule.Builder().respond(JsonResponse.success("confirmed").toString());
 					} else {
 						return new Rule.Builder().respond(JsonResponse.error().toString());
