@@ -58,53 +58,87 @@ public class SessionControllerTest {
 	@Mock
 	private CommandCodec commandCodec;
 	@Mock
-	private WsContext clientCtx;
-
+	private WsContext validClientCtx;
+	@Mock
+	private WsContext invalidClientCtx;
 	@Mock
 	private ModelRepository repository;
 
 	private SessionController sessionController;
 
+
 	@Test
-	public void testSubscribe() {
-		when(clientCtx.getSessionId()).thenReturn(UUID.randomUUID().toString());
-		when(clientCtx.pathParam("modeluri")).thenReturn("fancytesturi");
+	public void testSubscribeToValidModelUri() {
+		// try to subscribe to a valid modeluri
+		//
+		initializeValidClientContext();
 
-		assertFalse(sessionController.isClientSubscribed(clientCtx));
-
-		sessionController.subscribe(clientCtx, clientCtx.pathParam("modeluri"));
-
-		assertTrue(sessionController.isClientSubscribed(clientCtx));
+		assertTrue(sessionController.subscribe(validClientCtx, validClientCtx.pathParam("modeluri")));
+		assertTrue(sessionController.isClientSubscribed(validClientCtx));
+		verify(validClientCtx).send(argThat(jsonNodeThat(containsRegex("(?i)\"type\":\"success\""))));
 	}
 
 	@Test
-	public void testUnsubscribe() {
-		testSubscribe();
-		assertTrue(sessionController.isClientSubscribed(clientCtx));
+	public void testSubscribeToInvalidModelUri() {
+		// try to subscribe to an invalid modeluri
+		//
+		initializeInvalidClientContext();
+		
+		assertFalse(sessionController.subscribe(invalidClientCtx, invalidClientCtx.pathParam("modeluri")));
+		assertFalse(sessionController.isClientSubscribed(invalidClientCtx));
+	}
 
-		sessionController.unsubscribe(clientCtx);
-
-		assertFalse(sessionController.isClientSubscribed(clientCtx));
+	@Test
+	public void testUnsubscribeFromValidSession() {
+		// try to subscribe to a valid modeluri
+		//
+		initializeValidClientContext();
+		assertTrue(sessionController.subscribe(validClientCtx, validClientCtx.pathParam("modeluri")));
+		assertTrue(sessionController.isClientSubscribed(validClientCtx));
+		
+		// try to unsubscribe from this valid session
+		//
+		assertTrue(sessionController.isClientSubscribed(validClientCtx));
+		assertTrue(sessionController.unsubscribe(validClientCtx));
+		assertFalse(sessionController.isClientSubscribed(validClientCtx));
+	}
+	
+	@Test
+	public void testUnsubscribeFromInvalidSession() {
+		// try to unsubscribe from an invalid session
+		//
+		assertFalse(sessionController.isClientSubscribed(invalidClientCtx));
+		assertFalse(sessionController.unsubscribe(invalidClientCtx));
 	}
 
 	@Test
 	public void testCommandSubscription()
 			throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
-		when(clientCtx.getSessionId()).thenReturn(UUID.randomUUID().toString());
-		when(clientCtx.pathParam("modeluri")).thenReturn("fancytesturi");
+
+		initializeValidClientContext();
 		when(repository.getModel("fancytesturi")).thenReturn(Optional.of(CoffeeFactory.eINSTANCE.createMachine()));
 
-		sessionController.subscribe(clientCtx, clientCtx.pathParam("modeluri"));
+		sessionController.subscribe(validClientCtx, validClientCtx.pathParam("modeluri"));
 		CCommand command = CCommandFactory.eINSTANCE.createCommand();
 		command.setType(CommandKind.SET);
 		sessionController.modelChanged("fancytesturi", command);
 
-		verify(clientCtx).send(argThat(jsonNodeThat(containsRegex("(?i)\"type\":\"set\""))));
+		verify(validClientCtx).send(argThat(jsonNodeThat(containsRegex("(?i)\"type\":\"set\""))));
 	}
 
 	//
 	// Test framework
 	//
+	
+	private void initializeValidClientContext() {
+		when(validClientCtx.getSessionId()).thenReturn(UUID.randomUUID().toString());
+		when(validClientCtx.pathParam("modeluri")).thenReturn("fancytesturi");
+		when(repository.hasModel("fancytesturi")).thenReturn(true);
+	}
+	
+	private void initializeInvalidClientContext() {
+		when(invalidClientCtx.pathParam("modeluri")).thenReturn("tedioustesturi");
+	}
 
 	@Before
 	public void createSessionController() {

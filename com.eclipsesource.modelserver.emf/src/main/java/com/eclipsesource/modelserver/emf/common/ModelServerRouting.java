@@ -21,6 +21,8 @@ import com.eclipsesource.modelserver.emf.configuration.ServerConfiguration;
 import com.google.inject.Inject;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import io.javalin.websocket.WsContext;
+
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 
@@ -53,7 +55,7 @@ public class ModelServerRouting extends Routing {
 						.map(this::adaptModelUri)
 						.ifPresentOrElse(
 							param -> getController(ModelController.class).create(ctx, param),
-							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
+							() -> handleHttpError(ctx, 400, "Missing parameter 'modeluri'!")
 					);
 				});
 				
@@ -72,7 +74,7 @@ public class ModelServerRouting extends Routing {
 						.map(this::adaptModelUri)
 						.ifPresentOrElse(
 							param -> getController(ModelController.class).update(ctx, param),
-							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
+							() -> handleHttpError(ctx, 400, "Missing parameter 'modeluri'!")
 					);
 				});
 				
@@ -82,7 +84,7 @@ public class ModelServerRouting extends Routing {
 						.map(this::adaptModelUri)
 						.ifPresentOrElse(
 							param -> getController(ModelController.class).delete(ctx, param),
-							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
+							() -> handleHttpError(ctx, 400, "Missing parameter 'modeluri'!")
 					);
 				});
 				
@@ -92,7 +94,7 @@ public class ModelServerRouting extends Routing {
 						.map(this::adaptModelUri)
 						.ifPresentOrElse(
 							param -> getController(ModelController.class).executeCommand(ctx, param),
-							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
+							() -> handleHttpError(ctx, 400, "Missing parameter 'modeluri'!")
 					);
 				});
 
@@ -102,7 +104,7 @@ public class ModelServerRouting extends Routing {
 						.map(this::adaptModelUri)
 						.ifPresentOrElse(
 							param -> getController(ModelController.class).save(ctx, param),
-							() -> handleError(ctx, 400, "Missing parameter 'modeluri'!")
+							() -> handleHttpError(ctx, 400, "Missing parameter 'modeluri'!")
 					);
 				});
 
@@ -114,16 +116,25 @@ public class ModelServerRouting extends Routing {
 				get(ModelServerPaths.SERVER_PING, getController(ServerController.class).pingHandler);
 				
 				ws(ModelServerPaths.SUBSCRIPTION, wsHandler -> {
-					wsHandler.onConnect(ctx ->
-						getController(SessionController.class)
-							.subscribe(
-								ctx,
-								getQueryParam(ctx.queryParamMap(), "modeluri").map(this::adaptModelUri).orElse("")
-							)
-					);
-					wsHandler.onClose(ctx -> getController(SessionController.class).unsubscribe(ctx));
-					wsHandler.onError(ctx -> {});
-					wsHandler.onMessage(ctx -> {});
+					wsHandler.onConnect(ctx -> {
+						getQueryParam(ctx.queryParamMap(), "modeluri")
+							.map(this::adaptModelUri)
+							.ifPresentOrElse(
+									modeluri -> {
+										if (!getController(SessionController.class).subscribe(ctx, modeluri)) {
+											handleWsErrorAndCloseSession(ctx, String.format("Cannot subscribe to '%s': modeluri is not a valid model resource", modeluri));
+										}
+									},
+									() -> handleWsErrorAndCloseSession(ctx, "Missing parameter 'modeluri'!")
+							);
+					});
+					wsHandler.onClose(ctx -> {
+						if (!getController(SessionController.class).unsubscribe(ctx)) {
+							handleWsError(ctx, "Cannot unsubscribe: invalid session");
+						}
+					});
+					wsHandler.onError(ctx -> ctx.error());
+					wsHandler.onMessage(ctx -> {}); // we do not handle messages from subscribers at the moment
 				});
 				
 				// TODO: ws for the commands
@@ -145,15 +156,29 @@ public class ModelServerRouting extends Routing {
 			if (modelUri.startsWith(serverConfiguration.getWorkspaceRoot())) {
 				return URI.createFileURI(modelUri).toString();
 			} else {
+				// as getWorkspaceRoot() returns a normalized path, we remove the leading slash
+				if (modelUri.startsWith("/")) {
+					modelUri =  modelUri.replaceFirst("/", "");
+				}
 				return URI.createFileURI(serverConfiguration.getWorkspaceRoot() + modelUri).toString();
 			}
 		}
 
 		return uri.toString();
 	}
-	
-	private void handleError(Context ctx, int statusCode, String errorMsg) {
+
+	private void handleHttpError(Context ctx, int statusCode, String errorMsg) {
 		LOG.error(errorMsg);
 		ctx.status(statusCode).json(JsonResponse.error(errorMsg));
+	}
+
+	private void handleWsError(WsContext ctx, String errorMsg) {
+		LOG.error(errorMsg);
+		ctx.send(JsonResponse.error(errorMsg));
+	}
+	
+	private void handleWsErrorAndCloseSession(WsContext ctx, String errorMsg) {
+		handleWsError(ctx, errorMsg);
+		ctx.session.close();
 	}
 }

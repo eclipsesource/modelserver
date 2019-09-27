@@ -58,12 +58,20 @@ public class SessionController extends WsHandler {
 		this.encoder = new Codecs();
 	}
 
-	public void subscribe(WsContext ctx, String modeluri) {
-		modelUrisToClients.computeIfAbsent(modeluri, clients -> ConcurrentHashMap.newKeySet()).add(ctx);
-		ctx.send(JsonResponse.success(ctx.getSessionId()));
+	public boolean subscribe(WsContext ctx, String modeluri) {
+		if (this.modelRepository.hasModel(modeluri)) {
+			modelUrisToClients.computeIfAbsent(modeluri, clients -> ConcurrentHashMap.newKeySet()).add(ctx);
+			ctx.send(JsonResponse.success(ctx.getSessionId()));
+			return true;
+		}
+		return false;
 	}
 
-	public void unsubscribe(WsContext ctx) {
+	public boolean unsubscribe(WsContext ctx) {
+		if (!this.isClientSubscribed(ctx)) {
+			return false;
+		}
+		
 		Iterator<Map.Entry<String, Set<WsContext>>> it = modelUrisToClients.entrySet().iterator();
 		
 		while (it.hasNext()) {
@@ -74,6 +82,8 @@ public class SessionController extends WsHandler {
 				it.remove();
 			}
 		}
+
+		return true;
 	}
 
 	public void modelChanged(String modeluri) {
@@ -87,7 +97,6 @@ public class SessionController extends WsHandler {
 	}
 
 	public void modelChanged(String modeluri, CCommand command) {
-		// TODO: Distinguish from wholesale update?
 		modelRepository.getModel(modeluri).ifPresentOrElse(
 				eObject -> {
 					broadcastIncrementalUpdate(modeluri, command);
@@ -151,7 +160,6 @@ public class SessionController extends WsHandler {
 			.forEach(session -> session.send(JsonResponse.error(errorMessage)));
 	}
 
-	@TestOnly
 	boolean isClientSubscribed(WsContext ctx) {
 		return ! modelUrisToClients.entrySet().stream().filter(entry -> entry.getValue().contains(ctx)).collect(toSet()).isEmpty();
 	}

@@ -21,8 +21,6 @@ import java.util.Collection;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
-import org.emfjson.jackson.handlers.BaseURIHandler;
-import org.emfjson.jackson.handlers.URIHandler;
 
 import com.eclipsesource.modelserver.common.AppEntryPoint;
 import com.eclipsesource.modelserver.common.EntryPointType;
@@ -77,7 +75,7 @@ public class ModelServerModule extends AbstractModule {
 				ws.onConnect(ctx -> LOG.info("WS Connected: " + ctx.getSessionId()));
 				ws.onMessage(ctx -> LOG.info("WS Received: " + ctx.message() + " by " + ctx.getSessionId()));
 				ws.onClose(ctx -> LOG.info("WS Closed: " + ctx.getSessionId()));
-				ws.onError(ctx -> LOG.info("WS Error: " + ctx.getSessionId()));
+				ws.onError(ctx -> LOG.info("WS Errored: " + ctx.getSessionId()));
 			});
 		}));
 	}
