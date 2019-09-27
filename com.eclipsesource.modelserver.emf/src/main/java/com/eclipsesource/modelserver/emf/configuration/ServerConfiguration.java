@@ -56,7 +56,7 @@ public class ServerConfiguration {
 	
 	public void setWorkspaceRoot(String workspaceRoot) {
 		toFilePath(workspaceRoot)
-			.map(this::ensureDirectory)
+			.map(ServerConfiguration::ensureDirectory)
 			.ifPresent(uri -> this.workspaceRootURI = uri);
 	}
 
@@ -102,6 +102,10 @@ public class ServerConfiguration {
 			if (uri.scheme() == null) {
 				uri = URI.createFileURI(fileUrl);
 			}
+			if (uri.isRelative()) {
+				URI cwd = URI.createFileURI(System.getProperty("user.dir"));
+				uri = uri.resolve(ensureDirectory(cwd));
+			}
 			return Optional.ofNullable(uri).filter(URI::isFile);
 		} catch (NullPointerException | IllegalArgumentException e) {
 			LOG.warn(String.format("Could not convert to filePath! ’%s’ is not a valid URL", fileUrl));
@@ -109,7 +113,7 @@ public class ServerConfiguration {
 		}
 	}
 
-	private URI ensureDirectory(URI uri) {
+	private static URI ensureDirectory(URI uri) {
 		return uri.hasTrailingPathSeparator()
 				? uri
 						: uri.appendSegment("");
