@@ -5,6 +5,35 @@ To build and test the components as well as building the modelserver as standalo
 mvn clean install
 ```
 
+## Code the modelserver
+We use Eclipse as IDE and therefore all involved modules are provided as Eclipse projects with codestyle and checkstyle settings.
+
+### Requirements
+- Please make sure your Eclipse workspace has installed Java 9 or higher.
+- Install the Eclipse Checkstyle Plug-in via its update site `https://checkstyle.org/eclipse-cs/#!/install`.
+
+### Import existing projects
+Import all maven projects via `File > Import... > Existing Maven Projects > Root directory: $REPO_LOCATION`.
+
+Please also import the codestyle project via `File > Import... > Existing Projects into Workspace > Root directory: $REPO_LOCATION/releng > com.eclipsesource.modelserver.codestyle`.
+
+### Create new project
+When a new project is needed, please stick to the following instructions to guarantee your code will be conform to the existing code conventions.
+
+*Project specific settings*<br>
+Upon project creation the settings file `org.eclipse.resources.prefs` is created automatically and usually needs no further adjustment.
+Please copy and replace (if applicable) the following preferences files from `com.eclipsesource.modelserver.common` before you start coding:
+- `org.eclipse.jdt.core.prefs`
+- `org.eclipse.jdt.launching.prefs`
+- `org.eclipse.jdt.ui.prefs`
+- `org.eclipse.m2e.core.prefs`
+
+
+*Checkstyle*<br>
+To configure Checkstyle for the new project right click on the project, choose `Checkstyle > Configure project(s) from blueprint...` and select `com.eclipsesource.modelserver.common` as blueprint project.
+Run `Checkstyle > Check Code with Checkstyle` to make sure Checkstyle is activated correctly.
+
+Please make sure to include the `.settings` folder as well as the `.checkstyle` settings file to the repository in your initial commit.
 
 ## Run the modelserver
 ### Run the modelserver in an IDE
@@ -31,6 +60,8 @@ options:
 ```
 
 ## Use the modelserver API
+
+### HTTP endpoints
 If the modelserver is up and running, you can access the modelserver API via `http://localhost:8081/api/v1/*`.
 
 The following table shows the current HTTP endpoints: 
@@ -46,14 +77,17 @@ The following table shows the current HTTP endpoints:
 | |Execute commands|__PATCH__|`/edit`|query parameter: `?modeluri=...`
 | |Get all available model URIs in the workspace|__GET__|`/modeluris`| -
 |__JSON schema__ |Get JSON schema of a model|__GET__|`/schema`|query parameter: `?modeluri=...`
-|__Server actions__|Ping server|__GET__|`/api/v1/server/ping`| -
-| |Update server configuration|__PUT__|`/api/v1/server/configure`|application/json
+|__Server actions__|Ping server|__GET__|`/server/ping`| -
+| |Update server configuration|__PUT__|`/server/configure`|application/json
 
 <br>
 
-The query parameter `?modeluri=` accepts files in the loaded workspace as well as absolute file paths.
+- The query parameter `?modeluri=` accepts files in the loaded workspace as well as absolute file paths.
+- Parameters in brackets `[]` are optional.
 
 <br>
+
+### WebSocket endpoints
 
 Subscriptions are implemented via websockets `ws://localhost:8081/api/v1/*`.
 
@@ -69,39 +103,43 @@ The modelserver project features a Java-based client API that eases integration 
 The interface declaration looks as follows
 
 ```Java
-public interface ModelServerClientApiV1 {
+public interface ModelServerClientApiV1<A> {
 
-    CompletableFuture<Response<String>> get(String modelUri);
+   CompletableFuture<Response<String>> get(String modelUri);
 
-    CompletableFuture<Response<A>> get(String modelUri, String format);
+   CompletableFuture<Response<A>> get(String modelUri, String format);
 
-    CompletableFuture<Response<List<String>>> getAll();
+   CompletableFuture<Response<List<String>>> getAll();
 
-    CompletableFuture<Response<Boolean>> delete(String modelUri);
+   CompletableFuture<Response<Boolean>> delete(String modelUri);
 
-    CompletableFuture<Response<String>> update(String modelUri, String updatedModel);
+   CompletableFuture<Response<String>> update(String modelUri, String updatedModel);
 
-    CompletableFuture<Response<A>> update(String modelUri, A updatedModel, String format);
+   CompletableFuture<Response<A>> update(String modelUri, A updatedModel, String format);
 
-    CompletableFuture<Response<Boolean>> save(String modelUri);
+   CompletableFuture<Response<Boolean>> save(String modelUri);
 
-    CompletableFuture<Response<String>> getSchema(String modelUri);
+   CompletableFuture<Response<String>> getSchema(String modelUri);
 
-    CompletableFuture<Response<Boolean>> configure(ServerConfiguration configuration);
+   CompletableFuture<Response<Boolean>> configure(ServerConfiguration configuration);
 
-    CompletableFuture<Response<Boolean>> ping();
-    
-    CompletableFuture<Response<Boolean>> edit(String modelUri, Command command, String format);
+   CompletableFuture<Response<Boolean>> ping();
 
-    void subscribe(String modelUri, SubscriptionListener subscriptionListener, String format);
+   CompletableFuture<Response<Boolean>> edit(String modelUri, Command command);
 
-    boolean unsubscribe(String modelUri);
-    
-    EditingContext edit();
-    
-    boolean close(EditingContext editingContext);
+   CompletableFuture<Response<Boolean>> edit(String modelUri, Command command, String format);
+
+   CompletableFuture<Response<Boolean>> edit(String modelUri, CCommand command, String format);
+
+   void subscribe(String modelUri, SubscriptionListener subscriptionListener, String format);
+
+   boolean unsubscribe(String modelUri);
+
+   EditingContext edit();
+
+   boolean close(EditingContext editingContext);
+
 }
-
 ```
 
 
@@ -112,21 +150,25 @@ public interface ModelServerClientApiV1 {
 ModelServerClient client = new ModelServerClient("http://localhost:8081/api/v1/");
 
 // perform simple GET
-client.get("SuperBrewer3000.json")
+client.get("Coffee.ecore")
+      .thenAccept(response -> System.out.println("GET: " + response.body()));
+
+// perform same GET, but expect an EObject
+client.get("Coffee.ecore", "xmi")
+      .thenAccept(response -> System.out.println("GET: " + response.toString()));
+
+// perform GET ALL
+client.getAll()
+      .thenAccept(response -> System.out.println("GET ALL: " + response.body()));
+
+// perform PATCH update
+client.update("Coffee.ecore", "{ <payload> }")
       .thenAccept(response -> System.out.println(response.body()));
 
-// perform same GET, but expect XMI format      
-client.get("SuperBrewer3000.json&format=xmi")
-      .thenAccept(response -> System.out.println(response.body()));
-      
-// perform POST
-client.update("SuperBrewer3000.json", "{ \"data\": <payload> }")
-      .thenAccept(response -> System.out.println(response.body()));
-
-// perform POST with XMI format
-client.update("SuperBrewer3000.json&format=xmi", client.encode(brewingUnit, "xmi"))
+// perform PATCH update with XMI format
+client.update("Coffee.ecore", brewingUnit_EObject, "xmi")
   .thenAccept(response -> {
-    client.get("SuperBrewer3000.json&format=xmi").thenAccept(resp -> {
+    client.get("Coffee.ecore").thenAccept(resp -> {
       System.out.println(client.decode(resp.body(), "xmi"));
     });
   });
@@ -209,25 +251,25 @@ To execute this command, issue a `PATCH` request to the `edit` endpoint like:
 ### Subscriptions Example
 
 If you want to be notified about any changes happening on a certain model, 
-you can subscribe with a `SubscriptionListener`.
+you can subscribe with a `SubscriptionListener` and define a format for the responses, which is `"xmi"` in this example.
 
 ```Java
 ModelServerClient client = new ModelServerClient("http://localhost:8081/api/v1/");
-String subscriptionId = "SuperBrewer3000.json&format=xmi";
+String subscriptionId = "Coffee.ecore";
 client.subscribe(subscriptionId, new SubscriptionListener() {
   @Override
   public void onOpen(Response<String> response) {
-    System.out.println("connected: " + response.getMessage());
+    System.out.println("Connected: " + response.getMessage());
   }
 
   @Override
   public void onMessage(String response) {
-    System.out.println("message received: " + response);
+    System.out.println("Message received: " + response);
   }
 
   @Override
   public void onClosing(int code, @NotNull String reason) {
-    System.out.println("Closing");
+    System.out.println("Closing: Code " + code);
   }
 
   @Override
@@ -238,14 +280,19 @@ client.subscribe(subscriptionId, new SubscriptionListener() {
 
   @Override
   public void onClosed(int code, @NotNull String reason) {
-    System.out.println("Connected closed");
+    System.out.println("Connection closed: Reason " + reason);
   }
 
   @Override
   public void onFailure(Throwable t, Response<String> response) {
     System.out.println("Failed: " + response);
   }
-});
+
+  @Override
+  public void onNotification(ModelServerNotification notification) {
+    System.out.println("Notification: " + notification);
+  }
+}, "xmi");
 client.unsubscribe(subscriptionId);
 ```
 
@@ -255,14 +302,15 @@ an incremental update applied by a `PATCH` request with an edit command (see abo
 the message is the command that was executed.  This command can then be executed in
 the client application to effect the same change as occurred in the server:
 
-```java
+```Java
 ModelServerClient client = new ModelServerClient("http://localhost:8081/api/v1/");
-String subscriptionId = "SuperBrewer3000.json&format=json";
+String subscriptionId = "Coffee.ecore&format=json";
 client.subscribe(subscriptionId, new JsonToEObjectSubscriptionListener() {
     private final CommandCodec codec = new DefaultCommandCodec();
     
     public void onIncrementalUpdate(EObject message) {
         CCommand payload = (CCommand) message;
+        EditingDomain editingDomain = new EditingDomain() { ... };
         
         try {
             Command command = codec.decode(editingDomain, payload);
@@ -276,7 +324,7 @@ client.subscribe(subscriptionId, new JsonToEObjectSubscriptionListener() {
             System.err.println("Cannot decode incremental update: " + e.getMessage());
         }
     }
-});
+}, "json");
 
 ```
 
@@ -286,5 +334,5 @@ Latest Code Coverage report can be found here: `com.eclipsesource.modelserver.co
 
 The code coverage report is generated with [JaCoCo](https://www.eclemma.org/jacoco/) and is integrated in the Maven build. In the package `com.eclispesource.modelserver.codecoverage` all code coverages are aggregated into one report.
 
-For now, only the main overall result per module is uploaded to the repository here. When executing the Maven build executed locally, the detailled results are computed and can be investigated in more detail.
+When executing the Maven build executed locally, the detailled results are computed and can be investigated in more detail.
 

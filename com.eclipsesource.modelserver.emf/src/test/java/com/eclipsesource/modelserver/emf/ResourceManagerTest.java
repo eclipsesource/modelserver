@@ -3,7 +3,7 @@
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0.
+ * https://www.eclipse.org/legal/epl-2.0.
  *
  * This Source Code may also be made available under the following Secondary
  * Licenses when the conditions for such availability set forth in the Eclipse
@@ -37,46 +37,46 @@ import com.google.inject.Injector;
 
 public class ResourceManagerTest extends AbstractResourceTest {
 
-	private static ResourceManager resourceManager;
+   private static ResourceManager resourceManager;
 
-	@BeforeClass
-	public static void beforeClass() {
-		Injector injector = Guice.createInjector(ModelServerModule.create());
-		resourceManager = injector.getInstance(ResourceManager.class);
-	}
+   @BeforeClass
+   public static void beforeClass() {
+      Injector injector = Guice.createInjector(ModelServerModule.create());
+      resourceManager = injector.getInstance(ResourceManager.class);
+   }
 
-	@Test
-	public void testLoadModel_castToExactType() {
-		String resourceURI = toFullPath("Test1.ecore");
-		Optional<EPackage> result = resourceManager.loadModel(resourceURI, resourceSet, EPackage.class);
-		assertNotNull(result);
-		assertTrue(result.isPresent());
-		assertEquals("test1", result.get().getName());
-	}
+   @Test
+   public void testLoadModelCastToExactType() {
+      String resourceURI = toFullPath("Test1.ecore");
+      Optional<EPackage> result = resourceManager.loadModel(resourceURI, resourceSet, EPackage.class);
+      assertNotNull(result);
+      assertTrue(result.isPresent());
+      assertEquals("test1", result.get().getName());
+   }
 
-	@Test
-	public void testLoadModel_castToSupertype() {
-		String resourceURI = toFullPath("Test1.ecore");
-		Optional<EObject> result = resourceManager.loadModel(resourceURI, resourceSet, EObject.class);
-		assertNotNull(result);
-		assertTrue(result.isPresent());
-	}
+   @Test
+   public void testLoadModelCastToSupertype() {
+      String resourceURI = toFullPath("Test1.ecore");
+      Optional<EObject> result = resourceManager.loadModel(resourceURI, resourceSet, EObject.class);
+      assertNotNull(result);
+      assertTrue(result.isPresent());
+   }
 
-	@Test
-	public void testLoadModel_invalidCast() {
-		String resourceURI = toFullPath("Test1.ecore");
-		Optional<EClass> result = resourceManager.loadModel(resourceURI, resourceSet, EClass.class);
+   @Test
+   public void testLoadModelInvalidCast() {
+      String resourceURI = toFullPath("Test1.ecore");
+      Optional<EClass> result = resourceManager.loadModel(resourceURI, resourceSet, EClass.class);
 
-		assertNotNull(result);
-		assertFalse(result.isPresent());
-	}
+      assertNotNull(result);
+      assertFalse(result.isPresent());
+   }
 
-	@Test
-	public void testLoadModel_fromJson() throws IOException {
-		Resource expectedResource = loadResource("Test1.ecore");
-		Optional<Resource> result = resourceManager.loadResource(toFullPath("Test1.json"), resourceSet);
-		assertTrue(result.isPresent());
-		assertTrue(EcoreUtil.equals(expectedResource.getContents(), result.get().getContents()));
+   @Test
+   public void testLoadModelFromJson() throws IOException {
+      Resource expectedResource = loadResource("Test1.ecore");
+      Optional<Resource> result = resourceManager.loadResource(toFullPath("Test1.json"), resourceSet);
+      assertTrue(result.isPresent());
+      assertTrue(EcoreUtil.equals(expectedResource.getContents(), result.get().getContents()));
 
-	}
+   }
 }

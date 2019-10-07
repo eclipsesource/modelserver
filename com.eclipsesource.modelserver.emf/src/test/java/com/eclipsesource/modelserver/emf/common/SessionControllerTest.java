@@ -1,18 +1,18 @@
-/*******************************************************************************
+/********************************************************************************
  * Copyright (c) 2019 EclipseSource and others.
  *
- *   This program and the accompanying materials are made available under the
- *   terms of the Eclipse Public License v. 2.0 which is available at
- *   http://www.eclipse.org/legal/epl-2.0.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * https://www.eclipse.org/legal/epl-2.0.
  *
- *   This Source Code may also be made available under the following Secondary
- *   Licenses when the conditions for such availability set forth in the Eclipse
- *   Public License v. 2.0 are satisfied: GNU General Public License, version 2
- *   with the GNU Classpath Exception which is available at
- *   https://www.gnu.org/software/classpath/license.html.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the Eclipse
+ * Public License v. 2.0 are satisfied: GNU General Public License, version 2
+ * with the GNU Classpath Exception which is available at
+ * https://www.gnu.org/software/classpath/license.html.
  *
- *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
- *******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+ ********************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
 import static org.junit.Assert.assertFalse;
@@ -51,144 +51,144 @@ import io.javalin.websocket.WsContext;
 @RunWith(MockitoJUnitRunner.class)
 public class SessionControllerTest {
 
-	@Mock
-	private ServerConfiguration serverConfig;
-	@Mock
-	private ResourceManager resourceManager;
-	@Mock
-	private CommandCodec commandCodec;
-	@Mock
-	private WsContext validClientCtx;
-	@Mock
-	private WsContext invalidClientCtx;
-	@Mock
-	private ModelRepository repository;
+   @Mock
+   private ServerConfiguration serverConfig;
+   @Mock
+   private ResourceManager resourceManager;
+   @Mock
+   private CommandCodec commandCodec;
+   @Mock
+   private WsContext validClientCtx;
+   @Mock
+   private WsContext invalidClientCtx;
+   @Mock
+   private ModelRepository repository;
 
-	private SessionController sessionController;
+   private SessionController sessionController;
 
+   @Test
+   public void testSubscribeToValidModelUri() {
+      // try to subscribe to a valid modeluri
+      //
+      initializeValidClientContext();
 
-	@Test
-	public void testSubscribeToValidModelUri() {
-		// try to subscribe to a valid modeluri
-		//
-		initializeValidClientContext();
+      assertTrue(sessionController.subscribe(validClientCtx, validClientCtx.pathParam("modeluri")));
+      assertTrue(sessionController.isClientSubscribed(validClientCtx));
+      verify(validClientCtx).send(argThat(jsonNodeThat(containsRegex("(?i)\"type\":\"success\""))));
+   }
 
-		assertTrue(sessionController.subscribe(validClientCtx, validClientCtx.pathParam("modeluri")));
-		assertTrue(sessionController.isClientSubscribed(validClientCtx));
-		verify(validClientCtx).send(argThat(jsonNodeThat(containsRegex("(?i)\"type\":\"success\""))));
-	}
+   @Test
+   public void testSubscribeToInvalidModelUri() {
+      // try to subscribe to an invalid modeluri
+      //
+      initializeInvalidClientContext();
 
-	@Test
-	public void testSubscribeToInvalidModelUri() {
-		// try to subscribe to an invalid modeluri
-		//
-		initializeInvalidClientContext();
-		
-		assertFalse(sessionController.subscribe(invalidClientCtx, invalidClientCtx.pathParam("modeluri")));
-		assertFalse(sessionController.isClientSubscribed(invalidClientCtx));
-	}
+      assertFalse(sessionController.subscribe(invalidClientCtx, invalidClientCtx.pathParam("modeluri")));
+      assertFalse(sessionController.isClientSubscribed(invalidClientCtx));
+   }
 
-	@Test
-	public void testUnsubscribeFromValidSession() {
-		// try to subscribe to a valid modeluri
-		//
-		initializeValidClientContext();
-		assertTrue(sessionController.subscribe(validClientCtx, validClientCtx.pathParam("modeluri")));
-		assertTrue(sessionController.isClientSubscribed(validClientCtx));
-		
-		// try to unsubscribe from this valid session
-		//
-		assertTrue(sessionController.isClientSubscribed(validClientCtx));
-		assertTrue(sessionController.unsubscribe(validClientCtx));
-		assertFalse(sessionController.isClientSubscribed(validClientCtx));
-	}
-	
-	@Test
-	public void testUnsubscribeFromInvalidSession() {
-		// try to unsubscribe from an invalid session
-		//
-		assertFalse(sessionController.isClientSubscribed(invalidClientCtx));
-		assertFalse(sessionController.unsubscribe(invalidClientCtx));
-	}
+   @Test
+   public void testUnsubscribeFromValidSession() {
+      // try to subscribe to a valid modeluri
+      //
+      initializeValidClientContext();
+      assertTrue(sessionController.subscribe(validClientCtx, validClientCtx.pathParam("modeluri")));
+      assertTrue(sessionController.isClientSubscribed(validClientCtx));
 
-	@Test
-	public void testCommandSubscription()
-			throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
+      // try to unsubscribe from this valid session
+      //
+      assertTrue(sessionController.isClientSubscribed(validClientCtx));
+      assertTrue(sessionController.unsubscribe(validClientCtx));
+      assertFalse(sessionController.isClientSubscribed(validClientCtx));
+   }
 
-		initializeValidClientContext();
-		when(repository.getModel("fancytesturi")).thenReturn(Optional.of(CoffeeFactory.eINSTANCE.createMachine()));
+   @Test
+   public void testUnsubscribeFromInvalidSession() {
+      // try to unsubscribe from an invalid session
+      //
+      assertFalse(sessionController.isClientSubscribed(invalidClientCtx));
+      assertFalse(sessionController.unsubscribe(invalidClientCtx));
+   }
 
-		sessionController.subscribe(validClientCtx, validClientCtx.pathParam("modeluri"));
-		CCommand command = CCommandFactory.eINSTANCE.createCommand();
-		command.setType(CommandKind.SET);
-		sessionController.modelChanged("fancytesturi", command);
+   @Test
+   @SuppressWarnings({ "checkstyle:ThrowsCount" })
+   public void testCommandSubscription()
+      throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
 
-		verify(validClientCtx).send(argThat(jsonNodeThat(containsRegex("(?i)\"type\":\"set\""))));
-	}
+      initializeValidClientContext();
+      when(repository.getModel("fancytesturi")).thenReturn(Optional.of(CoffeeFactory.eINSTANCE.createMachine()));
 
-	//
-	// Test framework
-	//
-	
-	private void initializeValidClientContext() {
-		when(validClientCtx.getSessionId()).thenReturn(UUID.randomUUID().toString());
-		when(validClientCtx.pathParam("modeluri")).thenReturn("fancytesturi");
-		when(repository.hasModel("fancytesturi")).thenReturn(true);
-	}
-	
-	private void initializeInvalidClientContext() {
-		when(invalidClientCtx.pathParam("modeluri")).thenReturn("tedioustesturi");
-	}
+      sessionController.subscribe(validClientCtx, validClientCtx.pathParam("modeluri"));
+      CCommand command = CCommandFactory.eINSTANCE.createCommand();
+      command.setType(CommandKind.SET);
+      sessionController.modelChanged("fancytesturi", command);
 
-	@Before
-	public void createSessionController() {
-		sessionController = Guice.createInjector(new AbstractModule() {
+      verify(validClientCtx).send(argThat(jsonNodeThat(containsRegex("(?i)\"type\":\"set\""))));
+   }
 
-			@Override
-			protected void configure() {
-				bind(ServerConfiguration.class).toInstance(serverConfig);
-				bind(ResourceManager.class).toInstance(resourceManager);
-				bind(CommandCodec.class).toInstance(commandCodec);
-				bind(ModelRepository.class).toInstance(repository);
-			}
-		}).getInstance(SessionController.class);
+   //
+   // Test framework
+   //
 
-		// Mock sessions are always open
-		sessionController.setIsOnlyPredicate(ctx -> true);
-	}
+   private void initializeValidClientContext() {
+      when(validClientCtx.getSessionId()).thenReturn(UUID.randomUUID().toString());
+      when(validClientCtx.pathParam("modeluri")).thenReturn("fancytesturi");
+      when(repository.hasModel("fancytesturi")).thenReturn(true);
+   }
 
-	Matcher<Object> jsonNodeThat(Matcher<String> data) {
-		return new TypeSafeDiagnosingMatcher<Object>() {
-			@Override
-			public void describeTo(Description description) {
-				description.appendText("JsonNode that ");
-				description.appendDescriptionOf(data);
-			}
+   private void initializeInvalidClientContext() {
+      when(invalidClientCtx.pathParam("modeluri")).thenReturn("tedioustesturi");
+   }
 
-			@Override
-			protected boolean matchesSafely(Object item, Description mismatchDescription) {
-				if (!(item instanceof JsonNode)) {
-					return false;
-				}
-				JsonNode node = (JsonNode) item;
-				String text = node.toString();
-				if (!data.matches(text)) {
-					data.describeMismatch(text, mismatchDescription);
-					return false;
-				}
-				return true;
-			}
-		};
-	}
+   @Before
+   public void createSessionController() {
+      sessionController = Guice.createInjector(new AbstractModule() {
 
-	Matcher<String> containsRegex(String pattern) {
-		return new CustomTypeSafeMatcher<String>("contains regex '" + pattern + "'") {
-			@Override
-			protected boolean matchesSafely(String item) {
-				java.util.regex.Matcher m = Pattern.compile(pattern).matcher(item);
-				return m.find();
-			}
-		};
-	}
+         @Override
+         protected void configure() {
+            bind(ServerConfiguration.class).toInstance(serverConfig);
+            bind(ResourceManager.class).toInstance(resourceManager);
+            bind(CommandCodec.class).toInstance(commandCodec);
+            bind(ModelRepository.class).toInstance(repository);
+         }
+      }).getInstance(SessionController.class);
+
+      // Mock sessions are always open
+      sessionController.setIsOnlyPredicate(ctx -> true);
+   }
+
+   Matcher<Object> jsonNodeThat(final Matcher<String> data) {
+      return new TypeSafeDiagnosingMatcher<>() {
+         @Override
+         public void describeTo(final Description description) {
+            description.appendText("JsonNode that ");
+            description.appendDescriptionOf(data);
+         }
+
+         @Override
+         protected boolean matchesSafely(final Object item, final Description mismatchDescription) {
+            if (!(item instanceof JsonNode)) {
+               return false;
+            }
+            JsonNode node = (JsonNode) item;
+            String text = node.toString();
+            if (!data.matches(text)) {
+               data.describeMismatch(text, mismatchDescription);
+               return false;
+            }
+            return true;
+         }
+      };
+   }
+
+   Matcher<String> containsRegex(final String pattern) {
+      return new CustomTypeSafeMatcher<>("contains regex '" + pattern + "'") {
+         @Override
+         protected boolean matchesSafely(final String item) {
+            java.util.regex.Matcher m = Pattern.compile(pattern).matcher(item);
+            return m.find();
+         }
+      };
+   }
 
 }

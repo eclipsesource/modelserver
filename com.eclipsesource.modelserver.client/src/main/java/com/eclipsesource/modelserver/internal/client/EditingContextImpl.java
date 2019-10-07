@@ -1,18 +1,18 @@
-/*******************************************************************************
+/********************************************************************************
  * Copyright (c) 2019 EclipseSource and others.
  *
- *   This program and the accompanying materials are made available under the
- *   terms of the Eclipse Public License v. 2.0 which is available at
- *   http://www.eclipse.org/legal/epl-2.0.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * https://www.eclipse.org/legal/epl-2.0.
  *
- *   This Source Code may also be made available under the following Secondary
- *   Licenses when the conditions for such availability set forth in the Eclipse
- *   Public License v. 2.0 are satisfied: GNU General Public License, version 2
- *   with the GNU Classpath Exception which is available at
- *   https://www.gnu.org/software/classpath/license.html.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the Eclipse
+ * Public License v. 2.0 are satisfied: GNU General Public License, version 2
+ * with the GNU Classpath Exception which is available at
+ * https://www.gnu.org/software/classpath/license.html.
  *
- *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
- *******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+ ********************************************************************************/
 
 package com.eclipsesource.modelserver.internal.client;
 
@@ -34,65 +34,67 @@ import okhttp3.WebSocketListener;
  */
 public class EditingContextImpl extends WebSocketListener implements EditingContext {
 
-	private final ModelServerClient owner;
-	private final CommandCodec codec = new DefaultCommandCodec();
-	private WebSocket socket;
-	private int referenceCount = 1;
+   private final ModelServerClient owner;
+   private final CommandCodec codec = new DefaultCommandCodec();
+   private WebSocket socket;
+   private int referenceCount = 1;
 
-	/**
-	 * Initializes me.
-	 */
-	public EditingContextImpl(ModelServerClient owner) {
-		super();
+   /**
+    * Initializes me.
+    * 
+    * @param owner ModelServerClient which owns this EditingContext.
+    */
+   public EditingContextImpl(final ModelServerClient owner) {
+      super();
 
-		this.owner = owner;
-	}
+      this.owner = owner;
+   }
 
-	@Override
-	public boolean execute(Command command) throws EncodingException {
-		CCommand serializable = codec.encode(command);
-		String message = owner.encode(serializable);
-		return execute(message);
-	}
+   @Override
+   public boolean execute(final Command command) throws EncodingException {
+      CCommand serializable = codec.encode(command);
+      String message = owner.encode(serializable);
+      return execute(message);
+   }
 
-	@Override
-	public boolean execute(String command) {
-		if (socket == null) {
-			return false;
-		}
-		
-		// Wrap the command in a message
-		String message = String.format("{data:%s}", command);
-		return socket.send(message);
-	}
+   @Override
+   public boolean execute(final String command) {
+      if (socket == null) {
+         return false;
+      }
 
-	//
-	// WebSocket events
-	//
+      // Wrap the command in a message
+      String message = String.format("{data:%s}", command);
+      return socket.send(message);
+   }
 
-	@Override
-	public void onOpen(WebSocket webSocket, Response response) {
-		this.socket = webSocket;
-	}
+   //
+   // WebSocket events
+   //
 
-	@Override
-	public void onClosed(WebSocket webSocket, int code, String reason) {
-		if (webSocket == this.socket) {
-			this.socket = null;
-		}
-	}
+   @Override
+   public void onOpen(final WebSocket webSocket, final Response response) {
+      this.socket = webSocket;
+   }
 
-	//
-	// Reference counting
-	//
+   @Override
+   public void onClosed(final WebSocket webSocket, final int code, final String reason) {
+      if (webSocket == this.socket) {
+         this.socket = null;
+      }
+   }
 
-	public void retain() {
-		referenceCount = referenceCount + 1;
-	}
+   //
+   // Reference counting
+   //
 
-	public boolean release() {
-		referenceCount = referenceCount - 1;
-		return referenceCount <= 0;
-	}
+   public void retain() {
+      referenceCount = referenceCount + 1;
+   }
+
+   public boolean release() {
+      referenceCount = referenceCount - 1;
+      return referenceCount <= 0;
+   }
 
 }

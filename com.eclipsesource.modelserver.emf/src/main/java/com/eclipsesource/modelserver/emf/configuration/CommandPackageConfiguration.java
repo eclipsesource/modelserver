@@ -3,7 +3,7 @@
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v. 2.0 which is available at
- * http://www.eclipse.org/legal/epl-2.0.
+ * https://www.eclipse.org/legal/epl-2.0.
  *
  * This Source Code may also be made available under the following Secondary
  * Licenses when the conditions for such availability set forth in the Eclipse
@@ -21,20 +21,16 @@ import java.util.Collections;
 import com.eclipsesource.modelserver.command.CCommandPackage;
 
 public class CommandPackageConfiguration implements EPackageConfiguration {
-
-	@Override
-	public Collection<String> getFileExtensions() {
-		return Collections.singletonList("command");
-	}
-
-	@Override
-	public void registerEPackage() {
-		CCommandPackage.eINSTANCE.eClass();
-	}
-
-	@Override
-	public String getId() {
-		return CCommandPackage.eNS_URI;
-	}
-
+   
+   @Override
+   public Collection<String> getFileExtensions() { return Collections.singletonList("command"); }
+   
+   @Override
+   public void registerEPackage() {
+      CCommandPackage.eINSTANCE.eClass();
+   }
+   
+   @Override
+   public String getId() { return CCommandPackage.eNS_URI; }
+   
 }

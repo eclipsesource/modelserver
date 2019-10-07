@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.eclipsesource.modelserver</groupId>
 		<artifactId>com.eclipsesource.modelserver.parent</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.7.0-SNAPSHOT</version>
 		<relativePath>../</relativePath>
 	</parent>
 	<artifactId>com.eclipsesource.modelserver.edit</artifactId>
@@ -19,7 +19,7 @@
 		<dependency>
 			<groupId>com.eclipsesource.modelserver</groupId>
 			<artifactId>com.eclipsesource.modelserver.common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.7.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.emf</groupId>
@@ -41,7 +41,7 @@
 		<dependency>
 			<groupId>com.eclipsesource.modelserver</groupId>
 			<artifactId>com.eclipsesource.modelserver.coffee.model</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.7.0-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

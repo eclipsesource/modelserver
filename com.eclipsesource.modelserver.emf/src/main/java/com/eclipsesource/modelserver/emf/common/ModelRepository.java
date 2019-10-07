@@ -1,18 +1,18 @@
-/*******************************************************************************
+/********************************************************************************
  * Copyright (c) 2019 EclipseSource and others.
  *
- *   This program and the accompanying materials are made available under the
- *   terms of the Eclipse Public License v. 2.0 which is available at
- *   http://www.eclipse.org/legal/epl-2.0.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * https://www.eclipse.org/legal/epl-2.0.
  *
- *   This Source Code may also be made available under the following Secondary
- *   Licenses when the conditions for such availability set forth in the Eclipse
- *   Public License v. 2.0 are satisfied: GNU General Public License, version 2
- *   with the GNU Classpath Exception which is available at
- *   https://www.gnu.org/software/classpath/license.html.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the Eclipse
+ * Public License v. 2.0 are satisfied: GNU General Public License, version 2
+ * with the GNU Classpath Exception which is available at
+ * https://www.gnu.org/software/classpath/license.html.
  *
- *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
- *******************************************************************************/
+ * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+ ********************************************************************************/
 package com.eclipsesource.modelserver.emf.common;
 
 import java.io.File;
@@ -50,135 +50,134 @@ import com.google.inject.Inject;
  *
  */
 public class ModelRepository {
-
-	@Inject
-	private ServerConfiguration serverConfiguration;
-	@Inject
-	private ResourceManager resourceManager;
-	@Inject
-	private CommandCodec commandCodec;
-
-	private ResourceSet resourceSet = new ResourceSetImpl();
-	private EditingDomain domain;
-
-	@Inject
-	public ModelRepository(AdapterFactory adapterFactory, ServerConfiguration serverConfiguration, ResourceManager resourceManager) {
-		this.domain = new AdapterFactoryEditingDomain(adapterFactory, new BasicCommandStack(), resourceSet);
-		this.serverConfiguration = serverConfiguration;
-		this.resourceManager = resourceManager;
-		initialize(serverConfiguration.getWorkspaceRootURI().toFileString(), true);
-	}
-
-	public void initialize(String workspaceRoot, boolean clearResources) {
-		if (clearResources) {
-			resourceSet.getResources().forEach(Resource::unload);
-			resourceSet.getResources().clear();
-		}
-		File workspace = new File(workspaceRoot);
-		for (File file : workspace.listFiles()) {
-			if (file.isDirectory()) {
-				initialize(file.getAbsolutePath(), false);
-			} else {
-				resourceManager.loadResource(createURI(file.getAbsolutePath()), resourceSet);
-			}
-		}
-		// any resources loaded with errors are probably not resources in the first place
-		final List<Resource> resourcesWithErrors = resourceSet.getResources().stream()
-			.filter(resource -> !resource.getErrors().isEmpty())
-			.collect(Collectors.toList());
-		for (Resource resource : resourcesWithErrors) {
-			resourceSet.getResources().remove(resource);
-		}
-	}
-
-	boolean hasModel(String modeluri) {
-		final URI uri = createURI(modeluri);
-		return resourceSet.getResource(uri, false) != null;
-	}
-
-	public Optional<EObject> getModel(String modeluri) {
-		return loadResource(modeluri)
-			.flatMap(res -> {
-				List<EObject> contents = res.getContents();
-				if (contents.isEmpty()) {
-					return Optional.empty();
-				}
-				return Optional.of(contents.get(0));
-			});
-	}
-
-	public Optional<Resource> loadResource(String modeluri) {
-		URI uri = createURI(modeluri);
-		if (resourceSet.getResource(uri, false) == null) {
-			return Optional.empty();
-		}
-		return Optional.of(resourceSet.getResource(uri, true));
-	}
-
-	public Map<URI, EObject> getAllModels() throws IOException {
-		EList<Resource> resources = resourceSet.getResources();
-		for (Resource resource : resources) {
-			resource.load(null);
-		}
-		LinkedHashMap<URI, EObject> models = new LinkedHashMap<>();
-		resources.forEach(resource -> {
-			models.put(resource.getURI(), resource.getContents().get(0));
-		});
-		return models;
-	}
-
-	public void addModel(String modeluri, EObject model) throws IOException {
-		final Resource resource = resourceSet.createResource(createURI(modeluri));
-		resourceSet.getResources().add(resource);
-		resource.getContents().add(model);
-		resource.save(null);
-	}
-
-	/**
-	 * Replace a model with an update.
-	 * 
-	 * @param modeluri the URI of the model to replace
-	 * @param model    the replacement
-	 * @return the {@code resource} that was replaced, or an empty optional if it
-	 *         does not exist
-	 */
-	public Optional<Resource> updateModel(String modeluri, EObject model) {
-		return loadResource(modeluri).map(res -> {
-			ECollections.setEList(res.getContents(), ECollections.singletonEList(model));
-			return res;
-		});
-	}
-
-	public void updateModel(String modelURI, CCommand command) throws DecodingException {
-		Command decoded = commandCodec.decode(domain, command);
-		domain.getCommandStack().execute(decoded);
-	}
-
-	public void removeModel(String modeluri) throws IOException {
-		resourceSet.getResource(createURI(modeluri), false).delete(null);
-	}
-
-	public boolean saveModel(String modeluri) {
-		return this.resourceManager.save(resourceSet);
-	}
-
-	public Set<String> getAllModelUris() {
-		Set<String> modeluris = new HashSet<>();
-		for(Resource resource : resourceSet.getResources()){
-			modeluris.add(resource.getURI().deresolve(serverConfiguration.getWorkspaceRootURI()).toString());
-		}
-		return modeluris;
-	}
-
-	ResourceSet getResourceSet() {
-		return resourceSet;
-	}
-
-	private URI createURI(String modeluri) {
-		if (modeluri.startsWith("file:")) {
-			return URI.createURI(modeluri, true);
-		}
-
-		return URI.createFileURI(modeluri);
-	}
+   
+   @Inject
+   private final ServerConfiguration serverConfiguration;
+   @Inject
+   private final ResourceManager resourceManager;
+   @Inject
+   private CommandCodec commandCodec;
+   
+   private final ResourceSet resourceSet = new ResourceSetImpl();
+   private final EditingDomain domain;
+   
+   @Inject
+   public ModelRepository(final AdapterFactory adapterFactory, final ServerConfiguration serverConfiguration,
+      final ResourceManager resourceManager) {
+      this.domain = new AdapterFactoryEditingDomain(adapterFactory, new BasicCommandStack(), resourceSet);
+      this.serverConfiguration = serverConfiguration;
+      this.resourceManager = resourceManager;
+      initialize(serverConfiguration.getWorkspaceRootURI().toFileString(), true);
+   }
+   
+   public void initialize(final String workspaceRoot, final boolean clearResources) {
+      if (clearResources) {
+         resourceSet.getResources().forEach(Resource::unload);
+         resourceSet.getResources().clear();
+      }
+      File workspace = new File(workspaceRoot);
+      for (File file : workspace.listFiles()) {
+         if (file.isDirectory()) {
+            initialize(file.getAbsolutePath(), false);
+         } else {
+            resourceManager.loadResource(createURI(file.getAbsolutePath()), resourceSet);
+         }
+      }
+      // any resources loaded with errors are probably not resources in the first place
+      final List<Resource> resourcesWithErrors = resourceSet.getResources().stream()
+         .filter(resource -> !resource.getErrors().isEmpty())
+         .collect(Collectors.toList());
+      for (Resource resource : resourcesWithErrors) {
+         resourceSet.getResources().remove(resource);
+      }
+   }
+   
+   boolean hasModel(final String modeluri) {
+      final URI uri = createURI(modeluri);
+      return resourceSet.getResource(uri, false) != null;
+   }
+   
+   public Optional<EObject> getModel(final String modeluri) {
+      return loadResource(modeluri)
+         .flatMap(res -> {
+            List<EObject> contents = res.getContents();
+            if (contents.isEmpty()) {
+               return Optional.empty();
+            }
+            return Optional.of(contents.get(0));
+         });
+   }
+   
+   public Optional<Resource> loadResource(final String modeluri) {
+      URI uri = createURI(modeluri);
+      if (resourceSet.getResource(uri, false) == null) {
+         return Optional.empty();
+      }
+      return Optional.of(resourceSet.getResource(uri, true));
+   }
+   
+   public Map<URI, EObject> getAllModels() throws IOException {
+      EList<Resource> resources = resourceSet.getResources();
+      for (Resource resource : resources) {
+         resource.load(null);
+      }
+      LinkedHashMap<URI, EObject> models = new LinkedHashMap<>();
+      resources.forEach(resource -> {
+         models.put(resource.getURI(), resource.getContents().get(0));
+      });
+      return models;
+   }
+   
+   public void addModel(final String modeluri, final EObject model) throws IOException {
+      final Resource resource = resourceSet.createResource(createURI(modeluri));
+      resourceSet.getResources().add(resource);
+      resource.getContents().add(model);
+      resource.save(null);
+   }
+   
+   /**
+    * Replace a model with an update.
+    * 
+    * @param modeluri the URI of the model to replace
+    * @param model    the replacement
+    * @return the {@code resource} that was replaced, or an empty optional if it
+    *         does not exist
+    */
+   public Optional<Resource> updateModel(final String modeluri, final EObject model) {
+      return loadResource(modeluri).map(res -> {
+         ECollections.setEList(res.getContents(), ECollections.singletonEList(model));
+         return res;
+      });
+   }
+   
+   public void updateModel(final String modelURI, final CCommand command) throws DecodingException {
+      Command decoded = commandCodec.decode(domain, command);
+      domain.getCommandStack().execute(decoded);
+   }
+   
+   public void removeModel(final String modeluri) throws IOException {
+      resourceSet.getResource(createURI(modeluri), false).delete(null);
+   }
+   
+   public boolean saveModel(final String modeluri) {
+      return this.resourceManager.save(resourceSet);
+   }
+   
+   public Set<String> getAllModelUris() {
+      Set<String> modeluris = new HashSet<>();
+      for (Resource resource : resourceSet.getResources()) {
+         modeluris.add(resource.getURI().deresolve(serverConfiguration.getWorkspaceRootURI()).toString());
+      }
+      return modeluris;
+   }
+   
+   ResourceSet getResourceSet() { return resourceSet; }
+   
+   private URI createURI(final String modeluri) {
+      if (modeluri.startsWith("file:")) {
+         return URI.createURI(modeluri, true);
+      }
+      
+      return URI.createFileURI(modeluri);
+   }
 }

@@ -1,19 +1,18 @@
-/*******************************************************************************
+/********************************************************************************
  * Copyright (c) 2019 EclipseSource and others.
  *
- *   This program and the accompanying materials are made available under the
- *   terms of the Eclipse Public License v. 2.0 which is available at
- *   http://www.eclipse.org/legal/epl-2.0.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * https://www.eclipse.org/legal/epl-2.0.
  *
- *   This Source Code may also be made available under the following Secondary
- *   Licenses when the conditions for such availability set forth in the Eclipse
- *   Public License v. 2.0 are satisfied: GNU General Public License, version 2
- *   with the GNU Classpath Exception which is available at
- *   https://www.gnu.org/software/classpath/license.html.
+ * This Source Code may also be made available under the following Secondary
+ * Licenses when the conditions for such availability set forth in the Eclipse
+ * Public License v. 2.0 are satisfied: GNU General Public License, version 2
+ * with the GNU Classpath Exception which is available at
+ * https://www.gnu.org/software/classpath/license.html.
  *
- *   SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
- *******************************************************************************/
-
+ * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
+ ********************************************************************************/
 package com.eclipsesource.modelserver.edit;
 
 import static com.eclipsesource.modelserver.edit.tests.util.EMFMatchers.commandEqualTo;
@@ -64,264 +63,262 @@ import com.eclipsesource.modelserver.edit.tests.util.EMFMatchers;
 @RunWith(Parameterized.class)
 public class DefaultCommandCodecTest {
 
-	private static final String N_A = "n/a";
-	private static final String ATTRIBUTE = "attribute";
-	private static final String REFERENCE = "reference";
-	private static final String REFERENCE_MANY = "reference (many)";
-	private static final String REFERENCE_BY_INDEX = "reference (by index)";
+   private static final String N_A = "n/a";
+   private static final String ATTRIBUTE = "attribute";
+   private static final String REFERENCE = "reference";
+   private static final String REFERENCE_MANY = "reference (many)";
+   private static final String REFERENCE_BY_INDEX = "reference (by index)";
 
-	private static ResourceSet resourceSet;
-	private static EditingDomain domain;
-	private static EPackage ePackage;
-	private static CCommand commandFixture;
+   private static ResourceSet resourceSet;
+   private static EditingDomain domain;
+   private static EPackage ePackage;
+   private static CCommand commandFixture;
 
-	private final Command editCommand;
-	private final CCommand commandModel;
+   private final Command editCommand;
+   private final CCommand commandModel;
 
-	/**
-	 * Initializes me.
-	 */
-	public DefaultCommandCodecTest(CommandKind type, String featureKind, Command editCommand, CCommand commandModel) {
-		super();
+   public DefaultCommandCodecTest(final CommandKind type, final String featureKind, final Command editCommand,
+      final CCommand commandModel) {
+      super();
 
-		this.editCommand = editCommand;
-		this.commandModel = commandModel;
-	}
+      this.editCommand = editCommand;
+      this.commandModel = commandModel;
+   }
 
-	@Test
-	public void encode() throws EncodingException {
-		CCommand encoded = new DefaultCommandCodec().encode(editCommand);
-		assertThat(encoded, EMFMatchers.eEqualTo(commandModel));
-	}
+   @Test
+   public void encode() throws EncodingException {
+      CCommand encoded = new DefaultCommandCodec().encode(editCommand);
+      assertThat(encoded, EMFMatchers.eEqualTo(commandModel));
+   }
 
-	@Test
-	public void decode() throws DecodingException {
-		Command decoded = new DefaultCommandCodec().decode(domain, commandModel);
-		assertThat(decoded, commandEqualTo(editCommand));
-	}
+   @Test
+   public void decode() throws DecodingException {
+      Command decoded = new DefaultCommandCodec().decode(domain, commandModel);
+      assertThat(decoded, commandEqualTo(editCommand));
+   }
 
-	//
-	// Test framework
-	//
+   //
+   // Test framework
+   //
 
-	@Parameters(name = "{0} {1}")
-	public static Iterable<Object[]> parameters() {
-		initializeResourceSet();
+   @Parameters(name = "{0} {1}")
+   public static Iterable<Object[]> parameters() {
+      initializeResourceSet();
 
-		return Arrays.asList(new Object[][] { //
-				new Object[] { CommandKind.SET, ATTRIBUTE, createAttributeSetCommand(), createAttributeSetModel() }, //
-				new Object[] { CommandKind.SET, REFERENCE, createReferenceSetCommand(), createReferenceSetModel() }, //
-				new Object[] { CommandKind.ADD, ATTRIBUTE, createAttributeAddCommand(), createAttributeAddModel() }, //
-				new Object[] { CommandKind.ADD, REFERENCE, createReferenceAddCommand(), createReferenceAddModel() }, //
-				new Object[] { CommandKind.ADD, REFERENCE_MANY, createReferenceAddMultipleCommand(),
-						createReferenceAddMultipleModel() }, //
-				new Object[] { CommandKind.REMOVE, ATTRIBUTE, createAttributeRemoveCommand(),
-						createAttributeRemoveModel() }, //
-				new Object[] { CommandKind.REMOVE, REFERENCE, createReferenceRemoveCommand(),
-						createReferenceRemoveModel() }, //
-				new Object[] { CommandKind.REMOVE, REFERENCE_MANY, createReferenceRemoveMultipleCommand(),
-						createReferenceRemoveMultipleModel() }, //
-				new Object[] { CommandKind.REMOVE, REFERENCE_BY_INDEX, createReferenceRemoveByIndexCommand(),
-						createReferenceRemoveByIndexModel() }, //
-				new Object[] { CommandKind.COMPOUND, N_A, createCompoundCommand(), createCompoundModel() }, //
-		});
-	}
+      return Arrays.asList(new Object[][] { //
+         new Object[] { CommandKind.SET, ATTRIBUTE, createAttributeSetCommand(), createAttributeSetModel() }, //
+         new Object[] { CommandKind.SET, REFERENCE, createReferenceSetCommand(), createReferenceSetModel() }, //
+         new Object[] { CommandKind.ADD, ATTRIBUTE, createAttributeAddCommand(), createAttributeAddModel() }, //
+         new Object[] { CommandKind.ADD, REFERENCE, createReferenceAddCommand(), createReferenceAddModel() }, //
+         new Object[] { CommandKind.ADD, REFERENCE_MANY, createReferenceAddMultipleCommand(),
+            createReferenceAddMultipleModel() }, //
+         new Object[] { CommandKind.REMOVE, ATTRIBUTE, createAttributeRemoveCommand(),
+            createAttributeRemoveModel() }, //
+         new Object[] { CommandKind.REMOVE, REFERENCE, createReferenceRemoveCommand(),
+            createReferenceRemoveModel() }, //
+         new Object[] { CommandKind.REMOVE, REFERENCE_MANY, createReferenceRemoveMultipleCommand(),
+            createReferenceRemoveMultipleModel() }, //
+         new Object[] { CommandKind.REMOVE, REFERENCE_BY_INDEX, createReferenceRemoveByIndexCommand(),
+            createReferenceRemoveByIndexModel() }, //
+         new Object[] { CommandKind.COMPOUND, N_A, createCompoundCommand(), createCompoundModel() }, //
+      });
+   }
 
-	private static void initializeResourceSet() {
-		// Registry the packages we need
-		CoffeePackage.eINSTANCE.eClass();
-		CCommandPackage.eINSTANCE.eClass();
+   private static void initializeResourceSet() {
+      // Registry the packages we need
+      CoffeePackage.eINSTANCE.eClass();
+      CCommandPackage.eINSTANCE.eClass();
 
-		domain = new AdapterFactoryEditingDomain(new EcoreAdapterFactory(), new BasicCommandStack());
-		resourceSet = domain.getResourceSet();
-		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("json",
-				new JsonResourceFactory(EMFJsonConverter.setupDefaultMapper()));
-		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("ecore",
-				new EcoreResourceFactoryImpl());
-		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("*", new XMIResourceFactoryImpl());
-		Resource resource = resourceSet.getResource(URI.createFileURI("src/test/resources/Coffee.ecore"), true);
-		ePackage = (EPackage) resource.getContents().get(0);
-		resource = resourceSet.getResource(URI.createFileURI("src/test/resources/Command.xmi"), true);
-		commandFixture = (CCommand) resource.getContents().get(0);
-	}
+      domain = new AdapterFactoryEditingDomain(new EcoreAdapterFactory(), new BasicCommandStack());
+      resourceSet = domain.getResourceSet();
+      resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("json",
+         new JsonResourceFactory(EMFJsonConverter.setupDefaultMapper()));
+      resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("ecore",
+         new EcoreResourceFactoryImpl());
+      resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("*", new XMIResourceFactoryImpl());
+      Resource resource = resourceSet.getResource(URI.createFileURI("src/test/resources/Coffee.ecore"), true);
+      ePackage = (EPackage) resource.getContents().get(0);
+      resource = resourceSet.getResource(URI.createFileURI("src/test/resources/Command.xmi"), true);
+      commandFixture = (CCommand) resource.getContents().get(0);
+   }
 
-	static Command createAttributeSetCommand() {
-		return SetCommand.create(domain, ePackage, EcorePackage.Literals.ENAMED_ELEMENT__NAME, "Foo");
-	}
+   static Command createAttributeSetCommand() {
+      return SetCommand.create(domain, ePackage, EcorePackage.Literals.ENAMED_ELEMENT__NAME, "Foo");
+   }
 
-	static CCommand createAttributeSetModel() {
-		CCommand result = CCommandFactory.eINSTANCE.createCommand();
-		result.setType(CommandKind.SET);
-		result.setOwner(ePackage);
-		result.setFeature("name");
-		result.getDataValues().add("Foo");
-		result.getIndices().add(NO_INDEX);
-		return result;
-	}
+   static CCommand createAttributeSetModel() {
+      CCommand result = CCommandFactory.eINSTANCE.createCommand();
+      result.setType(CommandKind.SET);
+      result.setOwner(ePackage);
+      result.setFeature("name");
+      result.getDataValues().add("Foo");
+      result.getIndices().add(NO_INDEX);
+      return result;
+   }
 
-	static Command createReferenceSetCommand() {
-		EClass newClass = EcoreFactory.eINSTANCE.createEClass();
-		newClass.setName("Foo");
+   static Command createReferenceSetCommand() {
+      EClass newClass = EcoreFactory.eINSTANCE.createEClass();
+      newClass.setName("Foo");
 
-		return SetCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, newClass, 1);
-	}
+      return SetCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, newClass, 1);
+   }
 
-	static CCommand createReferenceSetModel() {
-		EClass newClass = EcoreFactory.eINSTANCE.createEClass();
-		newClass.setName("Foo");
+   static CCommand createReferenceSetModel() {
+      EClass newClass = EcoreFactory.eINSTANCE.createEClass();
+      newClass.setName("Foo");
 
-		CCommand result = CCommandFactory.eINSTANCE.createCommand();
-		result.setType(CommandKind.SET);
-		result.setOwner(ePackage);
-		result.setFeature("eClassifiers");
-		result.getObjectValues().add(newClass);
-		result.getObjectsToAdd().add(newClass);
-		result.getIndices().add(1);
-		return result;
-	}
+      CCommand result = CCommandFactory.eINSTANCE.createCommand();
+      result.setType(CommandKind.SET);
+      result.setOwner(ePackage);
+      result.setFeature("eClassifiers");
+      result.getObjectValues().add(newClass);
+      result.getObjectsToAdd().add(newClass);
+      result.getIndices().add(1);
+      return result;
+   }
 
-	static Command createAttributeAddCommand() {
-		return AddCommand.create(domain, commandFixture, CCommandPackage.Literals.COMMAND__DATA_VALUES, "Foo", 0);
-	}
+   static Command createAttributeAddCommand() {
+      return AddCommand.create(domain, commandFixture, CCommandPackage.Literals.COMMAND__DATA_VALUES, "Foo", 0);
+   }
 
-	static CCommand createAttributeAddModel() {
-		CCommand result = CCommandFactory.eINSTANCE.createCommand();
-		result.setType(CommandKind.ADD);
-		result.setOwner(commandFixture);
-		result.setFeature("dataValues");
-		result.getDataValues().add("Foo");
-		result.getIndices().add(0);
-		return result;
-	}
+   static CCommand createAttributeAddModel() {
+      CCommand result = CCommandFactory.eINSTANCE.createCommand();
+      result.setType(CommandKind.ADD);
+      result.setOwner(commandFixture);
+      result.setFeature("dataValues");
+      result.getDataValues().add("Foo");
+      result.getIndices().add(0);
+      return result;
+   }
 
-	static Command createReferenceAddCommand() {
-		EClass newClass = EcoreFactory.eINSTANCE.createEClass();
-		newClass.setName("Foo");
+   static Command createReferenceAddCommand() {
+      EClass newClass = EcoreFactory.eINSTANCE.createEClass();
+      newClass.setName("Foo");
 
-		return AddCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, newClass, 2);
-	}
+      return AddCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, newClass, 2);
+   }
 
-	static CCommand createReferenceAddModel() {
-		EClass newClass = EcoreFactory.eINSTANCE.createEClass();
-		newClass.setName("Foo");
+   static CCommand createReferenceAddModel() {
+      EClass newClass = EcoreFactory.eINSTANCE.createEClass();
+      newClass.setName("Foo");
 
-		CCommand result = CCommandFactory.eINSTANCE.createCommand();
-		result.setType(CommandKind.ADD);
-		result.setOwner(ePackage);
-		result.setFeature("eClassifiers");
-		result.getObjectValues().add(newClass);
-		result.getObjectsToAdd().add(newClass);
-		result.getIndices().add(2);
-		return result;
-	}
+      CCommand result = CCommandFactory.eINSTANCE.createCommand();
+      result.setType(CommandKind.ADD);
+      result.setOwner(ePackage);
+      result.setFeature("eClassifiers");
+      result.getObjectValues().add(newClass);
+      result.getObjectsToAdd().add(newClass);
+      result.getIndices().add(2);
+      return result;
+   }
 
-	static Command createReferenceAddMultipleCommand() {
-		EClass foo = EcoreFactory.eINSTANCE.createEClass();
-		foo.setName("Foo");
-		EDataType bar = EcoreFactory.eINSTANCE.createEDataType();
-		bar.setName("Bar");
+   static Command createReferenceAddMultipleCommand() {
+      EClass foo = EcoreFactory.eINSTANCE.createEClass();
+      foo.setName("Foo");
+      EDataType bar = EcoreFactory.eINSTANCE.createEDataType();
+      bar.setName("Bar");
 
-		return AddCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS,
-				Arrays.asList(foo, bar), 2);
-	}
+      return AddCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS,
+         Arrays.asList(foo, bar), 2);
+   }
 
-	static CCommand createReferenceAddMultipleModel() {
-		EClass foo = EcoreFactory.eINSTANCE.createEClass();
-		foo.setName("Foo");
-		EDataType bar = EcoreFactory.eINSTANCE.createEDataType();
-		bar.setName("Bar");
+   static CCommand createReferenceAddMultipleModel() {
+      EClass foo = EcoreFactory.eINSTANCE.createEClass();
+      foo.setName("Foo");
+      EDataType bar = EcoreFactory.eINSTANCE.createEDataType();
+      bar.setName("Bar");
 
-		CCommand result = CCommandFactory.eINSTANCE.createCommand();
-		result.setType(CommandKind.ADD);
-		result.setOwner(ePackage);
-		result.setFeature("eClassifiers");
-		result.getObjectValues().addAll(Arrays.asList(foo, bar));
-		result.getObjectsToAdd().addAll(Arrays.asList(foo, bar));
-		result.getIndices().add(2);
-		return result;
-	}
+      CCommand result = CCommandFactory.eINSTANCE.createCommand();
+      result.setType(CommandKind.ADD);
+      result.setOwner(ePackage);
+      result.setFeature("eClassifiers");
+      result.getObjectValues().addAll(Arrays.asList(foo, bar));
+      result.getObjectsToAdd().addAll(Arrays.asList(foo, bar));
+      result.getIndices().add(2);
+      return result;
+   }
 
-	static Command createAttributeRemoveCommand() {
-		return RemoveCommand.create(domain, commandFixture, CCommandPackage.Literals.COMMAND__DATA_VALUES, "Foo");
-	}
+   static Command createAttributeRemoveCommand() {
+      return RemoveCommand.create(domain, commandFixture, CCommandPackage.Literals.COMMAND__DATA_VALUES, "Foo");
+   }
 
-	static CCommand createAttributeRemoveModel() {
-		CCommand result = CCommandFactory.eINSTANCE.createCommand();
-		result.setType(CommandKind.REMOVE);
-		result.setOwner(commandFixture);
-		result.setFeature("dataValues");
-		result.getDataValues().add("Foo");
-		return result;
-	}
+   static CCommand createAttributeRemoveModel() {
+      CCommand result = CCommandFactory.eINSTANCE.createCommand();
+      result.setType(CommandKind.REMOVE);
+      result.setOwner(commandFixture);
+      result.setFeature("dataValues");
+      result.getDataValues().add("Foo");
+      return result;
+   }
 
-	static Command createReferenceRemoveCommand() {
-		EClassifier removeMe = EcorePackage.Literals.ESTRING;
+   static Command createReferenceRemoveCommand() {
+      EClassifier removeMe = EcorePackage.Literals.ESTRING;
 
-		return RemoveCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, removeMe);
-	}
+      return RemoveCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, removeMe);
+   }
 
-	static CCommand createReferenceRemoveModel() {
-		EClassifier removeMe = EcorePackage.Literals.ESTRING;
+   static CCommand createReferenceRemoveModel() {
+      EClassifier removeMe = EcorePackage.Literals.ESTRING;
 
-		CCommand result = CCommandFactory.eINSTANCE.createCommand();
-		result.setType(CommandKind.REMOVE);
-		result.setOwner(ePackage);
-		result.setFeature("eClassifiers");
-		result.getObjectValues().add(removeMe);
-		return result;
-	}
+      CCommand result = CCommandFactory.eINSTANCE.createCommand();
+      result.setType(CommandKind.REMOVE);
+      result.setOwner(ePackage);
+      result.setFeature("eClassifiers");
+      result.getObjectValues().add(removeMe);
+      return result;
+   }
 
-	static Command createReferenceRemoveMultipleCommand() {
-		EClassifier remove1 = EcorePackage.Literals.EFACTORY;
-		EClassifier remove2 = EcorePackage.Literals.ESTRING;
+   static Command createReferenceRemoveMultipleCommand() {
+      EClassifier remove1 = EcorePackage.Literals.EFACTORY;
+      EClassifier remove2 = EcorePackage.Literals.ESTRING;
 
-		return RemoveCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS,
-				Arrays.asList(remove1, remove2));
-	}
+      return RemoveCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS,
+         Arrays.asList(remove1, remove2));
+   }
 
-	static CCommand createReferenceRemoveMultipleModel() {
-		EClassifier remove1 = EcorePackage.Literals.EFACTORY;
-		EClassifier remove2 = EcorePackage.Literals.ESTRING;
+   static CCommand createReferenceRemoveMultipleModel() {
+      EClassifier remove1 = EcorePackage.Literals.EFACTORY;
+      EClassifier remove2 = EcorePackage.Literals.ESTRING;
 
-		CCommand result = CCommandFactory.eINSTANCE.createCommand();
-		result.setType(CommandKind.REMOVE);
-		result.setOwner(ePackage);
-		result.setFeature("eClassifiers");
-		result.getObjectValues().addAll(Arrays.asList(remove1, remove2));
-		return result;
-	}
+      CCommand result = CCommandFactory.eINSTANCE.createCommand();
+      result.setType(CommandKind.REMOVE);
+      result.setOwner(ePackage);
+      result.setFeature("eClassifiers");
+      result.getObjectValues().addAll(Arrays.asList(remove1, remove2));
+      return result;
+   }
 
-	static Command createReferenceRemoveByIndexCommand() {
-		EClassifier remove1 = EcorePackage.Literals.EFACTORY;
-		EClassifier remove2 = EcorePackage.Literals.ESTRING;
+   static Command createReferenceRemoveByIndexCommand() {
+      EClassifier remove1 = EcorePackage.Literals.EFACTORY;
+      EClassifier remove2 = EcorePackage.Literals.ESTRING;
 
-		return RemoveCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS,
-				remove1.getClassifierID(), remove2.getClassifierID());
-	}
+      return RemoveCommand.create(domain, ePackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS,
+         remove1.getClassifierID(), remove2.getClassifierID());
+   }
 
-	static CCommand createReferenceRemoveByIndexModel() {
-		EClassifier remove1 = EcorePackage.Literals.EFACTORY;
-		EClassifier remove2 = EcorePackage.Literals.ESTRING;
+   static CCommand createReferenceRemoveByIndexModel() {
+      EClassifier remove1 = EcorePackage.Literals.EFACTORY;
+      EClassifier remove2 = EcorePackage.Literals.ESTRING;
 
-		CCommand result = CCommandFactory.eINSTANCE.createCommand();
-		result.setType(CommandKind.REMOVE);
-		result.setOwner(ePackage);
-		result.setFeature("eClassifiers");
-		result.getIndices().add(remove1.getClassifierID());
-		result.getIndices().add(remove2.getClassifierID());
-		return result;
-	}
+      CCommand result = CCommandFactory.eINSTANCE.createCommand();
+      result.setType(CommandKind.REMOVE);
+      result.setOwner(ePackage);
+      result.setFeature("eClassifiers");
+      result.getIndices().add(remove1.getClassifierID());
+      result.getIndices().add(remove2.getClassifierID());
+      return result;
+   }
 
-	static Command createCompoundCommand() {
-		return createAttributeSetCommand().chain(createReferenceAddCommand());
-	}
+   static Command createCompoundCommand() {
+      return createAttributeSetCommand().chain(createReferenceAddCommand());
+   }
 
-	static CCommand createCompoundModel() {
-		CCompoundCommand result = CCommandFactory.eINSTANCE.createCompoundCommand();
-		result.setType(CommandKind.COMPOUND);
-		result.getCommands().add(createAttributeSetModel());
-		result.getCommands().add(createReferenceAddModel());
-		return result;
-	}
+   static CCommand createCompoundModel() {
+      CCompoundCommand result = CCommandFactory.eINSTANCE.createCompoundCommand();
+      result.setType(CommandKind.COMPOUND);
+      result.getCommands().add(createAttributeSetModel());
+      result.getCommands().add(createReferenceAddModel());
+      return result;
+   }
 
 }
