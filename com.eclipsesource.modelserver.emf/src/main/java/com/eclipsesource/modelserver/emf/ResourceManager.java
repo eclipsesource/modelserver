@@ -73,12 +73,13 @@ public class ResourceManager {
       return map;
    }
 
+   @SuppressWarnings("checkstyle:IllegalCatch")
    public Optional<Resource> loadResource(final URI resourceURI, final ResourceSet rs) {
       try {
          Resource resource = rs.getResource(resourceURI, true);
          resource.load(Collections.EMPTY_MAP);
          return Optional.of(resource);
-      } catch (final IOException e) {
+      } catch (final Throwable e) {
          LOG.error("Could not load resource with URI: " + resourceURI);
          return Optional.empty();
       }

@@ -32,7 +32,7 @@ public abstract class AbstractResourceTest {
    public static final String RESOURCE_PATH = "src/test/resources/";
    @SuppressWarnings({ "checkstyle:VisibilityModifier" })
    protected ResourceSetImpl resourceSet; // needed in ResourceManagerTest.java
-   
+
    @Before
    public void initializeResourceSet() {
       resourceSet = new ResourceSetImpl();
@@ -40,22 +40,22 @@ public abstract class AbstractResourceTest {
          new JsonResourceFactory(EMFJsonConverter.setupDefaultMapper()));
       resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("*", new XMIResourceFactoryImpl());
    }
-   
+
    protected Resource loadResource(final String file) throws IOException {
       Resource resource = resourceSet.createResource(URI.createFileURI(toFullPath(file)));
       resource.load(Collections.EMPTY_MAP);
       return resource;
    }
-   
+
    protected String toFullPath(final String file) {
       return RESOURCE_PATH + file;
    }
-   
+
    @After
    public void tearDownResourceSet() {
       if (resourceSet != null) {
          resourceSet.getResources().stream().forEach(Resource::unload);
       }
    }
-   
+
 }

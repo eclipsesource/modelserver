@@ -16,7 +16,7 @@
 package com.eclipsesource.modelserver.client;
 
 public interface ServerConfiguration {
-   
+
    String getWorkspaceRoot();
-   
+
 }

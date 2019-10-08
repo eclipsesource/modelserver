@@ -24,10 +24,10 @@ import com.eclipsesource.modelserver.common.EntryPointType;
 import com.google.inject.Inject;
 
 public class ModelServerStartup {
-   
+
    @Inject(optional = true)
    private final Map<EntryPointType, AppEntryPoint> entryPoints = Collections.emptyMap();
-   
+
    public void boot(final EntryPointType entryPointType, final int port) {
       Optional<AppEntryPoint> entryPoint = Optional.ofNullable(entryPoints.get(entryPointType));
       entryPoint.orElseThrow(() -> new RuntimeException("EntryPoint not defined")).boot(port);

@@ -33,41 +33,41 @@ import com.google.inject.Module;
 public class ModelServerLauncher {
    private static final Logger LOG = LoggerFactory.getLogger(ModelServerLauncher.class.getSimpleName());
    public static final int DEFAULT_JAVALIN_PORT = 8081;
-   
+
    private final Collection<Module> modules;
    private Injector injector;
    private String[] args;
    private ServerConfiguration configuration;
-   
+
    public ModelServerLauncher() {
       modules = Sets.newHashSet(ModelServerModule.create());
-      
+
    }
-   
+
    public ModelServerLauncher(final String[] args) {
       this();
       this.args = args;
    }
-   
+
    protected Injector doSetup() {
       Injector injector = Guice.createInjector(modules);
       this.configuration = injector.getInstance(ServerConfiguration.class);
       return injector;
    }
-   
+
    public void start() {
       if (injector == null) {
          injector = doSetup();
       }
       run();
    }
-   
+
    protected void run() {
       if (parseCLIArguments(args)) {
          injector.getInstance(ModelServerStartup.class).boot(EntryPointType.REST, configuration.getServerPort());
       }
    }
-   
+
    protected boolean parseCLIArguments(final String[] args) {
       if (CLIParser.initialized()) {
          CLIParser parser = CLIParser.getInstance();
@@ -82,18 +82,18 @@ public class ModelServerLauncher {
       }
       return false;
    }
-   
+
    public void shutdown() {
-      
+
    }
-   
+
    public void addEPackageConfigurations(final Collection<Class<? extends EPackageConfiguration>> configs) {
       this.modules.forEach(m -> {
          ((ModelServerModule) m).addEPackageConfigurations(configs);
       });
    }
-   
+
    public Collection<? extends Module> getModules() { return modules; }
-   
+
    public Injector getInjector() { return injector; }
 }

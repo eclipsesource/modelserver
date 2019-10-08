@@ -33,31 +33,31 @@ import io.javalin.http.Context;
 import io.javalin.websocket.WsContext;
 
 public class Codecs {
-   
+
    private final Map<String, Codec> formatToCodec = new LinkedHashMap<>();
-   
+
    public Codecs() {
       formatToCodec.put("xmi", new XmiCodec());
       formatToCodec.put("json", new JsonCodec());
    }
-   
+
    public JsonNode encode(final Context context, final EObject eObject) throws EncodingException {
       return findFormat(context.queryParamMap()).encode(eObject);
    }
-   
+
    public JsonNode encode(final WsContext context, final EObject eObject) throws EncodingException {
       return findFormat(context.queryParamMap()).encode(eObject);
    }
-   
+
    public Optional<EObject> decode(final Context context, final String payload) throws DecodingException {
       return findFormat(context.queryParamMap()).decode(payload);
    }
-   
+
    public Optional<EObject> decode(final Context context, final String payload, final URI workspaceURI)
       throws DecodingException {
       return findFormat(context.queryParamMap()).decode(payload, workspaceURI);
    }
-   
+
    private Codec findFormat(final Map<String, List<String>> queryParams) {
       return Optional
          .ofNullable(queryParams.get("format"))

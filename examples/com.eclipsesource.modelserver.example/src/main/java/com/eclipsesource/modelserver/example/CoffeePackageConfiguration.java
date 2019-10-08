@@ -22,16 +22,16 @@ import com.eclipsesource.modelserver.emf.configuration.EPackageConfiguration;
 import com.google.common.collect.Lists;
 
 public class CoffeePackageConfiguration implements EPackageConfiguration {
-   
+
    @Override
    public String getId() { return CoffeePackage.eINSTANCE.getNsURI(); }
-   
+
    @Override
    public Collection<String> getFileExtensions() { return Lists.newArrayList("coffee", "json"); }
-   
+
    @Override
    public void registerEPackage() {
       CoffeePackage.eINSTANCE.eClass();
    }
-   
+
 }

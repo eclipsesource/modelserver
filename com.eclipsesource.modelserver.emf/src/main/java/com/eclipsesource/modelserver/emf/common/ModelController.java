@@ -42,14 +42,14 @@ import io.javalin.http.Handler;
 import io.javalin.plugin.json.JavalinJackson;
 
 public class ModelController {
-   
+
    private static final Logger LOG = Logger.getLogger(ModelController.class.getSimpleName());
-   
+
    private ModelRepository modelRepository;
    private final SessionController sessionController;
    private final ServerConfiguration serverConfiguration;
    private final Codecs codecs;
-   
+
    @Inject
    public ModelController(final ModelRepository modelRepository, final SessionController sessionController,
       final ServerConfiguration serverConfiguration) {
@@ -60,7 +60,7 @@ public class ModelController {
       this.sessionController = sessionController;
       this.serverConfiguration = serverConfiguration;
    }
-   
+
    public void create(final Context ctx, final String modeluri) {
       readPayload(ctx).ifPresentOrElse(
          eObject -> {
@@ -77,7 +77,7 @@ public class ModelController {
          },
          () -> handleError(ctx, 400, "Create new model failed"));
    }
-   
+
    public void delete(final Context ctx, final String modeluri) {
       if (this.modelRepository.hasModel(modeluri)) {
          try {
@@ -91,7 +91,7 @@ public class ModelController {
          handleError(ctx, 404, "Model '" + modeluri + "' not found, cannot be deleted!");
       }
    }
-   
+
    public void getAll(final Context ctx) {
       try {
          final Map<URI, EObject> allModels = this.modelRepository.getAllModels();
@@ -107,7 +107,7 @@ public class ModelController {
          handleError(ctx, 404, "Could not load all models");
       }
    }
-   
+
    public void getOne(final Context ctx, final String modeluri) {
       this.modelRepository.getModel(modeluri).ifPresentOrElse(
          model -> {
@@ -123,7 +123,7 @@ public class ModelController {
          },
          () -> handleError(ctx, 404, "Model '" + modeluri + "' not found!"));
    }
-   
+
    public void update(final Context ctx, final String modeluri) {
       readPayload(ctx).ifPresentOrElse(
          eObject -> modelRepository.updateModel(modeluri, eObject)
@@ -138,7 +138,7 @@ public class ModelController {
                () -> handleError(ctx, 404, "No such model resource to update")),
          () -> handleError(ctx, 400, "Update has no content"));
    }
-   
+
    public void save(final Context ctx, final String modeluri) {
       if (this.modelRepository.saveModel(modeluri)) {
          ctx.json(JsonResponse.success("Model '" + modeluri + "' successfully saved"));
@@ -147,17 +147,17 @@ public class ModelController {
          handleError(ctx, 500, "Saving model '" + modeluri + "' failed!");
       }
    }
-   
+
    private final Handler modelUrisHandler = ctx -> ctx
       .json(JsonResponse.success(JsonCodec.encode(this.modelRepository.getAllModelUris())));
-   
+
    public Handler getModelUrisHandler() { return modelUrisHandler; }
-   
+
    // #FIXME Very ugly solution to prevent Eclipse from adding the final modifier. Look for a better solution!
    protected void preventFinal() {
       this.modelRepository = null;
    }
-   
+
    private Optional<EObject> readPayload(final Context ctx) {
       try {
          JsonNode json = JavalinJackson.getObjectMapper().readTree(ctx.body());
@@ -171,14 +171,14 @@ public class ModelController {
             handleError(ctx, 400, "Empty JSON");
             return Optional.empty();
          }
-         
+
          return codecs.decode(ctx, jsonData, serverConfiguration.getWorkspaceRootURI());
       } catch (DecodingException | IOException e) {
          handleError(ctx, 400, "Invalid JSON");
       }
       return Optional.empty();
    }
-   
+
    public void executeCommand(final Context ctx, final String modelURI) {
       this.modelRepository.getModel(modelURI).ifPresentOrElse(
          model -> {
@@ -197,10 +197,10 @@ public class ModelController {
                         Resource resource = new ResourceImpl(uri);
                         modelRepository.getResourceSet().getResources().add(resource);
                         resource.getContents().add(cmd);
-                        
+
                         try {
                            EcoreUtil.resolveAll(resource);
-                           
+
                            // Use an unique copy of the command for each operation
                            // here to ensure isolation in case of side-effects
                            modelRepository.updateModel(modelURI, EcoreUtil.copy(cmd));
@@ -219,20 +219,20 @@ public class ModelController {
          },
          () -> handleError(ctx, 404, String.format("Model '%s' not found!", modelURI)));
    }
-   
+
    private void handleEncodingError(final Context context, final EncodingException ex) {
       handleError(context, 500, "An error occurred during data encoding", ex);
    }
-   
+
    private void handleDecodingError(final Context context, final DecodingException ex) {
       handleError(context, 500, "An error occurred during data decoding", ex);
    }
-   
+
    private void handleError(final Context ctx, final int statusCode, final String errorMsg) {
       LOG.error(errorMsg);
       ctx.status(statusCode).json(JsonResponse.error(errorMsg));
    }
-   
+
    private void handleError(final Context ctx, final int statusCode, final String errorMsg, final Exception e) {
       LOG.error(errorMsg, e);
       ctx.status(statusCode).json(JsonResponse.error(errorMsg));

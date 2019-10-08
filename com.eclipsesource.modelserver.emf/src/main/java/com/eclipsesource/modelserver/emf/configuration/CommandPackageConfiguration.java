@@ -21,16 +21,16 @@ import java.util.Collections;
 import com.eclipsesource.modelserver.command.CCommandPackage;
 
 public class CommandPackageConfiguration implements EPackageConfiguration {
-   
+
    @Override
    public Collection<String> getFileExtensions() { return Collections.singletonList("command"); }
-   
+
    @Override
    public void registerEPackage() {
       CCommandPackage.eINSTANCE.eClass();
    }
-   
+
    @Override
    public String getId() { return CCommandPackage.eNS_URI; }
-   
+
 }

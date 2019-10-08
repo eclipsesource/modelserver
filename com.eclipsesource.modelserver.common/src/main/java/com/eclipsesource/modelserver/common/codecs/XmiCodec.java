@@ -34,9 +34,9 @@ import com.eclipsesource.modelserver.jsonschema.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class XmiCodec implements Codec {
-   
+
    private static Logger LOG = Logger.getLogger(XmiCodec.class.getSimpleName());
-   
+
    @Override
    public JsonNode encode(final EObject eObject) throws EncodingException {
       final Resource resource = createResource();
@@ -47,37 +47,37 @@ public class XmiCodec implements Codec {
       } catch (IOException e) {
          throw new EncodingException(e);
       }
-      
+
       return Json.text(outputStream.toString());
    }
-   
+
    @Override
    public Optional<EObject> decode(final String payload) throws DecodingException {
       return decode(payload, null);
    }
-   
+
    @Override
    public Optional<EObject> decode(final String payload, final URI workspaceURI) throws DecodingException {
       ResourceSet resourceSet = new ResourceSetImpl();
       Optional<Resource> resource = decode(resourceSet, "virtual.xmi", workspaceURI, payload);
       return resource.map(r -> r.getContents().isEmpty() ? null : r.getContents().get(0));
    }
-   
+
    private Resource createResource() {
       ResourceSet resourceSet = new ResourceSetImpl();
       resourceSet.getResourceFactoryRegistry().getProtocolToFactoryMap().put(null, new XMIResourceFactoryImpl());
       return resourceSet.createResource(URI.createURI("virtual.xmi"));
    }
-   
+
    public Optional<Resource> decode(final ResourceSet resourceSet, final String modelURI, final URI workspaceURI,
       final String payload)
       throws DecodingException {
-      
+
       URI uri = URI.createURI(modelURI);
       if (workspaceURI != null) {
          uri = uri.resolve(workspaceURI);
       }
-      
+
       Resource result = resourceSet.getResource(uri, false);
       if (result != null && !(result instanceof XMIResource)) {
          // Replace it
@@ -95,8 +95,8 @@ public class XmiCodec implements Codec {
       } catch (IOException e) {
          throw new DecodingException(e);
       }
-      
+
       return Optional.of(result);
    }
-   
+
 }

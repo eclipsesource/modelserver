@@ -203,7 +203,7 @@ public class DefaultCommandCodec implements CommandCodec {
    @SuppressWarnings({ "checkstyle:CyclomaticComplexity", "checkstyle:JavaNCSS" })
    public Command decode(final EditingDomain domain, final CCommand command) throws DecodingException {
       Command result;
-      
+
       switch (command.getType()) {
          case COMPOUND:
             CCompoundCommand ccompound = (CCompoundCommand) command;
@@ -266,7 +266,7 @@ public class DefaultCommandCodec implements CommandCodec {
          default:
             throw new DecodingException("unsupported command type: " + command.getType().getLiteral()); // TODO
       }
-      
+
       return result;
    }
 

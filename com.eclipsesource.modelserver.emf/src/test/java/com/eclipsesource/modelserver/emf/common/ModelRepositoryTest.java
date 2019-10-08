@@ -31,7 +31,6 @@ import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.common.util.URI;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -54,7 +53,6 @@ import com.google.inject.Guice;
 /**
  * Unit tests for the {@link ModelRepository} class.
  */
-@Ignore("Problems in @Before section - need to investigate further")
 @RunWith(MockitoJUnitRunner.class)
 public class ModelRepositoryTest {
 

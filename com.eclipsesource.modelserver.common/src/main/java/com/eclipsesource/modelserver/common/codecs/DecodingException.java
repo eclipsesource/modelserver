@@ -16,19 +16,19 @@
 package com.eclipsesource.modelserver.common.codecs;
 
 public class DecodingException extends Exception {
-   
+
    private static final long serialVersionUID = 1L;
 
    public DecodingException(final Exception underlyingCause) {
       super(underlyingCause);
    }
-   
+
    public DecodingException(final String message) {
       super(message);
    }
-   
+
    public DecodingException(final String message, final Throwable cause) {
       super(message, cause);
    }
-   
+
 }

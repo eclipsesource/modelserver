@@ -20,17 +20,17 @@ import java.util.Optional;
 public class ModelServerNotification {
    private final String type;
    private final Optional<String> data;
-   
+
    public ModelServerNotification(final String type, final Optional<String> data) {
       super();
       this.type = type;
       this.data = data;
    }
-   
+
    public String getType() { return type; }
-   
+
    public Optional<String> getData() { return data; }
-   
+
    @Override
    public String toString() {
       return super.toString() + "{ type = " + getType() + ", data = " + getData() + "}";

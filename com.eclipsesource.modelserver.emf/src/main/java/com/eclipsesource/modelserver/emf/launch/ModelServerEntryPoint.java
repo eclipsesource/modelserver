@@ -27,26 +27,26 @@ import com.google.inject.Inject;
 import io.javalin.Javalin;
 
 public class ModelServerEntryPoint implements AppEntryPoint {
-   
+
    private final Javalin app;
    private static final Logger LOG = Logger.getLogger(ModelServerEntryPoint.class.getSimpleName());
-   
+
    @Inject(optional = true)
    private final Set<Routing> routes = Collections.emptySet();
-   
+
    @Inject
    public ModelServerEntryPoint(final Javalin app) {
       this.app = app;
    }
-   
+
    @Override
    public void boot(final int port) {
       bindRoutes();
-      
+
       app.events(event -> event.serverStartFailed(() -> LOG.error("SERVER START FAILED")))
          .start(port);
    }
-   
+
    private void bindRoutes() {
       routes.forEach(Routing::bindRoutes);
    }

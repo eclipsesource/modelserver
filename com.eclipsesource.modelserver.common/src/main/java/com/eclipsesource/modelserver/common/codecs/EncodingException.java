@@ -16,9 +16,9 @@
 package com.eclipsesource.modelserver.common.codecs;
 
 public class EncodingException extends Exception {
-   
+
    private static final long serialVersionUID = 1L;
-   
+
    public EncodingException(final Exception underlyingCause) {
       super(underlyingCause);
    }
@@ -30,5 +30,5 @@ public class EncodingException extends Exception {
    public EncodingException(final String message, final Throwable cause) {
       super(message, cause);
    }
-   
+
 }

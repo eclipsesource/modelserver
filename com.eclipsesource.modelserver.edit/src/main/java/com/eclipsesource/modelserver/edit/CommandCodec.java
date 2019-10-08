@@ -26,7 +26,7 @@ import com.eclipsesource.modelserver.common.codecs.EncodingException;
  * Codec for serialization of EMF {@link Command}s.
  */
 public interface CommandCodec {
-   
+
    /**
     * Encode a {@code command} for serialization.
     * 
@@ -37,7 +37,7 @@ public interface CommandCodec {
     *                              that is not supported
     */
    CCommand encode(Command command) throws EncodingException;
-   
+
    /**
     * Decode a {@code command} from serialization.
     * 
@@ -49,5 +49,5 @@ public interface CommandCodec {
     *                              that is not supported
     */
    Command decode(EditingDomain domain, CCommand command) throws DecodingException;
-   
+
 }

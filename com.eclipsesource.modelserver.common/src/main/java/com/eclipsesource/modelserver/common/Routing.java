@@ -21,11 +21,11 @@ import com.google.inject.Injector;
 public abstract class Routing {
    @Inject
    private Injector injector;
-   
+
    protected Routing() {}
-   
+
    public abstract void bindRoutes();
-   
+
    public <T> T getController(final Class<T> clazz) {
       return injector.getInstance(clazz);
    }

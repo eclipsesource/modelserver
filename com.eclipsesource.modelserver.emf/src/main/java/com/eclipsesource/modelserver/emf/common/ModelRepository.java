@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.AdapterFactory;
@@ -50,17 +51,18 @@ import com.google.inject.Inject;
  *
  */
 public class ModelRepository {
-   
+   private static Logger LOG = Logger.getLogger(ModelRepository.class.getSimpleName());
+
    @Inject
    private final ServerConfiguration serverConfiguration;
    @Inject
    private final ResourceManager resourceManager;
    @Inject
    private CommandCodec commandCodec;
-   
+
    private final ResourceSet resourceSet = new ResourceSetImpl();
    private final EditingDomain domain;
-   
+
    @Inject
    public ModelRepository(final AdapterFactory adapterFactory, final ServerConfiguration serverConfiguration,
       final ResourceManager resourceManager) {
@@ -69,7 +71,7 @@ public class ModelRepository {
       this.resourceManager = resourceManager;
       initialize(serverConfiguration.getWorkspaceRootURI().toFileString(), true);
    }
-   
+
    public void initialize(final String workspaceRoot, final boolean clearResources) {
       if (clearResources) {
          resourceSet.getResources().forEach(Resource::unload);
@@ -91,12 +93,12 @@ public class ModelRepository {
          resourceSet.getResources().remove(resource);
       }
    }
-   
+
    boolean hasModel(final String modeluri) {
       final URI uri = createURI(modeluri);
       return resourceSet.getResource(uri, false) != null;
    }
-   
+
    public Optional<EObject> getModel(final String modeluri) {
       return loadResource(modeluri)
          .flatMap(res -> {
@@ -107,15 +109,25 @@ public class ModelRepository {
             return Optional.of(contents.get(0));
          });
    }
-   
+
+   @SuppressWarnings("checkstyle:IllegalCatch")
    public Optional<Resource> loadResource(final String modeluri) {
-      URI uri = createURI(modeluri);
-      if (resourceSet.getResource(uri, false) == null) {
-         return Optional.empty();
+      Resource resource = null;
+      try {
+         URI uri = createURI(modeluri);
+         resource = resourceSet.getResource(uri, true);
+         if (resource != null && !resource.getContents().isEmpty()) {
+            return Optional.of(resource);
+         }
+      } catch (Exception exception) {
+         // simply fall through
       }
-      return Optional.of(resourceSet.getResource(uri, true));
+      // properly remove model again so the resource set does not hold a broken resource
+      LOG.error("Could not load resource with URI: " + modeluri);
+      removeModelSafe(modeluri);
+      return Optional.empty();
    }
-   
+
    public Map<URI, EObject> getAllModels() throws IOException {
       EList<Resource> resources = resourceSet.getResources();
       for (Resource resource : resources) {
@@ -127,17 +139,17 @@ public class ModelRepository {
       });
       return models;
    }
-   
+
    public void addModel(final String modeluri, final EObject model) throws IOException {
       final Resource resource = resourceSet.createResource(createURI(modeluri));
       resourceSet.getResources().add(resource);
       resource.getContents().add(model);
       resource.save(null);
    }
-   
+
    /**
     * Replace a model with an update.
-    * 
+    *
     * @param modeluri the URI of the model to replace
     * @param model    the replacement
     * @return the {@code resource} that was replaced, or an empty optional if it
@@ -149,20 +161,31 @@ public class ModelRepository {
          return res;
       });
    }
-   
+
    public void updateModel(final String modelURI, final CCommand command) throws DecodingException {
       Command decoded = commandCodec.decode(domain, command);
       domain.getCommandStack().execute(decoded);
    }
-   
+
    public void removeModel(final String modeluri) throws IOException {
-      resourceSet.getResource(createURI(modeluri), false).delete(null);
+      Resource resource = resourceSet.getResource(createURI(modeluri), false);
+      if (resource != null) {
+         resource.delete(null);
+      }
    }
-   
+
+   private void removeModelSafe(final String modeluri) {
+      try {
+         removeModel(modeluri);
+      } catch (IOException exception) {
+         LOG.error("Could not remove resource with URI: " + modeluri, exception);
+      }
+   }
+
    public boolean saveModel(final String modeluri) {
       return this.resourceManager.save(resourceSet);
    }
-   
+
    public Set<String> getAllModelUris() {
       Set<String> modeluris = new HashSet<>();
       for (Resource resource : resourceSet.getResources()) {
@@ -170,14 +193,14 @@ public class ModelRepository {
       }
       return modeluris;
    }
-   
+
    ResourceSet getResourceSet() { return resourceSet; }
-   
+
    private URI createURI(final String modeluri) {
       if (modeluri.startsWith("file:")) {
          return URI.createURI(modeluri, true);
       }
-      
+
       return URI.createFileURI(modeluri);
    }
 }

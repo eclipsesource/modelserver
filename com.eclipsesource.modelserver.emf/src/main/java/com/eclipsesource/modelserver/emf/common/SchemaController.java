@@ -24,10 +24,10 @@ import io.javalin.http.Context;
 import io.javalin.http.Handler;
 
 public class SchemaController implements Handler {
-   
+
    @Inject
    private ModelRepository modelRepository;
-   
+
    @Override
    public void handle(@NotNull final Context ctx) {
       modelRepository.getModel(ctx.queryParam("modeluri")).ifPresentOrElse(

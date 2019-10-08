@@ -22,16 +22,16 @@ import org.eclipse.emf.ecore.EcorePackage;
 import com.google.common.collect.Lists;
 
 public class EcorePackageConfiguration implements EPackageConfiguration {
-   
+
    @Override
    public Collection<String> getFileExtensions() { return Lists.newArrayList(".ecore"); }
-   
+
    @Override
    public void registerEPackage() {
       EcorePackage.eINSTANCE.eClass();
    }
-   
+
    @Override
    public String getId() { return EcorePackage.eINSTANCE.getNsURI(); }
-   
+
 }

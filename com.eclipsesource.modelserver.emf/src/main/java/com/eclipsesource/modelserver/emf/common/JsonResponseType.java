@@ -16,22 +16,22 @@
 package com.eclipsesource.modelserver.emf.common;
 
 public enum JsonResponseType {
-   
+
    SUCCESS("success"),
    ERROR("error"),
    FULLUPDATE("fullUpdate"),
    INCREMENTALUPDATE("incrementalUpdate"),
    DIRTYSTATE("dirtyState");
-   
+
    private String typeString;
-   
+
    JsonResponseType(final String typeString) {
       this.typeString = typeString;
    }
-   
+
    @Override
    public String toString() {
       return typeString;
    }
-   
+
 }

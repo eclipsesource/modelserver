@@ -23,10 +23,10 @@ import org.eclipse.emf.ecore.EObject;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public interface Codec {
-   
+
    JsonNode encode(EObject eObject) throws EncodingException;
-   
+
    Optional<EObject> decode(String payload) throws DecodingException;
-   
+
    Optional<EObject> decode(String payload, URI workspaceURI) throws DecodingException;
 }

@@ -1,53 +1,31 @@
-# modelserver [![Build Status](https://travis-ci.org/eclipsesource/modelserver.svg?branch=master)](https://travis-ci.org/eclipsesource/modelserver)
-## Build the modelserver
-To build and test the components as well as building the modelserver as standalone JAR execute the following maven goal in the root directory:
+# Model Server
+## Build
+To build the model server as standalone JAR and execute all component tests execute the following maven goal in the root directory:
 ```bash
 mvn clean install
 ```
 
-## Code the modelserver
-We use Eclipse as IDE and therefore all involved modules are provided as Eclipse projects with codestyle and checkstyle settings.
+### Code Coverage
 
-### Requirements
-- Please make sure your Eclipse workspace has installed Java 9 or higher.
-- Install the Eclipse Checkstyle Plug-in via its update site `https://checkstyle.org/eclipse-cs/#!/install`.
+The latest code coverage can be found here: `com.eclipsesource.modelserver.codecoverage/jacoco/index.html`.
 
-### Import existing projects
-Import all maven projects via `File > Import... > Existing Maven Projects > Root directory: $REPO_LOCATION`.
+The code coverage report is generated with [JaCoCo](https://www.eclemma.org/jacoco/) and is integrated in the Maven build. In the package `com.eclispesource.modelserver.codecoverage` all code coverages are aggregated into one report.
 
-Please also import the codestyle project via `File > Import... > Existing Projects into Workspace > Root directory: $REPO_LOCATION/releng > com.eclipsesource.modelserver.codestyle`.
+When executing the Maven build locally, the detailed results are computed and can be investigated in more detail.
 
-### Create new project
-When a new project is needed, please stick to the following instructions to guarantee your code will be conform to the existing code conventions.
-
-*Project specific settings*<br>
-Upon project creation the settings file `org.eclipse.resources.prefs` is created automatically and usually needs no further adjustment.
-Please copy and replace (if applicable) the following preferences files from `com.eclipsesource.modelserver.common` before you start coding:
-- `org.eclipse.jdt.core.prefs`
-- `org.eclipse.jdt.launching.prefs`
-- `org.eclipse.jdt.ui.prefs`
-- `org.eclipse.m2e.core.prefs`
+## Run
+### Execute from IDE
+To run the example model server within an IDE, run the main method of `ExampleServerLauncher.java` as a Java Application, located in the module `com.eclipsesource.modelserver.example`.
 
 
-*Checkstyle*<br>
-To configure Checkstyle for the new project right click on the project, choose `Checkstyle > Configure project(s) from blueprint...` and select `com.eclipsesource.modelserver.common` as blueprint project.
-Run `Checkstyle > Check Code with Checkstyle` to make sure Checkstyle is activated correctly.
-
-Please make sure to include the `.settings` folder as well as the `.checkstyle` settings file to the repository in your initial commit.
-
-## Run the modelserver
-### Run the modelserver in an IDE
-To run the example modelserver within an IDE, run the main method of [ExampleServerLauncher.java](https://github.com/eclipsesource/modelserver/blob/master/examples/com.eclipsesource.modelserver.example/src/main/java/com/eclipsesource/modelserver/example/ExampleServerLauncher.java) as a Java Application, located in the module `com.eclipsesource.modelserver.example`.
-
-
-### Run the modelserver standalone JAR
+### Execute Standalone JAR
 To run the model server standalone JAR, run this command in your terminal:
 ```bash
 cd  examples/com.eclipsesource.modelserver.example/target/
 java -jar com.eclipsesource.modelserver.example-X.X.X-SNAPSHOT-standalone.jar
 ```
 
-### Usage
+#### Usage
 ```
 usage: java -jar com.eclipsesource.modelserver.example-X.X.X-SNAPSHOT-standalone.jar
        [-e] [-h] [-p <arg>] [-r <arg>]
@@ -59,10 +37,10 @@ options:
  -r,--root <arg>   Set workspace root
 ```
 
-## Use the modelserver API
+## Model Server API
 
-### HTTP endpoints
-If the modelserver is up and running, you can access the modelserver API via `http://localhost:8081/api/v1/*`.
+### HTTP Endpoints
+If the model server is up and running, you can access the model server API via `http://localhost:8081/api/v1/*`.
 
 The following table shows the current HTTP endpoints: 
 
@@ -87,7 +65,7 @@ The following table shows the current HTTP endpoints:
 
 <br>
 
-### WebSocket endpoints
+### WebSocket Endpoints
 
 Subscriptions are implemented via websockets `ws://localhost:8081/api/v1/*`.
 
@@ -97,9 +75,9 @@ The following table shows the current WS endpoints:
 |-|-|-|-
 |Subscribe to model changes|`/subscribe`|query parameter: `?modeluri=...[&format=...]`|`sessionId`
 
-## Java client API
+## Java Client API
 
-The modelserver project features a Java-based client API that eases integration with the model server.
+The model server project features a Java-based client API that eases integration with the model server.
 The interface declaration looks as follows
 
 ```Java
@@ -150,25 +128,25 @@ public interface ModelServerClientApiV1<A> {
 ModelServerClient client = new ModelServerClient("http://localhost:8081/api/v1/");
 
 // perform simple GET
-client.get("Coffee.ecore")
+client.get("SuperBrewer3000.json")
       .thenAccept(response -> System.out.println("GET: " + response.body()));
 
 // perform same GET, but expect an EObject
-client.get("Coffee.ecore", "xmi")
-      .thenAccept(response -> System.out.println("GET: " + response.toString()));
+client.get("SuperBrewer3000.json", "xmi")
+      .thenAccept(response -> System.out.println("GET: " + response.body()));
 
 // perform GET ALL
 client.getAll()
       .thenAccept(response -> System.out.println("GET ALL: " + response.body()));
 
 // perform PATCH update
-client.update("Coffee.ecore", "{ <payload> }")
+client.update("SuperBrewer3000.json", "{ <payload> }")
       .thenAccept(response -> System.out.println(response.body()));
 
 // perform PATCH update with XMI format
-client.update("Coffee.ecore", brewingUnit_EObject, "xmi")
+client.update("SuperBrewer3000.json", brewingUnit_EObject, "xmi")
   .thenAccept(response -> {
-    client.get("Coffee.ecore").thenAccept(resp -> {
+    client.get("SuperBrewer3000.json").thenAccept(resp -> {
       System.out.println(client.decode(resp.body(), "xmi"));
     });
   });
@@ -255,7 +233,7 @@ you can subscribe with a `SubscriptionListener` and define a format for the resp
 
 ```Java
 ModelServerClient client = new ModelServerClient("http://localhost:8081/api/v1/");
-String subscriptionId = "Coffee.ecore";
+String subscriptionId = "SuperBrewer3000.json";
 client.subscribe(subscriptionId, new SubscriptionListener() {
   @Override
   public void onOpen(Response<String> response) {
@@ -304,7 +282,7 @@ the client application to effect the same change as occurred in the server:
 
 ```Java
 ModelServerClient client = new ModelServerClient("http://localhost:8081/api/v1/");
-String subscriptionId = "Coffee.ecore&format=json";
+String subscriptionId = "SuperBrewer3000.json&format=json";
 client.subscribe(subscriptionId, new JsonToEObjectSubscriptionListener() {
     private final CommandCodec codec = new DefaultCommandCodec();
     
@@ -328,11 +306,37 @@ client.subscribe(subscriptionId, new JsonToEObjectSubscriptionListener() {
 
 ```
 
-## Code Coverage
 
-Latest Code Coverage report can be found here: `com.eclipsesource.modelserver.codecoverage/jacoco/index.html`
 
-The code coverage report is generated with [JaCoCo](https://www.eclemma.org/jacoco/) and is integrated in the Maven build. In the package `com.eclispesource.modelserver.codecoverage` all code coverages are aggregated into one report.
 
-When executing the Maven build executed locally, the detailled results are computed and can be investigated in more detail.
+## Contributing
+All involved code must adhere to the provided codestyle and checkstyle settings.
 
+### Eclipse IDE Setup
+
+#### Requirements
+- Please make sure your Eclipse workspace uses a JRE of Java 9 or higher.
+- Install the Eclipse Checkstyle Plug-in via its update site `https://checkstyle.org/eclipse-cs/#!/install`.
+
+#### Configure Checkstyle
+To configure Checkstyle for the new project right click on the project, choose `Checkstyle > Configure project(s) from blueprint...` and select `com.eclipsesource.modelserver.common` as blueprint project.
+Run `Checkstyle > Check Code with Checkstyle` to make sure Checkstyle is activated correctly.
+
+#### Import Existing Projects
+Import all maven projects via `File > Import... > Existing Maven Projects > Root directory: $REPO_LOCATION`.
+
+Please also import the codestyle project via `File > Import... > Existing Projects into Workspace > Root directory: $REPO_LOCATION/releng > com.eclipsesource.modelserver.codestyle`.
+
+#### Create New Project
+When a new project is needed, please stick to the following instructions to guarantee your code will be conform to the existing code conventions.
+
+##### Project-Specific settings
+Upon project creation the settings file `org.eclipse.resources.prefs` is created automatically and usually needs no further adjustment.
+Please copy and replace (if applicable) the following preferences files from `com.eclipsesource.modelserver.common` before you start coding:
+- `org.eclipse.jdt.core.prefs`
+- `org.eclipse.jdt.launching.prefs`
+- `org.eclipse.jdt.ui.prefs`
+- `org.eclipse.m2e.core.prefs`
+
+#### Commit Changes
+Please make sure to include the `.settings` folder as well as the `.checkstyle` settings file to the repository in your initial commit.

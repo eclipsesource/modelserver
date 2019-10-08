@@ -54,9 +54,9 @@ public class ServerController {
          .result(errorMsg)
          .json(JsonResponse.error());
    }
-   
+
    public Handler getPingHandler() { return pingHandler; }
-   
+
    public Handler getConfigureHandler() { return configureHandler; }
 
 }

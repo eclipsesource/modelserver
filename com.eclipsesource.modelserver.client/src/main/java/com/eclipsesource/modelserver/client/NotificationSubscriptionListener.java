@@ -19,14 +19,14 @@ import java.util.Optional;
 
 public interface NotificationSubscriptionListener<T> extends SubscriptionListener {
    void onSuccess(Optional<String> message);
-   
+
    void onError(Optional<String> message);
-   
+
    void onDirtyChange(boolean isDirty);
-   
+
    void onFullUpdate(T root);
-   
+
    void onIncrementalUpdate(T command);
-   
+
    void onUnknown(ModelServerNotification notification);
 }

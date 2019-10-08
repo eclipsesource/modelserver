@@ -20,11 +20,11 @@ import java.util.function.Function;
 
 public class TypedSubscriptionListener<T> implements NotificationSubscriptionListener<T> {
    private final Function<? super String, Optional<T>> updateFunction;
-   
+
    public TypedSubscriptionListener(final Function<String, Optional<T>> updateFunction) {
       this.updateFunction = updateFunction;
    }
-   
+
    @Override
    public void onNotification(final ModelServerNotification notification) {
       switch (notification.getType()) {
@@ -53,37 +53,37 @@ public class TypedSubscriptionListener<T> implements NotificationSubscriptionLis
             onUnknown(notification);
       }
    }
-   
+
    @Override
    public void onSuccess(final Optional<String> message) {}
-   
+
    @Override
    public void onError(final Optional<String> message) {}
-   
+
    @Override
    public void onDirtyChange(final boolean isDirty) {}
-   
+
    @Override
    public void onFullUpdate(final T root) {}
-   
+
    @Override
    public void onIncrementalUpdate(final T command) {}
-   
+
    @Override
    public void onUnknown(final ModelServerNotification notification) {}
-   
+
    @Override
    public void onOpen(final Response<String> response) {}
-   
+
    @Override
    public void onClosing(final int code, final String reason) {}
-   
+
    @Override
    public void onClosed(final int code, final String reason) {}
-   
+
    @Override
    public void onFailure(final Throwable t, final Response<String> response) {}
-   
+
    @Override
    public void onFailure(final Throwable t) {}
 }

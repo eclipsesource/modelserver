@@ -29,7 +29,7 @@ public class Response<T> {
       this.response = response;
       this.demarshaller = demarshaller;
    }
-   
+
    @SuppressWarnings({ "unchecked" })
    public Response(final okhttp3.Response response) {
       this.response = response;

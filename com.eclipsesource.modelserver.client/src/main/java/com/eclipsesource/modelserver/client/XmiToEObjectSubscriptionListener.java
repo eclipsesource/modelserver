@@ -27,7 +27,7 @@ public class XmiToEObjectSubscriptionListener extends TypedSubscriptionListener<
    public XmiToEObjectSubscriptionListener() {
       super(XmiToEObjectSubscriptionListener::decode);
    }
-   
+
    @Override
    public void onIncrementalUpdate(final EObject command) {
       if (!(command instanceof CCommand)) {
@@ -35,9 +35,9 @@ public class XmiToEObjectSubscriptionListener extends TypedSubscriptionListener<
       }
       onIncrementalUpdate((CCommand) command);
    }
-   
+
    public void onIncrementalUpdate(final CCommand command) {}
-   
+
    public static Optional<EObject> decode(final String xmiString) {
       try {
          return new XmiCodec().decode(xmiString);

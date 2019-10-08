@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.plugin.json.JavalinJackson;
 
 public class JsonCodec extends DefaultJsonCodec {
-   
+
    public static JsonNode encode(final Object obj) throws EncodingException {
       try {
          return JavalinJackson.getObjectMapper().valueToTree(obj);
@@ -31,8 +31,8 @@ public class JsonCodec extends DefaultJsonCodec {
          throw new EncodingException(ex);
       }
    }
-   
+
    @Override
    protected ObjectMapper getObjectMapper() { return JavalinJackson.getObjectMapper(); }
-   
+
 }

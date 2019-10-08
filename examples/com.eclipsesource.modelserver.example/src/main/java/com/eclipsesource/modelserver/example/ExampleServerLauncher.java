@@ -38,11 +38,11 @@ public final class ExampleServerLauncher {
    private static String COFFEE_TEST_FILE = "SuperBrewer3000.coffee";
    private static String JSON_TEST_FILE = "SuperBrewer3000.json";
    private static String PROCESS_NAME = "java -jar com.eclipsesource.modelserver.example-X.X.X-SNAPSHOT-standalone.jar";
-   
+
    private static Logger LOG = Logger.getLogger(ExampleServerLauncher.class.getSimpleName());
-   
+
    private ExampleServerLauncher() {}
-   
+
    public static void main(String[] args) throws ParseException {
       BasicConfigurator.configure();
       try {
@@ -52,19 +52,19 @@ public final class ExampleServerLauncher {
          CLIParser.printHelp(PROCESS_NAME, CLIParser.getDefaultCLIOptions());
          return;
       }
-      
+
       if (CLIParser.getInstance().optionExists("h")) {
          CLIParser.getInstance().printHelp(PROCESS_NAME);
          return;
       }
-      
+
       Logger root = Logger.getRootLogger();
       if (CLIParser.getInstance().optionExists("e")) {
          root.setLevel(Level.ERROR);
       } else {
          root.setLevel(Level.INFO);
       }
-      
+
       if (!CLIParser.getInstance().optionExists("r")) {
          // No workspace root was specified, use test workspace
          final File workspaceRoot = new File(TEMP_DIR + "/" + WORKSPACE_ROOT);
@@ -77,12 +77,12 @@ public final class ExampleServerLauncher {
          args[args.length - 1] = "--root=" + workspaceRoot.toURI();
          CLIParser.create(args, CLIParser.getDefaultCLIOptions());
       }
-      
+
       final ModelServerLauncher launcher = new ModelServerLauncher(args);
       launcher.addEPackageConfigurations(Lists.newArrayList(CoffeePackageConfiguration.class));
       launcher.start();
    }
-   
+
    private static boolean setupTempTestWorkspace(final File workspaceRoot) {
       cleanupTempTestWorkspace(workspaceRoot);
       boolean result = workspaceRoot.mkdirs();
@@ -94,7 +94,7 @@ public final class ExampleServerLauncher {
          new File(workspaceRoot, JSON_TEST_FILE));
       return result;
    }
-   
+
    private static void cleanupTempTestWorkspace(final File workspaceRoot) {
       if (workspaceRoot.exists()) {
          try {
@@ -104,5 +104,5 @@ public final class ExampleServerLauncher {
          }
       }
    }
-   
+
 }

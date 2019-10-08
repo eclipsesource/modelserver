@@ -64,13 +64,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.javalin.http.Context;
 
 public class ModelControllerTest {
-   
+
    private ModelRepository modelRepository;
    private Context context;
    private ModelController modelController;
    private SessionController sessionController;
    private ServerConfiguration serverConfiguration;
-   
+
    @Before
    public void before() {
       modelRepository = mock(ModelRepository.class);
@@ -80,7 +80,7 @@ public class ModelControllerTest {
       when(serverConfiguration.getWorkspaceRootURI()).thenReturn(URI.createFileURI("/home/modelserver/workspace/"));
       modelController = new ModelController(modelRepository, sessionController, serverConfiguration);
    }
-   
+
    @Test
    public void getOneXmiFormat() throws EncodingException {
       final AtomicReference<JsonNode> response = new AtomicReference<>();
@@ -94,12 +94,12 @@ public class ModelControllerTest {
       queryParams.put("format", Collections.singletonList("xmi"));
       when(context.queryParamMap()).thenReturn(queryParams);
       when(modelRepository.getModel("test")).thenReturn(Optional.of(brewingUnit));
-      
+
       modelController.getOne(context, "test");
-      
+
       assertThat(response.get().get("data"), is(equalTo(new XmiCodec().encode(brewingUnit))));
    }
-   
+
    @Test
    public void getAllXmiFormat() throws EncodingException, IOException {
       final AtomicReference<JsonNode> response = new AtomicReference<>();
@@ -114,14 +114,14 @@ public class ModelControllerTest {
       when(context.queryParamMap()).thenReturn(queryParams);
       final Map<URI, EObject> allModels = Collections.singletonMap(URI.createURI("test"), brewingUnit);
       when(modelRepository.getAllModels()).thenReturn(allModels);
-      
+
       modelController.getAll(context);
-      
+
       assertThat(response.get().get("data"), is(equalTo(
          Json.object(
             Json.prop("test", new XmiCodec().encode(brewingUnit))))));
    }
-   
+
    @Test
    public void getOneJsonFormat() throws EncodingException {
       final AtomicReference<JsonNode> response = new AtomicReference<>();
@@ -132,12 +132,12 @@ public class ModelControllerTest {
       };
       doAnswer(answer).when(context).json(any(JsonNode.class));
       when(modelRepository.getModel("test")).thenReturn(Optional.of(brewingUnit));
-      
+
       modelController.getOne(context, "test");
-      
+
       assertThat(response.get().get("data"), is(equalTo(new JsonCodec().encode(brewingUnit))));
    }
-   
+
    @Ignore
    @Test
    public void updateXmi() throws EncodingException {
@@ -152,7 +152,7 @@ public class ModelControllerTest {
       verify(modelRepository, times(1))
          .updateModel(eq("SuperBrewer3000.json"), any(BrewingUnit.class));
    }
-   
+
    @Test
    public void executeCommand() throws EncodingException, DecodingException {
       ResourceSet rset = new ResourceSetImpl();
@@ -169,7 +169,7 @@ public class ModelControllerTest {
       setCommand.getDataValues().add("Foo");
       JsonResource cmdRes = new JsonResource(URI.createURI("$command.json"));
       cmdRes.getContents().add(setCommand);
-      
+
       final LinkedHashMap<String, List<String>> queryParams = new LinkedHashMap<>();
       queryParams.put("modeluri", Collections.singletonList("SuperBrewer3000.json"));
       when(context.queryParamMap()).thenReturn(queryParams);
@@ -177,13 +177,13 @@ public class ModelControllerTest {
       when(modelRepository.getResourceSet()).thenReturn(rset);
       when(modelRepository.getModel("SuperBrewer3000.json")).thenReturn(Optional.of(task));
       modelController.executeCommand(context, "SuperBrewer3000.json");
-      
+
       // unload to proxify
       res.unload();
       verify(modelRepository).updateModel(eq("SuperBrewer3000.json"), argThat(eEqualTo(setCommand)));
       verify(sessionController).modelChanged(eq("SuperBrewer3000.json"), argThat(eEqualTo(setCommand)));
    }
-   
+
    @Test
    public void addCommandNotification() throws EncodingException, DecodingException {
       ResourceSet rset = new ResourceSetImpl();
@@ -193,7 +193,7 @@ public class ModelControllerTest {
       rset.getResources().add(res);
       final Workflow workflow = CoffeeFactory.eINSTANCE.createWorkflow();
       res.getContents().add(workflow);
-      
+
       final AutomaticTask task = CoffeeFactory.eINSTANCE.createAutomaticTask();
       CCommand addCommand = CCommandFactory.eINSTANCE.createCommand();
       addCommand.setType(CommandKind.ADD);
@@ -205,7 +205,7 @@ public class ModelControllerTest {
       cmdRes.getContents().add(addCommand);
       String commandAsString = Json.object(Json.prop("data", Json.text(new JsonCodec().encode(addCommand).toString())))
          .toString();
-      
+
       final LinkedHashMap<String, List<String>> queryParams = new LinkedHashMap<>();
       queryParams.put("modeluri", Collections.singletonList("SuperBrewer3000.json"));
       when(context.queryParamMap()).thenReturn(queryParams);
@@ -213,11 +213,11 @@ public class ModelControllerTest {
       when(modelRepository.getResourceSet()).thenReturn(rset);
       when(modelRepository.getModel("SuperBrewer3000.json")).thenReturn(Optional.of(task));
       modelController.executeCommand(context, "SuperBrewer3000.json");
-      
+
       // unload to proxify
       res.unload();
       verify(modelRepository).updateModel(eq("SuperBrewer3000.json"), argThat(eEqualTo(addCommand)));
       verify(sessionController).modelChanged(eq("SuperBrewer3000.json"), argThat(eEqualTo(addCommand)));
    }
-   
+
 }

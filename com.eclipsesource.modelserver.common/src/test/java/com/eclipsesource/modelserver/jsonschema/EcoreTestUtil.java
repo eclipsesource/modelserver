@@ -23,9 +23,9 @@ import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EcorePackage;
 
 public final class EcoreTestUtil {
-   
+
    private EcoreTestUtil() {}
-   
+
    public static EReference eReference(final String name, final int lower, final int upper, final EClassifier type) {
       EReference eReference = EcoreFactory.eINSTANCE.createEReference();
       eReference.setName(name);
