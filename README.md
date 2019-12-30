@@ -1,3 +1,5 @@
+# **!!! This repository is discontinued. This project has moved to [eclipse-emfcloud](https://github.com/eclipse-emfcloud/emfcloud-modelserver) and will be maintained there !!!**
+
 # Model Server
 ## Build
 To build the model server as standalone JAR and execute all component tests execute the following maven goal in the root directory:
